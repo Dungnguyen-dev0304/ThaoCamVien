@@ -1063,6 +1063,16 @@
         "build": {
           "buildTransitive/net8.0/_._": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     }
   },
@@ -3142,6 +3152,11 @@
         "system.security.cryptography.protecteddata.nuspec",
         "useSharedDesignerContext.txt"
       ]
+    },
+    "SharedThaoCamVien/1.0.0": {
+      "type": "project",
+      "path": "../SharedThaoCamVien/SharedThaoCamVien.csproj",
+      "msbuildProject": "../SharedThaoCamVien/SharedThaoCamVien.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -3149,7 +3164,8 @@
       "Microsoft.AspNetCore.OpenApi >= 10.0.2",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.5",
       "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.5",
-      "Microsoft.EntityFrameworkCore.Tools >= 10.0.5"
+      "Microsoft.EntityFrameworkCore.Tools >= 10.0.5",
+      "SharedThaoCamVien >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -3184,7 +3200,11 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj": {
+              "projectPath": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

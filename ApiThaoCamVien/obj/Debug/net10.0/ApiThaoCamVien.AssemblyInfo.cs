@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ApiThaoCamVien")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b19b5a641a85f889457e3161d93aaba8ba3d77ee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ee3a642e2d8d46cdcf0e3aae8e1ac311b88c5cd5")]
 [assembly: System.Reflection.AssemblyProductAttribute("ApiThaoCamVien")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ApiThaoCamVien")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

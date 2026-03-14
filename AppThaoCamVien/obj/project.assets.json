@@ -2484,6 +2484,16 @@
             "related": ".aar;.pdb;.xml"
           }
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-android36.0/android-arm64": {
@@ -4968,6 +4978,16 @@
           "lib/net10.0-android36.0/Xamarin.KotlinX.Serialization.Core.Jvm.dll": {
             "related": ".aar;.pdb;.xml"
           }
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -7454,6 +7474,16 @@
             "related": ".aar;.pdb;.xml"
           }
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-android36.0/iossimulator-x64": {
@@ -9938,6 +9968,16 @@
           "lib/net10.0-android36.0/Xamarin.KotlinX.Serialization.Core.Jvm.dll": {
             "related": ".aar;.pdb;.xml"
           }
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -12424,6 +12464,16 @@
             "related": ".aar;.pdb;.xml"
           }
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-android36.0/win-x64": {
@@ -14909,6 +14959,16 @@
             "related": ".aar;.pdb;.xml"
           }
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-ios26.1": {
@@ -15373,6 +15433,16 @@
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -15839,6 +15909,16 @@
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-ios26.1/android-x64": {
@@ -16303,6 +16383,16 @@
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -16769,6 +16859,16 @@
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-ios26.1/maccatalyst-x64": {
@@ -17233,6 +17333,16 @@
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -17699,6 +17809,16 @@
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-maccatalyst26.1": {
@@ -18163,6 +18283,16 @@
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -18629,6 +18759,16 @@
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-maccatalyst26.1/android-x64": {
@@ -19093,6 +19233,16 @@
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -19559,6 +19709,16 @@
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-maccatalyst26.1/maccatalyst-x64": {
@@ -20024,6 +20184,16 @@
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-maccatalyst26.1/win-x64": {
@@ -20488,6 +20658,16 @@
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -21205,6 +21385,16 @@
             "rid": "win-x86"
           }
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-windows10.0.19041/android-arm64": {
@@ -21858,6 +22048,16 @@
         "build": {
           "buildTransitive/Microsoft.WindowsAppSDK.props": {},
           "buildTransitive/Microsoft.WindowsAppSDK.targets": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -22513,6 +22713,16 @@
           "buildTransitive/Microsoft.WindowsAppSDK.props": {},
           "buildTransitive/Microsoft.WindowsAppSDK.targets": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-windows10.0.19041/iossimulator-x64": {
@@ -23167,6 +23377,16 @@
           "buildTransitive/Microsoft.WindowsAppSDK.props": {},
           "buildTransitive/Microsoft.WindowsAppSDK.targets": {}
         }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        }
       }
     },
     "net10.0-windows10.0.19041/maccatalyst-x64": {
@@ -23820,6 +24040,16 @@
         "build": {
           "buildTransitive/Microsoft.WindowsAppSDK.props": {},
           "buildTransitive/Microsoft.WindowsAppSDK.targets": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     },
@@ -24484,6 +24714,16 @@
         "build": {
           "buildTransitive/Microsoft.WindowsAppSDK.props": {},
           "buildTransitive/Microsoft.WindowsAppSDK.targets": {}
+        }
+      },
+      "SharedThaoCamVien/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/SharedThaoCamVien.dll": {}
         }
       }
     }
@@ -28965,27 +29205,36 @@
         "xamarin.kotlinx.serialization.core.jvm.1.9.0.1.nupkg.sha512",
         "xamarin.kotlinx.serialization.core.jvm.nuspec"
       ]
+    },
+    "SharedThaoCamVien/1.0.0": {
+      "type": "project",
+      "path": "../SharedThaoCamVien/SharedThaoCamVien.csproj",
+      "msbuildProject": "../SharedThaoCamVien/SharedThaoCamVien.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0-android36.0": [
       "Microsoft.Extensions.Logging.Debug >= 10.0.0",
       "Microsoft.Maui.Controls >= 10.0.1",
-      "Microsoft.NET.ILLink.Tasks >= 10.0.2"
+      "Microsoft.NET.ILLink.Tasks >= 10.0.2",
+      "SharedThaoCamVien >= 1.0.0"
     ],
     "net10.0-ios26.1": [
       "Microsoft.Extensions.Logging.Debug >= 10.0.0",
       "Microsoft.Maui.Controls >= 10.0.1",
-      "Microsoft.NET.ILLink.Tasks >= 10.0.2"
+      "Microsoft.NET.ILLink.Tasks >= 10.0.2",
+      "SharedThaoCamVien >= 1.0.0"
     ],
     "net10.0-maccatalyst26.1": [
       "Microsoft.Extensions.Logging.Debug >= 10.0.0",
       "Microsoft.Maui.Controls >= 10.0.1",
-      "Microsoft.NET.ILLink.Tasks >= 10.0.2"
+      "Microsoft.NET.ILLink.Tasks >= 10.0.2",
+      "SharedThaoCamVien >= 1.0.0"
     ],
     "net10.0-windows10.0.19041": [
       "Microsoft.Extensions.Logging.Debug >= 10.0.0",
-      "Microsoft.Maui.Controls >= 10.0.1"
+      "Microsoft.Maui.Controls >= 10.0.1",
+      "SharedThaoCamVien >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -29024,19 +29273,35 @@
       "frameworks": {
         "net10.0-android36.0": {
           "targetAlias": "net10.0-android",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj": {
+              "projectPath": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj"
+            }
+          }
         },
         "net10.0-ios26.1": {
           "targetAlias": "net10.0-ios",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj": {
+              "projectPath": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj"
+            }
+          }
         },
         "net10.0-maccatalyst26.1": {
           "targetAlias": "net10.0-maccatalyst",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj": {
+              "projectPath": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj"
+            }
+          }
         },
         "net10.0-windows10.0.19041": {
           "targetAlias": "net10.0-windows10.0.19041.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj": {
+              "projectPath": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\SharedThaoCamVien\\SharedThaoCamVien.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

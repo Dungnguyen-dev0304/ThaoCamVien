@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ApiThaoCamVien.Models;
+namespace SharedThaoCamVien.Models;
 
 public partial class PoiMedium
 {
