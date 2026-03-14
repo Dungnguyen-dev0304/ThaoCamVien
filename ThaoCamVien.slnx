@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="ApiThaoCamVien/ApiThaoCamVien.csproj" />
+  <Project Path="AppThaoCamVien/AppThaoCamVien.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="WebThaoCamVien/WebThaoCamVien.csproj" />
+</Solution>
