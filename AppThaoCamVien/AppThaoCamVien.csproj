@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
@@ -19,7 +19,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>AppThaoCamVien</ApplicationTitle>
+		<ApplicationTitle>ThaoCamVien</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.appthaocamvien</ApplicationId>
@@ -40,15 +40,15 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg"  />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Images\anhnen.jpg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen Include="Resources\Images\logothaocamvien.png" Color="#C3E15E" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\anhnen.jpg" Resize="True" BaseSize="300,185" />
-		
+		<MauiImage Update="Resources\Images\logothaocamvien.png" Resize="True" BaseSize="300,185" />
+
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
 
@@ -56,40 +56,54 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\SharedThaoCamVien\SharedThaoCamVien.csproj" />
+		  <ProjectReference Include="..\SharedThaoCamVien\SharedThaoCamVien.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="Pages\AboutPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Pages\HomePage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Pages\MapPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Pages\NumpadPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Pages\QrPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Pages\StoryAudioPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Views\FlyoutFooterView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Views\FlyoutHeaderView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
+		  <MauiXaml Update="Pages\AboutPage.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Pages\HomePage.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Pages\MapPage.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Pages\NumpadPage.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Pages\QrPage.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Pages\StoryAudioPage.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Views\FlyoutFooterView.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+		  <MauiXaml Update="Views\FlyoutHeaderView.xaml">
+			    <Generator>MSBuild:Compile</Generator>
+			 
+		</MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+		  <Folder Include="Resources\NewFolder\" />
 	</ItemGroup>
 
 </Project>
