@@ -3,16 +3,24 @@
   "WorkspaceRootPath": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|c:\\users\\admin\\source\\repos\\thaocamvien\\appthaocamvien\\resources\\styles\\colors.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|solutionrelative:appthaocamvien\\resources\\styles\\colors.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|c:\\users\\admin\\source\\repos\\thaocamvien\\appthaocamvien\\views\\flyoutfooterview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|solutionrelative:appthaocamvien\\views\\flyoutfooterview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|c:\\users\\admin\\source\\repos\\thaocamvien\\appthaocamvien\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|solutionrelative:appthaocamvien\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|c:\\users\\admin\\source\\repos\\thaocamvien\\appthaocamvien\\views\\flyoutheaderview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|solutionrelative:appthaocamvien\\views\\flyoutheaderview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|c:\\users\\admin\\source\\repos\\thaocamvien\\appthaocamvien\\pages\\mappage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|solutionrelative:appthaocamvien\\pages\\mappage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|c:\\users\\admin\\source\\repos\\thaocamvien\\appthaocamvien\\resources\\styles\\colors.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{2E9F3D8D-C845-C438-5097-281C5D8BEC9E}|AppThaoCamVien\\AppThaoCamVien.csproj|solutionrelative:appthaocamvien\\resources\\styles\\colors.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
@@ -32,7 +40,7 @@
               "RelativeDocumentMoniker": "AppThaoCamVien\\App.xaml",
               "ToolTip": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\App.xaml",
               "RelativeToolTip": "AppThaoCamVien\\App.xaml",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAABgAAAAXAAAAAAAAAA==",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABkAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
               "WhenOpened": "2026-03-15T07:26:21.613Z",
               "IsPinned": true,
@@ -40,7 +48,33 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FlyoutFooterView.xaml",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Views\\FlyoutFooterView.xaml",
+              "RelativeDocumentMoniker": "AppThaoCamVien\\Views\\FlyoutFooterView.xaml",
+              "ToolTip": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Views\\FlyoutFooterView.xaml*",
+              "RelativeToolTip": "AppThaoCamVien\\Views\\FlyoutFooterView.xaml*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-03-15T10:23:01.001Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "FlyoutHeaderView.xaml",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Views\\FlyoutHeaderView.xaml",
+              "RelativeDocumentMoniker": "AppThaoCamVien\\Views\\FlyoutHeaderView.xaml",
+              "ToolTip": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Views\\FlyoutHeaderView.xaml",
+              "RelativeToolTip": "AppThaoCamVien\\Views\\FlyoutHeaderView.xaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-03-15T10:03:24.144Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "MapPage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Pages\\MapPage.xaml.cs",
               "RelativeDocumentMoniker": "AppThaoCamVien\\Pages\\MapPage.xaml.cs",
@@ -53,13 +87,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "Colors.xaml",
               "DocumentMoniker": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Resources\\Styles\\Colors.xaml",
               "RelativeDocumentMoniker": "AppThaoCamVien\\Resources\\Styles\\Colors.xaml",
-              "ToolTip": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Resources\\Styles\\Colors.xaml*",
-              "RelativeToolTip": "AppThaoCamVien\\Resources\\Styles\\Colors.xaml*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAmAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\ADMIN\\source\\repos\\ThaoCamVien\\AppThaoCamVien\\Resources\\Styles\\Colors.xaml",
+              "RelativeToolTip": "AppThaoCamVien\\Resources\\Styles\\Colors.xaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
               "WhenOpened": "2026-03-15T09:39:28.237Z",
               "EditorCaption": ""

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Views.FlyoutFooterView">
+
+    
+    
+    
+    <Grid HeightRequest="{OnPlatform iOS=52, Default=40}">
+    <Grid.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#89d957" Offset="0.1"/>
+            <GradientStop Color="#c9e265" Offset="1.0"/>
+        </LinearGradientBrush>
+    </Grid.Background>
+    <Label Text="Copyright @ 2023 ajsf"
+           FontSize="Small"
+           TextColor="White"
+           HorizontalOptions="Center"
+           VerticalOptions="Center"/>
+</Grid>
+</ContentView>
