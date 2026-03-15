@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-
+using SharedThaoCamVien.Models;
 namespace ApiThaoCamVien.Models;
 
 public partial class WebContext : DbContext

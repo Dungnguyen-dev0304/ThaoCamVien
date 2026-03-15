@@ -1,7 +1,7 @@
 ﻿<?xml version = "1.0" encoding = "UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:AppThaoCamVien"
+             xmlns:local="clr-namespace:AppThaoCamVien.Pages"
              x:Class="AppThaoCamVien.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -11,4 +11,20 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
+
+    <Application.MainPage>
+        <Shell>
+            <TabBar x:Name="PhoneTabs">
+                <Tab Title="Home" Icon="home.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:HomePage}"></ShellContent>
+                </Tab>
+                <Tab Title="Setting" Icon="setting.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:SettingPage}"></ShellContent>
+                </Tab>
+                <Tab Title="About" Icon="map.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:AboutPage}"></ShellContent>
+                </Tab>
+            </TabBar>
+        </Shell>
+    </Application.MainPage>
 </Application>

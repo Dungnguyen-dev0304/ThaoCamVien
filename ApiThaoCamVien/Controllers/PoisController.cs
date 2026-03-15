@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SharedThaoCamVien.Models;
 using ApiThaoCamVien.Models;
 
 namespace ApiThaoCamVien.Controllers
