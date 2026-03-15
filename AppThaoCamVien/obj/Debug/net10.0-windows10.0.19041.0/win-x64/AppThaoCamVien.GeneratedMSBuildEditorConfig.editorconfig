@@ -14,7 +14,7 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = AppThaoCamVien
-build_property.ProjectDir = C:\Users\ADMIN\source\repos\ThaoCamVien\AppThaoCamVien\
+build_property.ProjectDir = D:\ThaoCamVien_Project\AppThaoCamVien\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTAotOptimizerEnabled = true
@@ -28,7 +28,7 @@ build_property.CsWinRTUseWindowsUIXamlProjections = false
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/App.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/App.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.App.xaml
 build_metadata.AdditionalFiles.TargetPath = App.xaml
@@ -38,7 +38,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/AppShell.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/AppShell.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.AppShell.xaml
 build_metadata.AdditionalFiles.TargetPath = AppShell.xaml
@@ -48,7 +48,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/MainPage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/MainPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.MainPage.xaml
 build_metadata.AdditionalFiles.TargetPath = MainPage.xaml
@@ -58,7 +58,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/AboutPage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Pages/AboutPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.AboutPage.xaml
 build_metadata.AdditionalFiles.TargetPath = Pages\AboutPage.xaml
@@ -68,7 +68,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/HomePage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Pages/HomePage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.HomePage.xaml
 build_metadata.AdditionalFiles.TargetPath = Pages\HomePage.xaml
@@ -78,7 +78,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/MapPage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Pages/MapPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.MapPage.xaml
 build_metadata.AdditionalFiles.TargetPath = Pages\MapPage.xaml
@@ -88,7 +88,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/NumpadPage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Pages/NumpadPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.NumpadPage.xaml
 build_metadata.AdditionalFiles.TargetPath = Pages\NumpadPage.xaml
@@ -98,7 +98,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/QrPage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Pages/QrPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.QrPage.xaml
 build_metadata.AdditionalFiles.TargetPath = Pages\QrPage.xaml
@@ -108,7 +108,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/StoryAudioPage.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Pages/StoryAudioPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.StoryAudioPage.xaml
 build_metadata.AdditionalFiles.TargetPath = Pages\StoryAudioPage.xaml
@@ -118,7 +118,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Resources/Styles/Colors.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Resources/Styles/Colors.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Resources.Styles.Colors.xaml
 build_metadata.AdditionalFiles.TargetPath = Resources\Styles\Colors.xaml
@@ -128,7 +128,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Resources/Styles/Styles.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Resources/Styles/Styles.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Resources.Styles.Styles.xaml
 build_metadata.AdditionalFiles.TargetPath = Resources\Styles\Styles.xaml
@@ -138,7 +138,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Views/FlyoutFooterView.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Views/FlyoutFooterView.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Views.FlyoutFooterView.xaml
 build_metadata.AdditionalFiles.TargetPath = Views\FlyoutFooterView.xaml
@@ -148,7 +148,7 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Views/FlyoutHeaderView.xaml]
+[D:/ThaoCamVien_Project/AppThaoCamVien/Views/FlyoutHeaderView.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Views.FlyoutHeaderView.xaml
 build_metadata.AdditionalFiles.TargetPath = Views\FlyoutHeaderView.xaml

@@ -34,8 +34,16 @@ public partial class WebContext : DbContext
     public virtual DbSet<UserLocationLog> UserLocationLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DUNGNGUYEN\\SQLEXPRESS;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
+    {
+        // 1. Kiểm tra xem nếu đã cấu hình ở Program.cs (qua appsettings.json) rồi thì thôi
+        if (!optionsBuilder.IsConfigured)
+        {
+            // 2. Nếu chưa cấu hình (ví dụ khi chạy Unit Test hoặc Migration), 
+            // thì mới dùng dòng mặc định này.
+            // Dùng dấu "." để máy nào cũng tự hiểu là đang gọi SQL của chính nó.
+            optionsBuilder.UseSqlServer("Server=.;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
