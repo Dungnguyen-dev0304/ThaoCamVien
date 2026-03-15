@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:AppThaoCamVien.Pages"
              x:Class="AppThaoCamVien.App">
+
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -13,21 +14,100 @@
     </Application.Resources>
 
     <Application.MainPage>
-        <Shell>
-            <TabBar x:Name="ThaoCamVienAPPPPP">
+        <Shell FlyoutBehavior="Flyout" FlyoutHeaderBehavior="Fixed" FlyoutVerticalScrollMode="Auto">
+
+            <Shell.FlyoutHeader>
+                <Grid HeightRequest="170" Padding="0,10">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#89d957" Offset="0.1"/>
+                            <GradientStop Color="#c9e265" Offset="1.0"/>
+                        </LinearGradientBrush>
+                    </Grid.Background>
+
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+
+                        <Frame CornerRadius="40" 
+                               HeightRequest="80" 
+                               WidthRequest="80"
+                               HorizontalOptions="Center"
+                               Padding="0"
+                               IsClippedToBounds="True"
+                               HasShadow="False"
+                               BackgroundColor="Transparent">
+
+                            <Image Source="logothaocamvien.png" 
+                                   Aspect="AspectFill"
+                                   HeightRequest="80" 
+                                   WidthRequest="80"/>
+                        </Frame>
+                        
+                    </VerticalStackLayout>
+                </Grid>
+            </Shell.FlyoutHeader>
+
+            <Shell.FlyoutFooter>
+                <Grid HeightRequest="{OnPlatform iOS=52, Default=40}">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#89d957" Offset="0.1"/>
+                            <GradientStop Color="#c9e265" Offset="1.0"/>
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <Label Text="Copyright @ 2023 ajsf"
+                           FontSize="Small"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Shell.FlyoutFooter>
+
+            <Shell.FlyoutBackdrop>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#8A2387" Offset="0.1"/>
+                    <GradientStop Color="#E94057" Offset="0.6"/>
+                    <GradientStop Color="#58ADF4" Offset="1.6"/>
+                </LinearGradientBrush>
+            </Shell.FlyoutBackdrop>
+
+            <Shell.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="0.25*,0.75*" Padding="0,10">
+                        <Image Source="{Binding FlyoutIcon}"
+                               HeightRequest="45"
+                               HorizontalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="{Binding Title}"
+                               FontSize="Small"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </DataTemplate>
+            </Shell.ItemTemplate>
+
+            <FlyoutItem Title="Trang chủ" Icon="menu_white.png">
                 <Tab Title="QR" Icon="qr_white.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:QrPage}"></ShellContent>
+                    <ShellContent ContentTemplate="{DataTemplate local:QrPage}" />
                 </Tab>
-                <Tab Title="Setting" Icon="numpad_white.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:NumpadPage}"></ShellContent>
+                <Tab Title="Số" Icon="numpad_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:NumpadPage}" />
                 </Tab>
-                <Tab Title="About" Icon="story_white.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:StoryAudioPage}"></ShellContent>
+                <Tab Title="Câu chuyện" Icon="story_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:StoryAudioPage}" />
                 </Tab>
-                <Tab Title="About" Icon="map_white.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:MapPage}"></ShellContent>
+                <Tab Title="Sơ đồ" Icon="map_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:MapPage}" />
                 </Tab>
-            </TabBar>
+            </FlyoutItem>
+
+            <FlyoutItem Title="Map Only" Icon="map_white.png">
+                <ShellContent ContentTemplate="{DataTemplate local:MapPage}" />
+            </FlyoutItem>
+
+            <FlyoutItem Title="Home Extra" Icon="menu_white.png">
+                <ShellContent ContentTemplate="{DataTemplate local:HomePage}" />
+            </FlyoutItem>
+
         </Shell>
     </Application.MainPage>
 </Application>
