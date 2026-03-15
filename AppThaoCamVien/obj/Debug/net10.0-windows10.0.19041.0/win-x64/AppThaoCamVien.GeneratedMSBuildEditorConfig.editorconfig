@@ -78,11 +78,41 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
-[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/SettingPage.xaml]
+[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/MapPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
-build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.SettingPage.xaml
-build_metadata.AdditionalFiles.TargetPath = Pages\SettingPage.xaml
-build_metadata.AdditionalFiles.RelativePath = Pages\SettingPage.xaml
+build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.MapPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Pages\MapPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Pages\MapPage.xaml
+build_metadata.AdditionalFiles.Inflator = Runtime
+build_metadata.AdditionalFiles.NoWarn = 
+build_metadata.AdditionalFiles.EnableDiagnostics = 
+build_metadata.AdditionalFiles.LineInfo = 
+
+[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/NumpadPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.NumpadPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Pages\NumpadPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Pages\NumpadPage.xaml
+build_metadata.AdditionalFiles.Inflator = Runtime
+build_metadata.AdditionalFiles.NoWarn = 
+build_metadata.AdditionalFiles.EnableDiagnostics = 
+build_metadata.AdditionalFiles.LineInfo = 
+
+[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/QrPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.QrPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Pages\QrPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Pages\QrPage.xaml
+build_metadata.AdditionalFiles.Inflator = Runtime
+build_metadata.AdditionalFiles.NoWarn = 
+build_metadata.AdditionalFiles.EnableDiagnostics = 
+build_metadata.AdditionalFiles.LineInfo = 
+
+[C:/Users/ADMIN/source/repos/ThaoCamVien/AppThaoCamVien/Pages/StoryAudioPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = AppThaoCamVien.Pages.StoryAudioPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Pages\StoryAudioPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Pages\StoryAudioPage.xaml
 build_metadata.AdditionalFiles.Inflator = Runtime
 build_metadata.AdditionalFiles.NoWarn = 
 build_metadata.AdditionalFiles.EnableDiagnostics = 

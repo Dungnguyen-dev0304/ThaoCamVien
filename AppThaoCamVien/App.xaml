@@ -14,15 +14,18 @@
 
     <Application.MainPage>
         <Shell>
-            <TabBar x:Name="PhoneTabs">
-                <Tab Title="Home" Icon="home.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:HomePage}"></ShellContent>
+            <TabBar x:Name="ThaoCamVienAPPPPP">
+                <Tab Title="QR" Icon="qr_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:QrPage}"></ShellContent>
                 </Tab>
-                <Tab Title="Setting" Icon="setting.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:SettingPage}"></ShellContent>
+                <Tab Title="Setting" Icon="numpad_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:NumpadPage}"></ShellContent>
                 </Tab>
-                <Tab Title="About" Icon="map.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:AboutPage}"></ShellContent>
+                <Tab Title="About" Icon="story_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:StoryAudioPage}"></ShellContent>
+                </Tab>
+                <Tab Title="About" Icon="map_white.png">
+                    <ShellContent ContentTemplate="{DataTemplate local:MapPage}"></ShellContent>
                 </Tab>
             </TabBar>
         </Shell>

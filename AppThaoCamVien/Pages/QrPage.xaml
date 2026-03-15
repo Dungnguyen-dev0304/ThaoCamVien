@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="AppThaoCamVien.Pages.HomePage"
-             Title="HomePage">
+             x:Class="AppThaoCamVien.Pages.QrPage"
+             Title="QrPage">
     <VerticalStackLayout>
         <Label 
-            Text="Welcome to HomePage!"
-            FontSize="Large"
+            Text="Welcome to QrPage"
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
     </VerticalStackLayout>
-    
 </ContentPage>
