@@ -7,5 +7,10 @@ public partial class HomePage : ContentPage
         InitializeComponent();
     }
 
-    // Bạn có thể thêm các sự kiện OnClick cho các ImageButton trong TabBar giả ở đây.
+    // Sự kiện mở trang Bản đồ MAUI
+    private async void OnMapClicked(object sender, EventArgs e)
+    {
+        // Dùng PushModalAsync để bản đồ mở lên full màn hình đè lên trang chủ
+        await Navigation.PushModalAsync(new MapPage());
+    }
 }

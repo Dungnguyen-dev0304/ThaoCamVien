@@ -10,5 +10,13 @@
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
     </VerticalStackLayout>
-    
+
+    <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+        <ImageButton Source="map_white.png" 
+                 WidthRequest="30" HeightRequest="30" 
+                 BackgroundColor="Transparent"
+                 Clicked="OnMapClicked" />
+        <Label Text="Sơ đồ" TextColor="White" FontSize="12" HorizontalOptions="Center"/>
+    </VerticalStackLayout>
+
 </ContentPage>
