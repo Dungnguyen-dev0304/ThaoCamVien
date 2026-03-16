@@ -1,13 +1,35 @@
-# Visual Studio rác
-.vs/
-[Bb]in/
-[Oo]bj/
-out/
+﻿# =======================================================
+# .gitignore CHUẨN CHO DỰ ÁN .NET MAUI & ASP.NET WEB
+# =======================================================
 
-# Các file cấu hình cá nhân
+# 1. Thư mục rác của Visual Studio & Hệ thống
+.vs/
 *.user
 *.userosscache
 *.sln.docstates
+.DS_Store
+Thumbs.db
 
-# Thư viện tải về (không nên đẩy lên vì có thể tải lại bằng NuGet/NPM)
+# 2. Thư mục Build & Chạy code (TUYỆT ĐỐI KHÔNG ĐẨY LÊN GIT)
+# (Đây chính là những thư mục chứa cache màu tím cứng đầu lúc nãy)
+[Bb]in/
+[Oo]bj/
+out/
+TestResults/
+
+# 3. Thư viện tải về của WebThaoCamVien
+# (Chỉ bỏ qua nếu bạn dùng LibMan, NPM hoặc NuGet để tự động tải lại)
 WebThaoCamVien/wwwroot/lib/
+node_modules/
+
+# 4. Các file đóng gói App (Chỉ lưu ở máy cá nhân, tải lên Git rất nặng)
+*.apk
+*.aab
+*.ipa
+*.keystore
+*.jks
+*.pfx
+*.publishsettings
+
+# 5. Các file log lỗi (Không cần thiết)
+*.log

@@ -19,7 +19,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>ThaoCamVien</ApplicationTitle>
+		<ApplicationTitle>Thảo Cầm Viên</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.appthaocamvien</ApplicationId>
@@ -40,7 +40,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#C3E15E"/>
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Images\logothaocamvien.png" Color="#C3E15E" BaseSize="128,128" />
