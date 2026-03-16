@@ -17,6 +17,13 @@
     <Application.MainPage>
         <Shell FlyoutBehavior="Flyout" FlyoutHeaderBehavior="Fixed" FlyoutVerticalScrollMode="Auto">
 
+            <Shell.FlyoutBackground>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#89d957" Offset="0.1"/>
+                    <GradientStop Color="#c9e265" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Shell.FlyoutBackground>
+
             <Shell.FlyoutHeader>
                 <views:FlyoutHeaderView></views:FlyoutHeaderView>
             </Shell.FlyoutHeader>
@@ -32,6 +39,7 @@
                                HeightRequest="45"
                                HorizontalOptions="Center"/>
                         <Label Grid.Column="1"
+                               TextColor="White"
                                Text="{Binding Title}"
                                FontSize="Small"
                                FontAttributes="Bold"
@@ -55,11 +63,52 @@
                 </Tab>
             </FlyoutItem>
 
-            <FlyoutItem Title="Map Only" Icon="map_white.png">
+            <FlyoutItem Title="Introduction">
+                <Shell.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="0.25*,0.75*" Padding="20,25">
+                            <Image Source="{Binding FlyoutIcon}"
+                                   HeightRequest="60" HorizontalOptions="Center"/>
+
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding Title}"
+                                       TextColor="White"
+                                       FontSize="Medium"
+                                       FontAttributes="Bold"/>
+
+                                <Label Text="Giới thiệu chung về khu du lịch"
+                                       TextColor="White"
+                                       FontSize="Small" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </DataTemplate>
+                </Shell.ItemTemplate>
+
                 <ShellContent ContentTemplate="{DataTemplate local:MapPage}" />
             </FlyoutItem>
 
-            <FlyoutItem Title="Home Extra" Icon="menu_white.png">
+            <FlyoutItem Title="Language" >
+                <Shell.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="0.25*,0.75*" Padding="20,25">
+                            <Image Source="{Binding FlyoutIcon}"
+                                   HeightRequest="60" 
+                                   HorizontalOptions="Center"/>
+
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding Title}"
+                                       TextColor="White"
+                                       FontSize="Medium"
+                                       FontAttributes="Bold"/>
+
+                                <Label Text="Cài đặt về ngôn ngữ sử dụng"
+                                       TextColor="White"
+                                       FontSize="Small" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </DataTemplate>
+                </Shell.ItemTemplate>
+
                 <ShellContent ContentTemplate="{DataTemplate local:HomePage}" />
             </FlyoutItem>
 

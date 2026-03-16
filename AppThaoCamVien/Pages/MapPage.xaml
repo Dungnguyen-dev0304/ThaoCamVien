@@ -1,12 +1,65 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:Class="AppThaoCamVien.Pages.MapPage"
-             Title="MapPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to MapPage"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Shell.NavBarIsVisible="False">
+    <Grid>
+
+        <maps:Map x:Name="BanDoThaoCamVien" 
+                  MapType="Street" 
+                  IsShowingUser="True"/>
+
+        <HorizontalStackLayout HorizontalOptions="Start" VerticalOptions="Start" Margin="20,50,0,0">
+            <ImageButton Source="close_icon.png" 
+                         WidthRequest="24" 
+                         HeightRequest="24"
+                         Clicked="OnCloseButtonClicked"/>
+            <Label Text="Sơ đồ" 
+                   FontSize="Title" 
+                   FontAttributes="Bold" 
+                   Margin="15,0,0,0" 
+                   VerticalOptions="Center"/>
+        </HorizontalStackLayout>
+
+        <CollectionView x:Name="CarouselDiaDiem"
+                        VerticalOptions="End"
+                        Margin="0,0,0,30"
+                        HeightRequest="200"
+                        SelectionMode="Single"
+                        SelectionChanged="OnDiaDiemSelected">
+
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" 
+                                   ItemSpacing="15" 
+                                   SnapPointsType="MandatorySingle" 
+                                   SnapPointsAlignment="Center" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border StrokeShape="RoundRectangle 15" 
+                            StrokeThickness="0"
+                            WidthRequest="140" 
+                            Margin="10,0">
+                        <Grid>
+                            <Image Source="{Binding HinhAnh}" Aspect="AspectFill" />
+
+                            <BoxView Color="Black" Opacity="0.4" />
+
+                            <VerticalStackLayout VerticalOptions="End" Padding="10">
+                                <Label Text="{Binding TenDiaDiem}" 
+                                       TextColor="White" 
+                                       FontAttributes="Bold" 
+                                       FontSize="Small"/>
+                                <Label Text="{Binding MoTaNgan}" 
+                                       TextColor="#E0E0E0" 
+                                       FontSize="Micro"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
 </ContentPage>

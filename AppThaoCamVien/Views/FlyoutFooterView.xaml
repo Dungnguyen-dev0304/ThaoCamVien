@@ -13,7 +13,7 @@
             <GradientStop Color="#c9e265" Offset="1.0"/>
         </LinearGradientBrush>
     </Grid.Background>
-    <Label Text="Copyright @ 2023 ajsf"
+    <Label Text="Copyright @ 2026 Dũng Nguyễn"
            FontSize="Small"
            TextColor="White"
            HorizontalOptions="Center"
