@@ -1,39 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
+// Bỏ dòng "using SQLite;" đi để tránh nhầm lẫn
 
-namespace SharedThaoCamVien.Models;
-
-public partial class Poi
+namespace SharedThaoCamVien.Models
 {
-    public int PoiId { get; set; }
+    [SQLite.Table("pois")]
+    public class Poi
+    {
+        [SQLite.PrimaryKey, SQLite.AutoIncrement, SQLite.Column("poi_id")]
+        public int PoiId { get; set; }
 
-    public int? CategoryId { get; set; }
+        [SQLite.Column("category_id")]
+        public int? CategoryId { get; set; }
 
-    public string Name { get; set; } = null!;
+        [SQLite.Column("name")]
+        public string Name { get; set; }
 
-    public string? Description { get; set; }
+        [SQLite.Column("description")]
+        public string Description { get; set; }
 
-    public decimal Latitude { get; set; }
+        // Cứ giữ là decimal theo đúng database SQL của bạn
+        [SQLite.Column("latitude")]
+        public decimal Latitude { get; set; }
 
-    public decimal Longitude { get; set; }
+        [SQLite.Column("longitude")]
+        public decimal Longitude { get; set; }
 
-    public int? Radius { get; set; }
+        [SQLite.Column("radius")]
+        public int? Radius { get; set; }
 
-    public int? Priority { get; set; }
+        [SQLite.Column("priority")]
+        public int? Priority { get; set; }
 
-    public string? ImageThumbnail { get; set; }
+        [SQLite.Column("image_thumbnail")]
+        public string ImageThumbnail { get; set; }
 
-    public bool? IsActive { get; set; }
+        [SQLite.Column("is_active")]
+        public bool IsActive { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
-
-    public virtual PoiCategory? Category { get; set; }
-
-    public virtual ICollection<PoiMedium> PoiMedia { get; set; } = new List<PoiMedium>();
-
-    public virtual ICollection<PoiVisitHistory> PoiVisitHistories { get; set; } = new List<PoiVisitHistory>();
-
-    public virtual ICollection<QrCode> QrCodes { get; set; } = new List<QrCode>();
-
-    public virtual ICollection<TourPoi> TourPois { get; set; } = new List<TourPoi>();
+        [SQLite.Column("created_at")]
+        public DateTime? CreatedAt { get; set; }
+    }
 }

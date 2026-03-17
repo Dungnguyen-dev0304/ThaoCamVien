@@ -3,20 +3,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.HomePage"
              Title="HomePage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to HomePage!"
-            FontSize="Large"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <Grid>
+        <VerticalStackLayout>
+            <Label 
+        Text="Welcome to HomePage!"
+        FontSize="Large"
+        VerticalOptions="Center" 
+        HorizontalOptions="Center" />
+        </VerticalStackLayout>
 
-    <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-        <ImageButton Source="map_white.png" 
-                 WidthRequest="30" HeightRequest="30" 
-                 BackgroundColor="Transparent"
-                 Clicked="OnMapClicked" />
-        <Label Text="Sơ đồ" TextColor="White" FontSize="12" HorizontalOptions="Center"/>
-    </VerticalStackLayout>
+        <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+            <ImageButton Source="map_white.png" 
+             WidthRequest="30" HeightRequest="30" 
+             BackgroundColor="Transparent"
+             Clicked="OnMapClicked" />
+            <Label Text="Sơ đồ" TextColor="White" FontSize="12" HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </Grid>
 
 </ContentPage>

@@ -40,7 +40,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#C3E15E"/>
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#C3E15E" />
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Images\logothaocamvien.png" Color="#C3E15E" BaseSize="128,128" />
@@ -59,9 +59,11 @@
 	
 
 	<ItemGroup>
+		<PackageReference Include="Mapsui.Maui" Version="5.0.2" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="$(MauiVersion)" />
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 
 	</ItemGroup>
 

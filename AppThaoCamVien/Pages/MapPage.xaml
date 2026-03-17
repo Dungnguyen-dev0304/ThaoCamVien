@@ -1,17 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+    xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
     x:Class="AppThaoCamVien.Pages.MapPage">
 
     <Grid>
 
-        <maps:Map
-            x:Name="ZooMap"
-            MapType="Street"
-            IsShowingUser="True"/>
+        <mapsui:MapView x:Name="ZooMap" />
 
         <Button Text="Trở về"
                 Clicked="OnBackClicked"
@@ -27,28 +23,3 @@
     </Grid>
 
 </ContentPage>
-
-<!--
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
-             x:Class="AppThaoCamVien.Pages.MapPage"
-             Title="Sơ đồ Thảo Cầm Viên">
-
-    <Grid>
-
-        <Button Text="Trở về" 
-                Clicked="OnBackClicked"
-                BackgroundColor="#8E2424" 
-                TextColor="White"
-                CornerRadius="20"
-                WidthRequest="100"
-                HeightRequest="40"
-                HorizontalOptions="Start" 
-                VerticalOptions="Start" 
-                Margin="15,15,0,0" />
-    </Grid>
-
-</ContentPage>
-    -->

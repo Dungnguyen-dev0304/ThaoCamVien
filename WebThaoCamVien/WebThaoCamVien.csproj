@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Mapsui.Maui" Version="5.0.2" />
+  </ItemGroup>
+
 </Project>

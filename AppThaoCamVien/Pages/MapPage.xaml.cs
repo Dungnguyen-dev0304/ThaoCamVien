@@ -1,123 +1,125 @@
-﻿//namespace AppThaoCamVien.Pages
-//{
-//    public partial class MapPage : ContentPage
-//    {
-//        public MapPage()
-//        {
-//            InitializeComponent();
-//        }
-
-//        protected override void OnAppearing()
-//        {
-//            base.OnAppearing();
-
-//            // Khởi tạo bản đồ miễn phí ngay vị trí bạn muốn
-//            // Thêm <!DOCTYPE html> và thẻ <meta name='viewport'...> để ép WebView hiển thị full màn hình
-//            string htmlHeader = @"<!DOCTYPE html>
-//    <html><head>
-//        <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
-//        <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>
-//        <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
-//        <style>body { margin: 0; padding: 0; } #map { height: 100vh; width: 100vw; background-color: #e5e3df; }</style>
-//    </head>
-//    <body><div id='map'></div><script>";
-
-//            // Tọa độ trung tâm bản đồ
-//            string mapInit = "var map = L.map('map').setView([22.2920807, 73.222102], 14); " +
-//                             "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);";
-
-//            // Vẽ Pin (Marker) và Vòng tròn (Circle) theo đúng tọa độ của bạn
-//            string markersAndCircles = @"
-//                L.marker([22.237816, 73.217731]).addTo(map).bindPopup('Location 1');
-//                L.marker([22.2792358, 73.1894696]).addTo(map).bindPopup('Location 2');
-//                L.marker([22.2811848, 73.2004881]).addTo(map).bindPopup('Location 3');
-
-//                // Vòng tròn Geofence (Bán kính tính bằng mét)
-//                L.circle([22.2920807, 73.222102], {
-//                    color: 'white',
-//                    weight: 4,
-//                    fillColor: 'green',
-//                    fillOpacity: 0.5,
-//                    radius: 2000 
-//                }).addTo(map);
-//            ";
-
-//            string htmlFooter = "</script></body></html>";
-
-//            // Hiển thị lên màn hình
-//            var htmlSource = new HtmlWebViewSource();
-//            htmlSource.Html = htmlHeader + mapInit + markersAndCircles + htmlFooter;
-//            MapWebView.Source = htmlSource;
-//        }
-
-//        private async void OnBackClicked(object sender, EventArgs e)
-//        {
-//            try
-//            {
-//                // Kiểm tra xem có trang Modal nào đang mở không
-//                if (Navigation.ModalStack.Count > 0)
-//                {
-//                    await Navigation.PopModalAsync();
-//                }
-//                else
-//                {
-//                    await Navigation.PopAsync(); // Nếu không, dùng lệnh đóng bình thường
-//                }
-//            }
-//            catch (Exception)
-//            {
-//                // Backup an toàn nhất: Ép nó về lại trang chủ nếu Shell bị lỗi
-//                Application.Current.MainPage = new AppShell();
-//            }
-//        }
-//    }
-//}
-////using Microsoft.Maui.Controls.Maps;
-////using Microsoft.Maui.Maps;
-
-////namespace AppThaoCamVien.Pages;
-
-////public partial class MapPage : ContentPage
-////{
-////    public MapPage()
-////    {
-////        InitializeComponent();
-
-////        // Cài đặt vị trí mặc định khi mở bản đồ là Thảo Cầm Viên
-
-////    }
-
-////    //private async void OnBackClicked(object sender, EventArgs e)
-////    //{
-////    //    await Navigation.PopModalAsync(); // Đóng trang bản đồ
-////    //}
-////}
-
-using Microsoft.Maui.Controls.Maps;
-using Microsoft.Maui.Maps;
+﻿using Mapsui.Tiling;
+using Mapsui.UI.Maui;
+using AppThaoCamVien.Services;
+using SharedThaoCamVien.Models;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace AppThaoCamVien.Pages;
 
 public partial class MapPage : ContentPage
 {
-    public MapPage()
+    private readonly DatabaseService _databaseService;
+    private readonly LocationService _locationService;
+    private readonly GeofencingEngine _geofencingEngine;
+
+    private List<Poi> _allPois = new List<Poi>();
+
+    // Biến chống Spam (Debounce): Lưu lại điểm PoI người dùng đang đứng
+    // Để không bị báo "Bạn đã đến..." liên tục mỗi 2 giây
+    private Poi _currentActivePoi = null;
+
+    public MapPage(DatabaseService databaseService, LocationService locationService, GeofencingEngine geofencingEngine)
     {
         InitializeComponent();
+        _databaseService = databaseService;
+        _locationService = locationService;
+        _geofencingEngine = geofencingEngine;
 
-        var location = new Location(10.7870, 106.7055);
+        SetupMap();
+    }
 
-        var span = new MapSpan(location, 0.01, 0.01);
+    private void SetupMap()
+    {
+        ZooMap.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
+        ZooMap.Map?.Widgets.Clear(); // Tắt các dòng chữ rác thống kê FPS
 
-        ZooMap.MoveToRegion(span);
+        // Bật lớp hiển thị vị trí người dùng (Chấm xanh)
+        ZooMap.MyLocationEnabled = true;
 
-        var pin = new Pin
+        var centerLocation = new Position(10.7870, 106.7055);
+        var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(centerLocation.Longitude, centerLocation.Latitude);
+        ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 2);
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        // 1. Nạp dữ liệu PoI từ SQLite
+        await _databaseService.SeedDataAsync();
+        _allPois = await _databaseService.GetAllPoisAsync();
+
+        ZooMap.Pins.Clear();
+        foreach (var poi in _allPois)
         {
-            Label = "Thảo Cầm Viên",
-            Location = location,
-            Type = PinType.Place
-        };
+            var pin = new Pin(ZooMap)
+            {
+                Label = poi.Name,
+                Position = new Position((double)poi.Latitude, (double)poi.Longitude),
+                Type = PinType.Pin,
+                Color = Colors.Red
+            };
+            ZooMap.Pins.Add(pin);
+        }
 
-        ZooMap.Pins.Add(pin);
+        // 2. Xin quyền và bật GPS
+        bool hasPermission = await _locationService.CheckAndRequestLocationPermission();
+        if (hasPermission)
+        {
+            // Lắng nghe sự kiện khi tọa độ thay đổi
+            _locationService.LocationUpdated += OnLocationUpdated;
+            _locationService.StartTracking();
+        }
+        else
+        {
+            await DisplayAlert("Quyền truy cập", "Ứng dụng cần GPS để hướng dẫn bạn tham quan.", "OK");
+        }
+    }
+
+    // Khi thoát trang bản đồ thì tắt GPS để đỡ hao pin
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _locationService.LocationUpdated -= OnLocationUpdated;
+        _locationService.StopTracking();
+    }
+
+    // Hàm này tự động chạy mỗi 2 giây khi có tọa độ mới từ GPS
+    private void OnLocationUpdated(object sender, Location userLocation)
+    {
+        // UI phải được cập nhật trên luồng chính (MainThread)
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            // 1. Cập nhật vị trí "Chấm xanh" trên bản đồ
+            ZooMap.MyLocationLayer.UpdateMyLocation(new Position(userLocation.Latitude, userLocation.Longitude));
+
+            // 2. Quét xem có đang đứng gần thú không (Geofencing)
+            bool isNearAnyPoi = false;
+
+            foreach (var poi in _allPois)
+            {
+                if (_geofencingEngine.IsWithinRadius(userLocation, poi))
+                {
+                    isNearAnyPoi = true;
+
+                    // Nếu đây là điểm mới (khác với điểm đang đứng lúc nãy) -> Phát thông báo
+                    if (_currentActivePoi?.PoiId != poi.PoiId)
+                    {
+                        _currentActivePoi = poi;
+
+                        // Ở giai đoạn 3, ta sẽ gọi hàm phát Audio tại đây. Tạm thời dùng Alert.
+                        DisplayAlert("Phát hiện", $"Bạn đã bước vào khu vực: {poi.Name}!\nChuẩn bị phát thuyết minh...", "Nghe");
+                    }
+                    break; // Ưu tiên điểm quét trúng đầu tiên
+                }
+            }
+
+            // Nếu đi ra khỏi vùng phủ sóng của tất cả các điểm, reset biến lưu trữ
+            if (!isNearAnyPoi)
+            {
+                _currentActivePoi = null;
+            }
+        });
     }
 
     private async void OnBackClicked(object sender, EventArgs e)
