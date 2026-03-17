@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Mapsui.Maui" Version="5.0.2" />
+    <Folder Include="wwwroot\admin\" />
   </ItemGroup>
 
 </Project>

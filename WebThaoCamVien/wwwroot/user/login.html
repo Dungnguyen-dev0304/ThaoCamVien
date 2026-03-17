@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thành viên Thảo Cầm Viên</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #27ae60;
+            --dark-green: #219150;
+            --error-red: #e74c3c;
+            --bg-color: #f4fbf7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-color);
+            background-image: linear-gradient(120deg, #e8f5e9 0%, #ffffff 100%);
+        }
+
+        .auth-card {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        /* Tab chuyển đổi */
+        .tab-group {
+            display: flex;
+            background: #f0f2f1;
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #7f8c8d;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+            .tab.active {
+                background: white;
+                color: var(--primary-green);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            }
+
+        /* Hiệu ứng Form */
+        .auth-form {
+            display: none;
+        }
+
+            .auth-form.active {
+                display: block;
+                animation: fadeIn 0.5s ease;
+            }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+            input:focus {
+                border-color: var(--primary-green);
+            }
+
+            input.invalid {
+                border-color: var(--error-red);
+                background: #fffcfc;
+            }
+
+        .error-text {
+            color: var(--error-red);
+            font-size: 0.75rem;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: 0.3s;
+        }
+
+            .btn-submit:hover {
+                background: var(--dark-green);
+                transform: translateY(-2px);
+            }
+
+        .footer-info {
+            margin-top: 2rem;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div class="tab-group">
+            <button class="tab active" id="tab-login">Đăng nhập</button>
+            <button class="tab" id="tab-register">Đăng ký</button>
+        </div>
+
+        <form id="login-form" class="auth-form active">
+            <h2>Chào mừng trở lại!</h2>
+            <div class="input-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="login-user" placeholder="Nhập tài khoản..." required>
+            </div>
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="login-pass" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-submit">Đăng nhập</button>
+        </form>
+
+        <form id="register-form" class="auth-form">
+            <h2>Tạo tài khoản mới</h2>
+            <div class="input-group">
+                <label>Họ và tên</label>
+                <input type="text" id="reg-name" placeholder="Nguyễn Văn A" required>
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" placeholder="vi-du@gmail.com" required>
+                <span class="error-text" id="email-error">Email không đúng định dạng (ví dụ: name@abc.com)</span>
+            </div>
+            <div class="input-group">
+                <label>Mật khẩu mới</label>
+                <input type="password" id="reg-pass" placeholder="Tối thiểu 8 ký tự" required>
+                <span class="error-text" id="pass-error">Mật khẩu phải từ 8 ký tự trở lên</span>
+            </div>
+            <button type="submit" class="btn-submit">Hoàn tất đăng ký</button>
+        </form>
+
+        <a href="index.html" style="text-decoration: none; color: #999; font-size: 0.8rem; display: block; margin-bottom: 1rem;">
+            ← Quay lại trang chủ
+        </a>
+
+        <div class="footer-info">
+            © 2026 Thảo Cầm Viên Smart Map
+        </div>
+    </div>
+
+
+
+    <script src="js/login.js"></script>
+</body>
+</html>
