@@ -14,15 +14,17 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
-app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-// 3. Thiết lập trang mặc định
+app.MapGet("/", context => {
+    context.Response.Redirect("/admin/index");
+    return System.Threading.Tasks.Task.CompletedTask;
+});
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=admin}/{action=index}/{id?}");
 
 app.Run();

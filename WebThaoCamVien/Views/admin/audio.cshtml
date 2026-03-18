@@ -1,0 +1,81 @@
+﻿@{
+    Layout = "_adminlayout";
+    ViewData["Title"] = "audio & bản dịch";
+    ViewData["Active"] = "audio";
+    ViewData["PageHeader"] = "quản lý âm thanh thuyết minh";
+}
+
+<div class="card p-4">
+    <div class="row g-4">
+        <div class="col-md-5 border-end">
+            <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-file-audio me-2"></i>Tải lên dữ liệu</h6>
+            
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Chọn địa điểm (poi)</label>
+                <select class="form-select border-success-subtle">
+                    <option>chuồng hổ đông dương</option>
+                    <option>chuồng voi châu á</option>
+                    <option>khu vườn lan</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">ngôn ngữ thuyết minh</label>
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="lang" id="lang_vi" checked>
+                    <label class="btn btn-outline-success" for="lang_vi">tiếng việt</label>
+                    <input type="radio" class="btn-check" name="lang" id="lang_en">
+                    <label class="btn btn-outline-success" for="lang_en">tiếng anh</label>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-muted">tệp âm thanh (.mp3)</label>
+                <input type="file" class="form-control" accept=".mp3">
+                <div class="form-text mt-1 text-danger small">Lưu ý: Chỉ chấp nhận file định dạng MP3.</div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-language me-2"></i>nội dung bản dịch (text)</h6>
+            <div class="mb-3">
+                <textarea class="form-control" rows="9" placeholder="Nhập nội dung thuyết minh chi tiết để hiển thị trên app khi khách tham quan quét mã qr hoặc nhấn vào địa điểm..."></textarea>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <span class="text-muted small italic">Đảm bảo nội dung dịch thuật chính xác trước khi lưu.</span>
+                <button class="btn-green shadow-sm">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>lưu cập nhật
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4 p-4">
+    <h6 class="fw-bold text-success mb-3">Danh sách audio hiện có</h6>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Địa điểm</th>
+                    <th>Ngôn ngữ</th>
+                    <th>Tên file</th>
+                    <th>Nghe thử</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>chuồng hổ</td>
+                    <td><span class="badge bg-success">vi</span></td>
+                    <td class="small">ho_dong_duong_vi.mp3</td>
+                    <td><i class="fa-solid fa-circle-play text-success fs-5 cursor-pointer"></i></td>
+                    <td>
+                        <button class="btn btn-sm btn-link text-danger p-0"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
