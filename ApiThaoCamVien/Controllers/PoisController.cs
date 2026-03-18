@@ -9,7 +9,7 @@ namespace ApiThaoCamVien.Controllers
     [ApiController]
     public class PoisController : ControllerBase
     {
-        // Đã đổi từ ApplicationDbContext thành WebContext
+        // Sử dụng WebContext đã cấu hình lại để khớp với Database SQL Server
         private readonly WebContext _context;
 
         public PoisController(WebContext context)
@@ -20,15 +20,28 @@ namespace ApiThaoCamVien.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPois()
         {
-            // Kiểm tra tên bảng: EF Core thường tự thêm "s" hoặc giữ nguyên. 
-            // Nếu lỗi ở ".Pois", bạn thử đổi thành ".Pois" (viết hoa) hoặc ".pois" (viết thường)
+            // Lấy danh sách địa điểm trong Thảo Cầm Viên
+            // Đã lược bỏ .Include vì Model Poi.cs hiện tại là bản phẳng (SQLite)
             var data = await _context.Pois
-                .Include(p => p.PoiMedia)
                 .Where(p => p.IsActive == true)
                 .OrderByDescending(p => p.Priority)
                 .ToListAsync();
 
             return Ok(data);
+        }
+
+        // Thêm hàm lấy chi tiết 1 địa điểm để App Android hiển thị thông tin khi nhấn vào Marker
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPoi(int id)
+        {
+            var poi = await _context.Pois.FindAsync(id);
+
+            if (poi == null)
+            {
+                return NotFound(new { message = "Không tìm thấy địa điểm này trong Thảo Cầm Viên." });
+            }
+
+            return Ok(poi);
         }
     }
 }
