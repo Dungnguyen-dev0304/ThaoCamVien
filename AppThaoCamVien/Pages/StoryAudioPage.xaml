@@ -2,11 +2,72 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.StoryAudioPage"
-             Title="StoryAudioPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to StoryAudioPage"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="Nghe thuyết minh"
+             BackgroundColor="#F4F7F4"
+             Shell.NavBarIsVisible="False">
+
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout Padding="20,40,20,30" Spacing="20">
+
+            <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Start">
+                <ImageButton Grid.Column="0" Source="icon_back_dark.png" WidthRequest="40" HeightRequest="40" BackgroundColor="Transparent" />
+                <Label Grid.Column="1" Text="ĐANG PHÁT" HorizontalOptions="Center" VerticalOptions="Center" FontSize="12" FontAttributes="Bold" TextColor="#757575" CharacterSpacing="2"/>
+                <ImageButton Grid.Column="2" Source="icon_menu_dots.png" WidthRequest="40" HeightRequest="40" BackgroundColor="Transparent" />
+            </Grid>
+
+            <Border HeightRequest="340" BackgroundColor="Transparent" Padding="0" Margin="10,10" Stroke="Transparent">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="30" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,15" Radius="25" Opacity="0.15"/>
+                </Border.Shadow>
+                <Image Source="tiger_artwork.jpg" Aspect="AspectFill" />
+            </Border>
+
+            <VerticalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0,10,0,0">
+                <Label Text="Hổ Đông Dương" FontSize="26" FontAttributes="Bold" TextColor="#1C1C1E" HorizontalOptions="Center" />
+                <Label Text="Khu vực thú dữ  •  Thời lượng: 03:45" FontSize="14" TextColor="#2E7D32" HorizontalOptions="Center" FontAttributes="Bold"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="5" Margin="10,15,10,5">
+                <Slider Minimum="0" Maximum="100" Value="35" MinimumTrackColor="#2E7D32" MaximumTrackColor="#D7CCC8" ThumbColor="#4CAF50" />
+                <Grid ColumnDefinitions="*, *">
+                    <Label Grid.Column="0" Text="01:15" FontSize="13" TextColor="#757575" HorizontalOptions="Start" />
+                    <Label Grid.Column="1" Text="03:45" FontSize="13" TextColor="#757575" HorizontalOptions="End" />
+                </Grid>
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="*, Auto, *" HorizontalOptions="Fill" VerticalOptions="Center">
+                <ImageButton Grid.Column="0" Source="icon_rewind.png" WidthRequest="45" HeightRequest="45" BackgroundColor="Transparent" HorizontalOptions="End" Margin="0,0,25,0"/>
+
+                <Border Grid.Column="1" HeightRequest="86" WidthRequest="86" BackgroundColor="#4CAF50" Stroke="Transparent" Padding="0" HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="43" />
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="#2E7D32" Offset="0,8" Radius="15" Opacity="0.4"/>
+                    </Border.Shadow>
+                    <Image Source="icon_pause_white.png" Aspect="AspectFit" Margin="25"/>
+                </Border>
+
+                <ImageButton Grid.Column="2" Source="icon_forward.png" WidthRequest="45" HeightRequest="45" BackgroundColor="Transparent" HorizontalOptions="Start" Margin="25,0,0,0"/>
+            </Grid>
+
+            <Border BackgroundColor="White" Padding="25" Margin="0,25,0,0" Stroke="Transparent">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="24" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.05"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Về Hổ Đông Dương" FontSize="18" FontAttributes="Bold" TextColor="#1C1C1E" />
+                    <Label Text="Hổ Đông Dương (Panthera tigris corbetti) là một phân loài hổ phân bố chủ yếu ở khu vực Đông Nam Á. Chúng có kích thước nhỏ hơn hổ Bengal và bộ lông màu sẫm hơn với các sọc vằn hẹp..." FontSize="15" TextColor="#424242" LineHeight="1.5" />
+                    <Label Text="Đọc thêm..." FontSize="14" TextColor="#4CAF50" FontAttributes="Bold" TextDecorations="Underline" />
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

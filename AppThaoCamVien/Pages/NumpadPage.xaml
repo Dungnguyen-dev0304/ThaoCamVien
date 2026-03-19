@@ -2,11 +2,38 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.NumpadPage"
-             Title="NumpadPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to NumpadPage"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             BackgroundColor="White"
+             Title="Nhập mã âm thanh">
+
+    <Grid RowDefinitions="Auto, *" Padding="20,40,20,20">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="10" HorizontalOptions="Center" Margin="0,0,0,40">
+            <Label Text="Nhập mã trên biển báo" FontSize="16" TextColor="#757575" HorizontalOptions="Center" />
+            <Label Text="---" FontSize="48" FontAttributes="Bold" TextColor="#2E7D32" HorizontalOptions="Center" CharacterSpacing="5"/>
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" RowDefinitions="*,*,*,*" ColumnSpacing="20" RowSpacing="20" HorizontalOptions="Center" VerticalOptions="End">
+
+            <Button Grid.Row="0" Grid.Column="0" Text="1" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="0" Grid.Column="1" Text="2" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="0" Grid.Column="2" Text="3" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+
+            <Button Grid.Row="1" Grid.Column="0" Text="4" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="1" Grid.Column="1" Text="5" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="1" Grid.Column="2" Text="6" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+
+            <Button Grid.Row="2" Grid.Column="0" Text="7" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="2" Grid.Column="1" Text="8" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="2" Grid.Column="2" Text="9" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+
+            <ImageButton Grid.Row="3" Grid.Column="0" Source="icon_backspace.png" BackgroundColor="Transparent" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="3" Grid.Column="1" Text="0" FontSize="28" BackgroundColor="#F5F5F5" TextColor="#1C1C1E" CornerRadius="40" HeightRequest="80" WidthRequest="80" />
+            <Button Grid.Row="3" Grid.Column="2" Text="OK" FontSize="22" FontAttributes="Bold" BackgroundColor="#4CAF50" TextColor="White" CornerRadius="40" HeightRequest="80" WidthRequest="80">
+                <Button.Shadow>
+                    <Shadow Brush="#2E7D32" Offset="0,4" Radius="5" Opacity="0.3"/>
+                </Button.Shadow>
+            </Button>
+
+        </Grid>
+    </Grid>
 </ContentPage>

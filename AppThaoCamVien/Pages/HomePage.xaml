@@ -2,23 +2,77 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.HomePage"
-             Title="HomePage">
-    <Grid>
-        <VerticalStackLayout>
-            <Label 
-        Text="Welcome to HomePage!"
-        FontSize="Large"
-        VerticalOptions="Center" 
-        HorizontalOptions="Center" />
-        </VerticalStackLayout>
+             Title="Trang Chủ"
+             BackgroundColor="#F4F7F4"
+             Shell.NavBarIsVisible="False">
 
-        <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-            <ImageButton Source="map_white.png" 
-             WidthRequest="30" HeightRequest="30" 
-             BackgroundColor="Transparent"
-             Clicked="OnMapClicked" />
-            <Label Text="Sơ đồ" TextColor="White" FontSize="12" HorizontalOptions="Center"/>
-        </VerticalStackLayout>
-    </Grid>
+    <ScrollView>
+        <Grid RowDefinitions="Auto, *">
 
+            <Grid Grid.Row="0" HeightRequest="220">
+                <Grid.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#4CAF50" Offset="0.0" />
+                        <GradientStop Color="#2E7D32" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Grid.Background>
+
+                <VerticalStackLayout Padding="20,50,20,0" Spacing="8">
+                    <Label Text="Xin chào," TextColor="#E8F5E9" FontSize="18" />
+                    <Label Text="Khám phá Thảo Cầm Viên" TextColor="White" FontSize="26" FontAttributes="Bold" />
+                    <Label Text="Hành trình âm thanh thông minh của bạn" TextColor="#C8E6C9" FontSize="14" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="20,-40,20,20" RowDefinitions="Auto, Auto" RowSpacing="20">
+
+                <Frame Grid.Row="0" CornerRadius="20" Padding="0" HasShadow="True" BorderColor="Transparent" BackgroundColor="White">
+                    <Frame.Shadow>
+                        <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.1" />
+                    </Frame.Shadow>
+                    <Grid ColumnDefinitions="*, Auto" Padding="20" BackgroundColor="Transparent">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnOpenMapClicked"/>
+                        </Grid.GestureRecognizers>
+
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="5">
+                            <Label Text="Sơ đồ sở thú" FontSize="20" FontAttributes="Bold" TextColor="#1C1C1E" />
+                            <Label Text="Tìm kiếm động vật &amp; định vị GPS" FontSize="13" TextColor="#757575" />
+                        </VerticalStackLayout>
+
+                        <Frame Grid.Column="1" HeightRequest="60" WidthRequest="60" CornerRadius="30" BackgroundColor="#E8F5E9" Padding="15" BorderColor="Transparent" HasShadow="False">
+                            <Image Source="map_white.png" Aspect="AspectFit" />
+                        </Frame>
+                    </Grid>
+                </Frame>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="15">
+
+                    <Frame Grid.Column="0" CornerRadius="20" Padding="20" HasShadow="True" BorderColor="Transparent" BackgroundColor="White">
+                        <Frame.Shadow>
+                            <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.08" />
+                        </Frame.Shadow>
+                        <VerticalStackLayout HorizontalOptions="Center" Spacing="10">
+                            <Frame HeightRequest="50" WidthRequest="50" CornerRadius="25" BackgroundColor="#FFF3E0" Padding="12" BorderColor="Transparent">
+                                <Image Source="qr_white.png" Aspect="AspectFit"/>
+                            </Frame>
+                            <Label Text="Quét QR" FontSize="15" FontAttributes="Bold" TextColor="#1C1C1E" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="1" CornerRadius="20" Padding="20" HasShadow="True" BorderColor="Transparent" BackgroundColor="White">
+                        <Frame.Shadow>
+                            <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.08" />
+                        </Frame.Shadow>
+                        <VerticalStackLayout HorizontalOptions="Center" Spacing="10">
+                            <Frame HeightRequest="50" WidthRequest="50" CornerRadius="25" BackgroundColor="#E3F2FD" Padding="12" BorderColor="Transparent">
+                                <Image Source="numpad_white.png" Aspect="AspectFit"/>
+                            </Frame>
+                            <Label Text="Nhập Mã" FontSize="15" FontAttributes="Bold" TextColor="#1C1C1E" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+            </Grid>
+        </Grid>
+    </ScrollView>
 </ContentPage>
