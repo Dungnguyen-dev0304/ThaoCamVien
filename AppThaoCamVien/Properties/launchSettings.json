@@ -4,11 +4,6 @@
       "commandName": "Project",
       "nativeDebugging": false,
       "remoteDebugEnabled": false
-    },
-    "Profile 1": {
-      "commandName": "Project",
-      "nativeDebugging": false,
-      "remoteDebugEnabled": false
     }
   }
 }

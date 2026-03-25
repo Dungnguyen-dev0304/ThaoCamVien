@@ -1,10 +1,20 @@
-﻿namespace AppThaoCamVien
+﻿namespace AppThaoCamVien;
+
+public partial class AppShell : Shell
 {
-    public partial class AppShell : Shell
+    public AppShell()
     {
-        public AppShell()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+
+        // Đăng ký routes để navigate bằng Shell.GoToAsync()
+        // Các page này được lấy từ DI thông qua ServiceProvider
+        Routing.RegisterRoute(nameof(Pages.MapPage),
+            typeof(Pages.MapPage));
+        Routing.RegisterRoute(nameof(Pages.QrPage),
+            typeof(Pages.QrPage));
+        Routing.RegisterRoute(nameof(Pages.NumpadPage),
+            typeof(Pages.NumpadPage));
+        Routing.RegisterRoute(nameof(Pages.StoryAudioPage),
+            typeof(Pages.StoryAudioPage));
     }
 }

@@ -1,6 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using AppThaoCamVien.Services;
+using AppThaoCamVien.Pages;
+using ZXing.Net.Maui.Controls;
+using CommunityToolkit.Maui;
+using Plugin.Maui.Audio;
 
 namespace AppThaoCamVien
 {
@@ -13,19 +17,30 @@ namespace AppThaoCamVien
                 .UseMauiApp<App>()
                 .UseMauiMaps()
                 .UseSkiaSharp()
+                .UseBarcodeReader()           // ZXing QR scanner
+                .UseMauiCommunityToolkit()    // CommunityToolkit helpers
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
-            builder.Services.AddSingleton<DatabaseService>();
 
-            // Đăng ký MapPage để nó có thể nhận DatabaseService
-            builder.Services.AddTransient<Pages.MapPage>();
-            // ĐĂNG KÝ SERVICES (Giữ nguyên cái cũ, thêm 2 cái mới)
+            // === Plugin Audio ===
+            builder.Services.AddSingleton(AudioManager.Current);
+
+            // === SERVICES ===
             builder.Services.AddSingleton<DatabaseService>();
-            builder.Services.AddSingleton<LocationService>();   // <-- THÊM MỚI
-            builder.Services.AddSingleton<GeofencingEngine>();  // <-- THÊM MỚI
+            builder.Services.AddSingleton<LocationService>();
+            builder.Services.AddSingleton<GeofencingEngine>();
+            builder.Services.AddSingleton<AudioService>();
+
+            // === PAGES (Transient = tạo mới mỗi lần navigate) ===
+            builder.Services.AddTransient<HomePage>();
+            builder.Services.AddTransient<MapPage>();
+            builder.Services.AddTransient<QrPage>();
+            builder.Services.AddTransient<NumpadPage>();
+            builder.Services.AddTransient<StoryAudioPage>();
+            builder.Services.AddTransient<AboutPage>();
 
 #if DEBUG
             builder.Logging.AddDebug();

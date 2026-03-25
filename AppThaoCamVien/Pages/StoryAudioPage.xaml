@@ -2,69 +2,145 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.StoryAudioPage"
-             Title="Nghe thuyết minh"
              BackgroundColor="#F4F7F4"
-             Shell.NavBarIsVisible="False">
+             Title="Thuyết minh">
 
     <ScrollView VerticalScrollBarVisibility="Never">
-        <VerticalStackLayout Padding="20,40,20,30" Spacing="20">
+        <VerticalStackLayout Padding="20,50,20,30" Spacing="20">
 
-            <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Start">
-                <ImageButton Grid.Column="0" Source="icon_back_dark.png" WidthRequest="40" HeightRequest="40" BackgroundColor="Transparent" />
-                <Label Grid.Column="1" Text="ĐANG PHÁT" HorizontalOptions="Center" VerticalOptions="Center" FontSize="12" FontAttributes="Bold" TextColor="#757575" CharacterSpacing="2"/>
-                <ImageButton Grid.Column="2" Source="icon_menu_dots.png" WidthRequest="40" HeightRequest="40" BackgroundColor="Transparent" />
+            <!-- Header -->
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <ImageButton Grid.Column="0"
+                             Source="icon_back_dark.png"
+                             WidthRequest="40" HeightRequest="40"
+                             BackgroundColor="Transparent"
+                             Clicked="OnBackClicked"/>
+                <Label Grid.Column="1"
+                       Text="ĐANG PHÁT"
+                       HorizontalOptions="Center" VerticalOptions="Center"
+                       FontSize="12" FontAttributes="Bold"
+                       TextColor="#757575" CharacterSpacing="2"/>
+                <ImageButton Grid.Column="2"
+                             Source="icon_menu_dots.png"
+                             WidthRequest="40" HeightRequest="40"
+                             BackgroundColor="Transparent"/>
             </Grid>
 
-            <Border HeightRequest="340" BackgroundColor="Transparent" Padding="0" Margin="10,10" Stroke="Transparent">
+            <!-- Ảnh thumbnail POI -->
+            <Border HeightRequest="300"
+                    BackgroundColor="#E0E0E0"
+                    Padding="0" Margin="10,10"
+                    Stroke="Transparent">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="30" />
+                    <RoundRectangle CornerRadius="28"/>
                 </Border.StrokeShape>
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,15" Radius="25" Opacity="0.15"/>
                 </Border.Shadow>
-                <Image Source="tiger_artwork.jpg" Aspect="AspectFill" />
+                <Image x:Name="PoiImage"
+                       Source="placeholder_animal.png"
+                       Aspect="AspectFill"/>
             </Border>
 
-            <VerticalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0,10,0,0">
-                <Label Text="Hổ Đông Dương" FontSize="26" FontAttributes="Bold" TextColor="#1C1C1E" HorizontalOptions="Center" />
-                <Label Text="Khu vực thú dữ  •  Thời lượng: 03:45" FontSize="14" TextColor="#2E7D32" HorizontalOptions="Center" FontAttributes="Bold"/>
+            <!-- Tên và thông tin POI -->
+            <VerticalStackLayout Spacing="6" HorizontalOptions="Center" Margin="0,5,0,0">
+                <Label x:Name="PoiNameLabel"
+                       Text="Đang tải..."
+                       FontSize="26" FontAttributes="Bold"
+                       TextColor="#1C1C1E"
+                       HorizontalOptions="Center"/>
+                <Label x:Name="PoiSubtitleLabel"
+                       Text="Thảo Cầm Viên Sài Gòn"
+                       FontSize="14" TextColor="#2E7D32"
+                       HorizontalOptions="Center" FontAttributes="Bold"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Spacing="5" Margin="10,15,10,5">
-                <Slider Minimum="0" Maximum="100" Value="35" MinimumTrackColor="#2E7D32" MaximumTrackColor="#D7CCC8" ThumbColor="#4CAF50" />
+            <!-- Loading indicator khi stream audio -->
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               IsRunning="False"
+                               IsVisible="False"
+                               Color="#4CAF50"
+                               HorizontalOptions="Center"/>
+
+            <!-- Thanh tiến trình audio -->
+            <VerticalStackLayout Spacing="4" Margin="5,10,5,0">
+                <Slider x:Name="ProgressSlider"
+                        Minimum="0" Maximum="100" Value="0"
+                        MinimumTrackColor="#2E7D32"
+                        MaximumTrackColor="#D7CCC8"
+                        ThumbColor="#4CAF50"
+                        DragCompleted="OnSliderDragCompleted"/>
                 <Grid ColumnDefinitions="*, *">
-                    <Label Grid.Column="0" Text="01:15" FontSize="13" TextColor="#757575" HorizontalOptions="Start" />
-                    <Label Grid.Column="1" Text="03:45" FontSize="13" TextColor="#757575" HorizontalOptions="End" />
+                    <Label x:Name="CurrentTimeLabel"
+                           Grid.Column="0" Text="00:00"
+                           FontSize="13" TextColor="#757575"
+                           HorizontalOptions="Start"/>
+                    <Label x:Name="TotalTimeLabel"
+                           Grid.Column="1" Text="00:00"
+                           FontSize="13" TextColor="#757575"
+                           HorizontalOptions="End"/>
                 </Grid>
             </VerticalStackLayout>
 
-            <Grid ColumnDefinitions="*, Auto, *" HorizontalOptions="Fill" VerticalOptions="Center">
-                <ImageButton Grid.Column="0" Source="icon_rewind.png" WidthRequest="45" HeightRequest="45" BackgroundColor="Transparent" HorizontalOptions="End" Margin="0,0,25,0"/>
+            <!-- Nút điều khiển: Rewind | Play/Pause | Forward -->
+            <Grid ColumnDefinitions="*, Auto, *"
+                  HorizontalOptions="Fill" VerticalOptions="Center" Margin="0,10">
 
-                <Border Grid.Column="1" HeightRequest="86" WidthRequest="86" BackgroundColor="#4CAF50" Stroke="Transparent" Padding="0" HorizontalOptions="Center">
+                <!-- Rewind 10s -->
+                <ImageButton Grid.Column="0"
+                             Source="icon_rewind.png"
+                             WidthRequest="48" HeightRequest="48"
+                             BackgroundColor="Transparent"
+                             HorizontalOptions="End" Margin="0,0,20,0"
+                             Clicked="OnRewindClicked"/>
+
+                <!-- Play / Pause button -->
+                <Border Grid.Column="1"
+                        HeightRequest="86" WidthRequest="86"
+                        BackgroundColor="#4CAF50"
+                        Stroke="Transparent" Padding="0"
+                        HorizontalOptions="Center">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="43" />
+                        <RoundRectangle CornerRadius="43"/>
                     </Border.StrokeShape>
                     <Border.Shadow>
                         <Shadow Brush="#2E7D32" Offset="0,8" Radius="15" Opacity="0.4"/>
                     </Border.Shadow>
-                    <Image Source="icon_pause_white.png" Aspect="AspectFit" Margin="25"/>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPlayPauseClicked"/>
+                    </Border.GestureRecognizers>
+                    <Image x:Name="PlayPauseIcon"
+                           Source="icon_play_white.png"
+                           Aspect="AspectFit" Margin="22"/>
                 </Border>
 
-                <ImageButton Grid.Column="2" Source="icon_forward.png" WidthRequest="45" HeightRequest="45" BackgroundColor="Transparent" HorizontalOptions="Start" Margin="25,0,0,0"/>
+                <!-- Forward 10s -->
+                <ImageButton Grid.Column="2"
+                             Source="icon_forward.png"
+                             WidthRequest="48" HeightRequest="48"
+                             BackgroundColor="Transparent"
+                             HorizontalOptions="Start" Margin="20,0,0,0"
+                             Clicked="OnForwardClicked"/>
             </Grid>
 
-            <Border BackgroundColor="White" Padding="25" Margin="0,25,0,0" Stroke="Transparent">
+            <!-- Mô tả POI -->
+            <Border BackgroundColor="White" Padding="22"
+                    Margin="0,15,0,0" Stroke="Transparent">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="24" />
+                    <RoundRectangle CornerRadius="22"/>
                 </Border.StrokeShape>
                 <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.05"/>
+                    <Shadow Brush="Black" Offset="0,5" Radius="12" Opacity="0.06"/>
                 </Border.Shadow>
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Về Hổ Đông Dương" FontSize="18" FontAttributes="Bold" TextColor="#1C1C1E" />
-                    <Label Text="Hổ Đông Dương (Panthera tigris corbetti) là một phân loài hổ phân bố chủ yếu ở khu vực Đông Nam Á. Chúng có kích thước nhỏ hơn hổ Bengal và bộ lông màu sẫm hơn với các sọc vằn hẹp..." FontSize="15" TextColor="#424242" LineHeight="1.5" />
-                    <Label Text="Đọc thêm..." FontSize="14" TextColor="#4CAF50" FontAttributes="Bold" TextDecorations="Underline" />
+                    <Label x:Name="PoiDescTitleLabel"
+                           Text="Giới thiệu"
+                           FontSize="18" FontAttributes="Bold"
+                           TextColor="#1C1C1E"/>
+                    <Label x:Name="PoiDescLabel"
+                           Text="Đang tải thông tin..."
+                           FontSize="15" TextColor="#424242"
+                           LineHeight="1.5"/>
                 </VerticalStackLayout>
             </Border>
 

@@ -1,14 +1,76 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="AppThaoCamVien.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:AppThaoCamVien"
-    Title="AppThaoCamVien">
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    ⚠️ QUAN TRỌNG:
+    Shell dùng DataTemplate sẽ KHÔNG inject được DI constructor.
+    Giải pháp: Dùng ShellContent với x:TypeArguments hoặc dùng
+    ServiceProvider factory trong code-behind.
+    
+    Cách đơn giản nhất: Các page có DI (MapPage) → navigate thủ công từ code.
+    Các page đơn giản (QrPage, NumpadPage, StoryAudioPage) → dùng Shell route.
+-->
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:AppThaoCamVien.Pages"
+       xmlns:views="clr-namespace:AppThaoCamVien.Views"
+       x:Class="AppThaoCamVien.AppShell"
+       FlyoutBehavior="Flyout"
+       FlyoutHeaderBehavior="Fixed">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Shell.FlyoutBackground>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#89d957" Offset="0.1"/>
+            <GradientStop Color="#c9e265" Offset="1.0"/>
+        </LinearGradientBrush>
+    </Shell.FlyoutBackground>
+
+    <Shell.FlyoutHeader>
+        <views:FlyoutHeaderView/>
+    </Shell.FlyoutHeader>
+
+    <Shell.FlyoutFooter>
+        <views:FlyoutFooterView/>
+    </Shell.FlyoutFooter>
+
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid ColumnDefinitions="0.25*,0.75*" Padding="0,10">
+                <Image Source="{Binding FlyoutIcon}"
+                       HeightRequest="40" HorizontalOptions="Center"/>
+                <Label Grid.Column="1"
+                       TextColor="White"
+                       Text="{Binding Title}"
+                       FontSize="Small" FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
+    <!-- Trang chủ: HomePage (dùng factory trong AppShell.xaml.cs) -->
+    <FlyoutItem Title="Trang chủ" Icon="menu_white.png" Route="home">
+        <ShellContent x:Name="HomeShellContent"
+                      Title="Trang chủ"
+                      ContentTemplate="{DataTemplate pages:HomePage}"/>
+    </FlyoutItem>
+
+    <!-- Sơ đồ: MapPage được navigate thủ công từ HomePage vì cần DI -->
+    <!-- QR và Numpad được register route bên dưới -->
+
+    <FlyoutItem Title="Giới thiệu" Icon="about_white.png">
+        <Shell.ItemTemplate>
+            <DataTemplate>
+                <Grid ColumnDefinitions="0.25*,0.75*" Padding="20,20">
+                    <Image Source="{Binding FlyoutIcon}"
+                           HeightRequest="50" HorizontalOptions="Center"/>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{Binding Title}"
+                               TextColor="White" FontSize="Medium" FontAttributes="Bold"/>
+                        <Label Text="Thông tin ứng dụng"
+                               TextColor="White" FontSize="Small"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </DataTemplate>
+        </Shell.ItemTemplate>
+        <ShellContent ContentTemplate="{DataTemplate pages:AboutPage}"/>
+    </FlyoutItem>
 
 </Shell>

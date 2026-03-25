@@ -11,19 +11,22 @@ public partial class MapPage : ContentPage
     private readonly DatabaseService _databaseService;
     private readonly LocationService _locationService;
     private readonly GeofencingEngine _geofencingEngine;
+    private readonly AudioService _audioService;
 
-    private List<Poi> _allPois = new List<Poi>();
+    private List<Poi> _allPois = new();
+    private Poi? _currentActivePoi = null;
 
-    // Biến chống Spam (Debounce): Lưu lại điểm PoI người dùng đang đứng
-    // Để không bị báo "Bạn đã đến..." liên tục mỗi 2 giây
-    private Poi _currentActivePoi = null;
-
-    public MapPage(DatabaseService databaseService, LocationService locationService, GeofencingEngine geofencingEngine)
+    public MapPage(
+        DatabaseService databaseService,
+        LocationService locationService,
+        GeofencingEngine geofencingEngine,
+        AudioService audioService)
     {
         InitializeComponent();
         _databaseService = databaseService;
         _locationService = locationService;
         _geofencingEngine = geofencingEngine;
+        _audioService = audioService;
 
         SetupMap();
     }
@@ -31,99 +34,122 @@ public partial class MapPage : ContentPage
     private void SetupMap()
     {
         ZooMap.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
-        ZooMap.Map?.Widgets.Clear(); // Tắt các dòng chữ rác thống kê FPS
-
-        // Bật lớp hiển thị vị trí người dùng (Chấm xanh)
+        ZooMap.Map?.Widgets.Clear();
         ZooMap.MyLocationEnabled = true;
 
-        var centerLocation = new Position(10.7870, 106.7055);
-        var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(centerLocation.Longitude, centerLocation.Latitude);
+        var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(106.7055, 10.7870);
         ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 2);
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        try
+        {
+            await LoadPoisAsync();
+            await StartGpsAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Lỗi", $"Không thể tải dữ liệu: {ex.Message}", "OK");
+        }
+    }
 
-        // 1. Nạp dữ liệu PoI từ SQLite
+    private async Task LoadPoisAsync()
+    {
         await _databaseService.SeedDataAsync();
+        // Chỉ lấy POI đang active (IsActive = true)
         _allPois = await _databaseService.GetAllPoisAsync();
 
         ZooMap.Pins.Clear();
         foreach (var poi in _allPois)
         {
-            var pin = new Pin(ZooMap)
+            ZooMap.Pins.Add(new Pin(ZooMap)
             {
                 Label = poi.Name,
                 Position = new Position((double)poi.Latitude, (double)poi.Longitude),
                 Type = PinType.Pin,
                 Color = Colors.Red
-            };
-            ZooMap.Pins.Add(pin);
+            });
         }
+    }
 
-        // 2. Xin quyền và bật GPS
+    private async Task StartGpsAsync()
+    {
         bool hasPermission = await _locationService.CheckAndRequestLocationPermission();
         if (hasPermission)
         {
-            // Lắng nghe sự kiện khi tọa độ thay đổi
             _locationService.LocationUpdated += OnLocationUpdated;
             _locationService.StartTracking();
         }
         else
         {
-            await DisplayAlert("Quyền truy cập", "Ứng dụng cần GPS để hướng dẫn bạn tham quan.", "OK");
+            await DisplayAlert("Quyền truy cập",
+                "Ứng dụng cần GPS để hướng dẫn bạn tham quan.", "OK");
         }
     }
 
-    // Khi thoát trang bản đồ thì tắt GPS để đỡ hao pin
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         _locationService.LocationUpdated -= OnLocationUpdated;
         _locationService.StopTracking();
+        _ = _audioService.StopAsync();
     }
 
-    // Hàm này tự động chạy mỗi 2 giây khi có tọa độ mới từ GPS
-    private void OnLocationUpdated(object sender, Location userLocation)
+    private void OnLocationUpdated(object? sender, Location userLocation)
     {
-        // UI phải được cập nhật trên luồng chính (MainThread)
-        MainThread.BeginInvokeOnMainThread(() =>
+        MainThread.BeginInvokeOnMainThread(async () =>
         {
-            // 1. Cập nhật vị trí "Chấm xanh" trên bản đồ
-            ZooMap.MyLocationLayer.UpdateMyLocation(new Position(userLocation.Latitude, userLocation.Longitude));
-
-            // 2. Quét xem có đang đứng gần thú không (Geofencing)
-            bool isNearAnyPoi = false;
-
-            foreach (var poi in _allPois)
+            try
             {
-                if (_geofencingEngine.IsWithinRadius(userLocation, poi))
+                ZooMap.MyLocationLayer.UpdateMyLocation(
+                    new Position(userLocation.Latitude, userLocation.Longitude));
+
+                bool isNearAnyPoi = false;
+                foreach (var poi in _allPois)
                 {
-                    isNearAnyPoi = true;
-
-                    // Nếu đây là điểm mới (khác với điểm đang đứng lúc nãy) -> Phát thông báo
-                    if (_currentActivePoi?.PoiId != poi.PoiId)
+                    // Dùng poi.Radius (nullable int) — GeofencingEngine tự xử lý null
+                    if (_geofencingEngine.IsWithinRadius(userLocation, poi))
                     {
-                        _currentActivePoi = poi;
-
-                        // Ở giai đoạn 3, ta sẽ gọi hàm phát Audio tại đây. Tạm thời dùng Alert.
-                        DisplayAlert("Phát hiện", $"Bạn đã bước vào khu vực: {poi.Name}!\nChuẩn bị phát thuyết minh...", "Nghe");
+                        isNearAnyPoi = true;
+                        if (_currentActivePoi?.PoiId != poi.PoiId)
+                        {
+                            _currentActivePoi = poi;
+                            await OnEnterPoiZoneAsync(poi);
+                        }
+                        break;
                     }
-                    break; // Ưu tiên điểm quét trúng đầu tiên
                 }
-            }
 
-            // Nếu đi ra khỏi vùng phủ sóng của tất cả các điểm, reset biến lưu trữ
-            if (!isNearAnyPoi)
+                if (!isNearAnyPoi)
+                    _currentActivePoi = null;
+            }
+            catch (Exception ex)
             {
-                _currentActivePoi = null;
+                System.Diagnostics.Debug.WriteLine($"[MapPage] Location error: {ex.Message}");
             }
         });
     }
 
-    private async void OnBackClicked(object sender, EventArgs e)
+    private async Task OnEnterPoiZoneAsync(Poi poi)
     {
-        await Navigation.PopAsync();
+        bool wantToListen = await DisplayAlert(
+            "🦁 Phát hiện khu vực!",
+            $"Bạn đã đến: {poi.Name}\nMuốn nghe thuyết minh không?",
+            "Nghe ngay", "Bỏ qua");
+
+        if (wantToListen)
+        {
+            var audioPage = IPlatformApplication.Current.Services.GetService<StoryAudioPage>();
+            if (audioPage != null)
+            {
+                audioPage.LoadPoi(poi);
+                await Navigation.PushAsync(audioPage);
+            }
+        }
     }
+
+    private async void OnBackClicked(object sender, EventArgs e)
+        => await Navigation.PopAsync();
 }

@@ -20,7 +20,7 @@
             <Shell.FlyoutBackground>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                     <GradientStop Color="#89d957" Offset="0.1"/>
-                    <GradientStop Color="#c9e265" Offset="1.0"/>
+                    <GradientStop Color="#c9e265" Offset="1.0"/>    
                 </LinearGradientBrush>
             </Shell.FlyoutBackground>
 

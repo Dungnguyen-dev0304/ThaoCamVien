@@ -5,23 +5,41 @@ namespace AppThaoCamVien.Services
 {
     public class GeofencingEngine
     {
-        // Hàm kiểm tra xem user có đang đứng trong bán kính của PoI không
+        private const int DEFAULT_RADIUS_METERS = 30;
+
+        /// <summary>
+        /// Kiểm tra người dùng có đang đứng trong vùng bán kính của POI không.
+        /// Dùng công thức Haversine để tính khoảng cách chính xác.
+        /// </summary>
         public bool IsWithinRadius(Location userLocation, Poi poi)
         {
-            // Ép kiểu từ decimal (database) sang double (GPS)
-            Location poiLocation = new Location((double)poi.Latitude, (double)poi.Longitude);
+            var radiusMeters = poi.Radius ?? DEFAULT_RADIUS_METERS;
+            var distance = CalculateDistance(
+                (double)poi.Latitude, (double)poi.Longitude,
+                userLocation.Latitude, userLocation.Longitude);
 
-            // Tính khoảng cách (kết quả trả về là Kilomet)
-            double distanceInKm = Location.CalculateDistance(userLocation, poiLocation, DistanceUnits.Kilometers);
-
-            // Đổi ra Mét
-            double distanceInMeters = distanceInKm * 1000;
-
-            // Bán kính kích hoạt (Mặc định 15m nếu database chưa có)
-            double radius = poi.Radius ?? 15.0;
-
-            // Trả về true nếu khoảng cách <= bán kính
-            return distanceInMeters <= radius;
+            return distance <= radiusMeters;
         }
+
+        /// <summary>
+        /// Tính khoảng cách (mét) giữa 2 tọa độ theo công thức Haversine.
+        /// </summary>
+        public double CalculateDistance(
+            double lat1, double lon1,
+            double lat2, double lon2)
+        {
+            const double R = 6371000; // Bán kính Trái Đất (mét)
+            var dLat = ToRad(lat2 - lat1);
+            var dLon = ToRad(lon2 - lon1);
+
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+                  + Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2))
+                  * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
+        }
+
+        private static double ToRad(double deg) => deg * Math.PI / 180;
     }
 }
