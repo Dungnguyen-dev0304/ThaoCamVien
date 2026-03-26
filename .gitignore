@@ -1,28 +1,38 @@
-﻿# =======================================================
-# .gitignore CHUẨN CHO DỰ ÁN .NET MAUI & ASP.NET WEB
-# =======================================================
-
-# 1. Thư mục rác của Visual Studio & Hệ thống
+# ========================
+# VISUAL STUDIO / SYSTEM
+# ========================
 .vs/
 *.user
 *.userosscache
 *.sln.docstates
 .DS_Store
 Thumbs.db
+.idea/
 
-# 2. Thư mục Build & Chạy code (TUYỆT ĐỐI KHÔNG ĐẨY LÊN GIT)
-# (Đây chính là những thư mục chứa cache màu tím cứng đầu lúc nãy)
+# ========================
+# BUILD FILES (QUAN TRỌNG)
+# ========================
 [Bb]in/
 [Oo]bj/
 out/
 TestResults/
 
-# 3. Thư viện tải về của WebThaoCamVien
-# (Chỉ bỏ qua nếu bạn dùng LibMan, NPM hoặc NuGet để tự động tải lại)
-WebThaoCamVien/wwwroot/lib/
-node_modules/
+# ========================
+# MAUI / ANDROID BUILD
+# ========================
+platforms/android/.gradle/
+platforms/android/app/build/
+platforms/android/build/
 
-# 4. Các file đóng gói App (Chỉ lưu ở máy cá nhân, tải lên Git rất nặng)
+# ========================
+# PACKAGE / LIB
+# ========================
+node_modules/
+WebThaoCamVien/wwwroot/lib/
+
+# ========================
+# APP PACKAGING
+# ========================
 *.apk
 *.aab
 *.ipa
@@ -31,5 +41,24 @@ node_modules/
 *.pfx
 *.publishsettings
 
-# 5. Các file log lỗi (Không cần thiết)
+# ========================
+# LOG FILES
+# ========================
 *.log
+
+# ========================
+# ENV / CONFIG (TEAM)
+# ========================
+.env
+.env.*
+appsettings.Development.json
+appsettings.*.json
+
+# ========================
+# MAUI / XAMARIN CACHE
+# ========================
+*.ap_
+*.aot
+*.dex
+*.class
+*.so
