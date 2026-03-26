@@ -2,138 +2,383 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.HomePage"
-             BackgroundColor="#F4F7F4"
+             BackgroundColor="#F5F5F5"
              NavigationPage.HasNavigationBar="False">
 
-    <ScrollView>
-        <Grid RowDefinitions="220, *">
+    <Grid RowDefinitions="*, Auto">
 
-            <!-- Hero gradient header -->
-            <Grid Grid.Row="0">
-                <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#4CAF50" Offset="0.0"/>
-                        <GradientStop Color="#2E7D32" Offset="1.0"/>
-                    </LinearGradientBrush>
-                </Grid.Background>
-                <VerticalStackLayout Padding="24,55,24,0" Spacing="6">
-                    <Label Text="Xin chào 👋"
-                           TextColor="#E8F5E9" FontSize="17"/>
-                    <Label Text="Khám phá Thảo Cầm Viên"
-                           TextColor="White" FontSize="26" FontAttributes="Bold"/>
-                    <Label Text="Hành trình âm thanh thông minh"
-                           TextColor="#C8E6C9" FontSize="14"/>
-                </VerticalStackLayout>
-            </Grid>
+        <!-- Main Scrollable Content -->
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="0">
 
-            <!-- Cards -->
-            <Grid Grid.Row="1" Margin="20,-45,20,20"
-                  RowDefinitions="Auto, Auto" RowSpacing="16">
+                <!-- Hero Image Section -->
+                <Grid HeightRequest="260">
+                    <!-- Background Image -->
+                    <Image Source="zoo_hero.jpg"
+                           Aspect="AspectFill"
+                           HeightRequest="260"/>
 
-                <!-- Card Bản đồ (lớn) -->
-                <Border Grid.Row="0" BackgroundColor="White"
-                        Stroke="Transparent" Padding="0">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="20"/>
-                    </Border.StrokeShape>
-                    <Border.Shadow>
-                        <Shadow Brush="Black" Offset="0,6" Radius="16" Opacity="0.1"/>
-                    </Border.Shadow>
-                    <Grid ColumnDefinitions="*, Auto" Padding="22,18">
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnOpenMapClicked"/>
-                        </Grid.GestureRecognizers>
-                        <VerticalStackLayout Grid.Column="0"
-                                             VerticalOptions="Center" Spacing="4">
-                            <Label Text="🗺 Sơ đồ sở thú"
-                                   FontSize="20" FontAttributes="Bold"
-                                   TextColor="#1C1C1E"/>
-                            <Label Text="Định vị GPS · Thuyết minh tự động"
-                                   FontSize="13" TextColor="#757575"/>
-                        </VerticalStackLayout>
-                        <Border Grid.Column="1"
-                                HeightRequest="58" WidthRequest="58"
-                                BackgroundColor="#E8F5E9"
-                                Stroke="Transparent" Padding="14">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="29"/>
-                            </Border.StrokeShape>
-                            <Image Source="map_white.png" Aspect="AspectFit"/>
-                        </Border>
-                    </Grid>
-                </Border>
+                    <!-- Dark Overlay Gradient -->
+                    <BoxView Color="#000000"
+                             Opacity="0.35"
+                             HeightRequest="260"/>
 
-                <!-- 2 card nhỏ: QR và Numpad -->
-                <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="14">
-
-                    <!-- QR Card -->
-                    <Border Grid.Column="0" BackgroundColor="White"
-                            Stroke="Transparent" Padding="0">
+                    <!-- Vietnam Flag Badge -->
+                    <Border BackgroundColor="#DA251D"
+                            HeightRequest="36"
+                            WidthRequest="36"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Margin="0,16,16,0"
+                            StrokeThickness="0">
                         <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="20"/>
+                            <RoundRectangle CornerRadius="18"/>
                         </Border.StrokeShape>
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.08"/>
-                        </Border.Shadow>
-                        <VerticalStackLayout Padding="20,22"
-                                             HorizontalOptions="Center" Spacing="12">
-                            <VerticalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenQrClicked"/>
-                            </VerticalStackLayout.GestureRecognizers>
-                            <Border HeightRequest="52" WidthRequest="52"
-                                    BackgroundColor="#FFF3E0"
-                                    Stroke="Transparent" Padding="12">
+                        <Label Text="🇻🇳"
+                               FontSize="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+                    </Border>
+
+                    <!-- Bottom Text + Button -->
+                    <VerticalStackLayout VerticalOptions="End"
+                                         Padding="16,0,16,16"
+                                         Spacing="10">
+
+                        <!-- Title -->
+                        <Label Text="Thảo Cầm Viên"
+                               TextColor="White"
+                               FontSize="26"
+                               FontAttributes="Bold"/>
+
+                        <!-- Address -->
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="📍"
+                                   FontSize="13"
+                                   TextColor="#CCFFFFFF"/>
+                            <Label Text="2 Nguyễn Bỉnh Khiêm, Bến Nghé, Quận 1"
+                                   TextColor="#CCFFFFFF"
+                                   FontSize="13"
+                                   LineBreakMode="TailTruncation"/>
+                        </HorizontalStackLayout>
+
+                        <!-- Start Tour Button -->
+                        <Border BackgroundColor="#4CAF50"
+                                HeightRequest="44"
+                                StrokeThickness="0"
+                                Margin="0,4,0,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="22"/>
+                            </Border.StrokeShape>
+                            <HorizontalStackLayout HorizontalOptions="Center"
+                                                   VerticalOptions="Center"
+                                                   Spacing="8">
+                                <Label Text="🗺️"
+                                       FontSize="17"
+                                       VerticalOptions="Center"/>
+                                <Label Text="Bắt đầu tham quan"
+                                       TextColor="White"
+                                       FontSize="15"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                                <Label Text="→"
+                                       TextColor="White"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
+
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Info Cards Row -->
+                <Grid ColumnDefinitions="*, *"
+                      Margin="16,16,16,0"
+                      ColumnSpacing="12">
+
+                    <!-- Hours Card -->
+                    <Border Grid.Column="0"
+                            BackgroundColor="White"
+                            Padding="14,12"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="14"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="8">
+                            <Border BackgroundColor="#E8F5E9"
+                                    HeightRequest="36"
+                                    WidthRequest="36"
+                                    StrokeThickness="0">
                                 <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="26"/>
+                                    <RoundRectangle CornerRadius="10"/>
                                 </Border.StrokeShape>
-                                <Image Source="qr_white.png" Aspect="AspectFit"/>
+                                <Label Text="🕐"
+                                       FontSize="18"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
                             </Border>
-                            <Label Text="Quét QR"
-                                   FontSize="15" FontAttributes="Bold"
-                                   TextColor="#1C1C1E"
-                                   HorizontalOptions="Center"/>
-                            <Label Text="Hướng camera vào biển báo"
-                                   FontSize="11" TextColor="#9E9E9E"
-                                   HorizontalOptions="Center"
-                                   HorizontalTextAlignment="Center"/>
+                            <Label Text="Giờ mở cửa: 7:00&#10;- 18:30"
+                                   FontSize="13"
+                                   TextColor="#333333"
+                                   LineBreakMode="WordWrap"/>
                         </VerticalStackLayout>
                     </Border>
 
-                    <!-- Numpad Card -->
-                    <Border Grid.Column="1" BackgroundColor="White"
-                            Stroke="Transparent" Padding="0">
+                    <!-- Ticket Price Card -->
+                    <Border Grid.Column="1"
+                            BackgroundColor="White"
+                            Padding="14,12"
+                            StrokeThickness="0">
                         <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="20"/>
+                            <RoundRectangle CornerRadius="14"/>
                         </Border.StrokeShape>
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.08"/>
-                        </Border.Shadow>
-                        <VerticalStackLayout Padding="20,22"
-                                             HorizontalOptions="Center" Spacing="12">
-                            <VerticalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenNumpadClicked"/>
-                            </VerticalStackLayout.GestureRecognizers>
-                            <Border HeightRequest="52" WidthRequest="52"
-                                    BackgroundColor="#E3F2FD"
-                                    Stroke="Transparent" Padding="12">
+                        <VerticalStackLayout Spacing="8">
+                            <Border BackgroundColor="#FFF3E0"
+                                    HeightRequest="36"
+                                    WidthRequest="36"
+                                    StrokeThickness="0">
                                 <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="26"/>
+                                    <RoundRectangle CornerRadius="10"/>
                                 </Border.StrokeShape>
-                                <Image Source="numpad_white.png" Aspect="AspectFit"/>
+                                <Label Text="🎟️"
+                                       FontSize="18"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
                             </Border>
-                            <Label Text="Nhập Mã"
-                                   FontSize="15" FontAttributes="Bold"
-                                   TextColor="#1C1C1E"
-                                   HorizontalOptions="Center"/>
-                            <Label Text="Nhập số trên biển báo"
-                                   FontSize="11" TextColor="#9E9E9E"
-                                   HorizontalOptions="Center"
-                                   HorizontalTextAlignment="Center"/>
+                            <Label FontSize="12"
+                                   TextColor="#333333"
+                                   LineBreakMode="WordWrap">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Dưới 1m: " TextColor="#555555" FontSize="12"/>
+                                        <Span Text="Miễn phí" TextColor="#4CAF50" FontSize="12" FontAttributes="Bold"/>
+                                        <Span Text="&#10;1m-1m3: " TextColor="#555555" FontSize="12"/>
+                                        <Span Text="40.000đ" TextColor="#333333" FontSize="12"/>
+                                        <Span Text="&#10;Trên 1m4: " TextColor="#555555" FontSize="12"/>
+                                        <Span Text="60.000đ" TextColor="#333333" FontSize="12"/>
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
                         </VerticalStackLayout>
                     </Border>
 
                 </Grid>
+
+                <!-- Highlights Section -->
+                <VerticalStackLayout Margin="16,20,16,0" Spacing="14">
+
+                    <!-- Section Header -->
+                    <Grid ColumnDefinitions="*, Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="🐾"
+                                   FontSize="17"
+                                   VerticalOptions="Center"/>
+                            <Label Text="Nổi bật"
+                                   FontSize="17"
+                                   FontAttributes="Bold"
+                                   TextColor="#222222"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <Label Grid.Column="1"
+                               Text="Khám phá muông thú"
+                               FontSize="13"
+                               TextColor="#4CAF50"
+                               VerticalOptions="Center"/>
+                    </Grid>
+
+                    <!-- Animal Cards Row -->
+                    <ScrollView Orientation="Horizontal"
+                                HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout Spacing="14">
+
+                            <!-- Card 1: Voi Châu Á -->
+                            <Border BackgroundColor="White"
+                                    WidthRequest="160"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="16"/>
+                                </Border.StrokeShape>
+                                <Grid RowDefinitions="140, Auto">
+                                    <!-- Animal Image -->
+                                    <Grid Grid.Row="0">
+                                        <Image Source="elephant.jpg"
+                                               Aspect="AspectFill"
+                                               HeightRequest="140"/>
+                                        <!-- Badge -->
+                                        <Border BackgroundColor="#4CAF50"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Start"
+                                                Margin="0,8,8,0"
+                                                Padding="8,4"
+                                                StrokeThickness="0">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="10"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="Thú"
+                                                   TextColor="White"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+                                    <!-- Animal Name -->
+                                    <VerticalStackLayout Grid.Row="1" Padding="10,10,10,12" Spacing="2">
+                                        <Label Text="Voi Châu Á"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               TextColor="#222222"/>
+                                        <Label Text="Elephas maximus"
+                                               FontSize="11"
+                                               TextColor="#888888"
+                                               FontAttributes="Italic"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 2: Hổ Đông Dương -->
+                            <Border BackgroundColor="White"
+                                    WidthRequest="160"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="16"/>
+                                </Border.StrokeShape>
+                                <Grid RowDefinitions="140, Auto">
+                                    <Grid Grid.Row="0">
+                                        <Image Source="tiger.jpg"
+                                               Aspect="AspectFill"
+                                               HeightRequest="140"/>
+                                        <Border BackgroundColor="#4CAF50"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Start"
+                                                Margin="0,8,8,0"
+                                                Padding="8,4"
+                                                StrokeThickness="0">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="10"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="Thú"
+                                                   TextColor="White"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+                                    <VerticalStackLayout Grid.Row="1" Padding="10,10,10,12" Spacing="2">
+                                        <Label Text="Hổ Đông Dương"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               TextColor="#222222"/>
+                                        <Label Text="Panthera tigris corbetti"
+                                               FontSize="11"
+                                               TextColor="#888888"
+                                               FontAttributes="Italic"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 3: Placeholder thêm -->
+                            <Border BackgroundColor="White"
+                                    WidthRequest="160"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="16"/>
+                                </Border.StrokeShape>
+                                <Grid RowDefinitions="140, Auto">
+                                    <Grid Grid.Row="0">
+                                        <Image Source="giraffe.jpg"
+                                               Aspect="AspectFill"
+                                               HeightRequest="140"/>
+                                        <Border BackgroundColor="#4CAF50"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Start"
+                                                Margin="0,8,8,0"
+                                                Padding="8,4"
+                                                StrokeThickness="0">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="10"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="Thú"
+                                                   TextColor="White"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+                                    <VerticalStackLayout Grid.Row="1" Padding="10,10,10,12" Spacing="2">
+                                        <Label Text="Hươu Cao Cổ"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               TextColor="#222222"/>
+                                        <Label Text="Giraffa camelopardalis"
+                                               FontSize="11"
+                                               TextColor="#888888"
+                                               FontAttributes="Italic"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+
+                        </HorizontalStackLayout>
+                    </ScrollView>
+
+                </VerticalStackLayout>
+
+                <!-- Bottom padding -->
+                <BoxView HeightRequest="20" Color="Transparent"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Navigation Bar -->
+        <Border Grid.Row="1"
+                BackgroundColor="White"
+                StrokeThickness="0"
+                Padding="0,10,0,20">
+            <Border.Shadow>
+                <Shadow Brush="#20000000" Offset="0,-4" Radius="12" Opacity="0.12"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*, *, *">
+
+                <!-- Trang chủ (active) -->
+                <VerticalStackLayout Grid.Column="0"
+                                     HorizontalOptions="Center"
+                                     Spacing="4">
+                    <Label Text="📅"
+                           FontSize="22"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Trang chủ"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           TextColor="#4CAF50"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Bản đồ -->
+                <VerticalStackLayout Grid.Column="1"
+                                     HorizontalOptions="Center"
+                                     Spacing="4">
+                    <Label Text="🗺️"
+                           FontSize="22"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Bản đồ"
+                           FontSize="11"
+                           TextColor="#999999"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Quét mã -->
+                <VerticalStackLayout Grid.Column="2"
+                                     HorizontalOptions="Center"
+                                     Spacing="4">
+                    <Label Text="⊞"
+                           FontSize="22"
+                           HorizontalOptions="Center"
+                           TextColor="#999999"/>
+                    <Label Text="Quét mã"
+                           FontSize="11"
+                           TextColor="#999999"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
             </Grid>
-        </Grid>
-    </ScrollView>
+        </Border>
+
+    </Grid>
 </ContentPage>
