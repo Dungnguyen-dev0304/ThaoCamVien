@@ -3,11 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AppThaoCamVien.Pages.HomePage"
              BackgroundColor="#F5F5F5"
-<<<<<<< HEAD
-             Shell.NavBarIsVisible="False">
-=======
+
              NavigationPage.HasNavigationBar="False">
->>>>>>> b647d25168529a3a14550faf9bd0e2641cadc376
 
     <Grid RowDefinitions="*, Auto">
 
