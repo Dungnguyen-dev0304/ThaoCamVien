@@ -1,26 +1,51 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ApiThaoCamVien.Models;
+using SharedThaoCamVien.Models;
+using System.Threading.Tasks;
 
 namespace WebThaoCamVien.Controllers
 {
-    [Route("admin")] // Khi gõ localhost/admin sẽ vào đây
-    public class adminController : Controller
+    public class AdminController : Controller
     {
-        [Route("index")] // URL: localhost/admin/index
-        public IActionResult index() => View();
+        private readonly WebContext _context;
 
-        [Route("poi")] // URL: localhost/admin/poi
-        public IActionResult poi() => View();
+        // 3. Tiêm WebContext vào Controller để sử dụng
+        public AdminController(WebContext context)
+        {
+            _context = context;
+        }
 
-        [Route("audio")] // URL: localhost/admin/audio
-        public IActionResult audio() => View();
+        // GET: /admin/index
+        public IActionResult Index()
+        {
+            return View();
+        }
 
-        [Route("tour")] // URL: localhost/admin/tour
-        public IActionResult tour() => View();
+        // GET: /admin/AddPOI (Hiển thị trang thêm mới)
+        public IActionResult AddPOI()
+        {
+            return View();
+        }
 
-        [Route("history")] // URL: localhost/admin/history
-        public IActionResult history() => View();
+        // 4. POST: /admin/AddPOI (Hàm này sẽ chạy khi bạn nhấn nút "Lưu")
+        [HttpPost]
+        public async Task<IActionResult> AddPOI(Poi model)
+        {
+            // Kiểm tra nếu dữ liệu hợp lệ (không trống tên, đúng định dạng...)
+            if (ModelState.IsValid)
+            {
+                model.CreatedAt = System.DateTime.Now; // Gán ngày tạo tự động
+                model.IsActive = true; // Mặc định cho hiển thị
 
-        [Route("login")] // URL: localhost/admin/login
-        public IActionResult login() => View();
+                _context.Pois.Add(model); // Thêm vào bộ nhớ tạm
+                await _context.SaveChangesAsync(); // Lưu thực sự xuống SQLite
+
+                // Sau khi lưu xong, chuyển hướng về trang Index
+                return RedirectToAction("Index");
+            }
+
+            // Nếu có lỗi, trả lại View kèm dữ liệu đã nhập để người dùng sửa
+            return View(model);
+        }
     }
 }

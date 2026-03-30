@@ -8,6 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Mapsui.Maui" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ApiThaoCamVien\ApiThaoCamVien.csproj" />
+    <ProjectReference Include="..\SharedThaoCamVien\SharedThaoCamVien.csproj" />
   </ItemGroup>
 
 </Project>
