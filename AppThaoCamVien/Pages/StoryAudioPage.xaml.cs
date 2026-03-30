@@ -17,9 +17,6 @@ public partial class StoryAudioPage : ContentPage
         _audioService.ProgressChanged += OnProgressChanged;
     }
 
-    /// <summary>
-    /// Gọi từ MapPage / QrPage / NumpadPage trước khi navigate
-    /// </summary>
     public void LoadPoi(Poi poi)
     {
         _currentPoi = poi;
@@ -44,9 +41,10 @@ public partial class StoryAudioPage : ContentPage
     private void UpdateUiWithPoi(Poi poi)
     {
         PoiNameLabel.Text = poi.Name;
-        PoiDescTitleLabel.Text = $"Về {poi.Name}";
-        PoiDescLabel.Text = poi.Description ?? "Đang tải thông tin...";
-        PoiSubtitleLabel.Text = $"Thảo Cầm Viên Sài Gòn  •  Mã: {poi.PoiId:D3}";
+        // Nếu database của bạn có trường Tên khoa học, có thể gán thay vì text cứng
+        PoiSubtitleLabel.Text = $"Thảo Cầm Viên Sài Gòn • Mã: {poi.PoiId:D3}";
+        PoiDescTitleLabel.Text = $"Câu chuyện {poi.Name}";
+        PoiDescLabel.Text = poi.Description ?? "Chưa có thông tin chi tiết.";
 
         // Ảnh thumbnail (local hoặc URL)
         if (!string.IsNullOrEmpty(poi.ImageThumbnail))
@@ -55,6 +53,10 @@ public partial class StoryAudioPage : ContentPage
                 ? ImageSource.FromUri(new Uri(poi.ImageThumbnail))
                 : ImageSource.FromFile(poi.ImageThumbnail);
         }
+
+        // Ghi chú: Các thông số trong 4 ô vuông (Số lượng, Tuổi thọ...) hiện đang được hardcode trong XAML. 
+        // Nếu trong Model 'Poi' của bạn có các thuộc tính này, bạn có thể gán giá trị tại đây.
+        // Ví dụ: lblWeight.Text = poi.Weight;
     }
 
     private async Task StartAudioAsync()
@@ -64,13 +66,11 @@ public partial class StoryAudioPage : ContentPage
             LoadingIndicator.IsVisible = true;
             LoadingIndicator.IsRunning = true;
 
-            // AudioService tự lấy URL từ PoiMedium qua DatabaseService
             await _audioService.PlayPoiAudioAsync(_currentPoi!.PoiId);
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Không có audio",
-                $"Chưa có file thuyết minh cho khu vực này.\n({ex.Message})", "OK");
+            await DisplayAlert("Không có audio", $"Chưa có file thuyết minh cho khu vực này.\n({ex.Message})", "OK");
         }
         finally
         {
@@ -91,6 +91,8 @@ public partial class StoryAudioPage : ContentPage
             _audioService.Resume();
     }
 
+    // Các nút Tua đi / Tua lại (Tôi đã ẩn icon đi trong UI để giao diện gọn giống ảnh mẫu, 
+    // nhưng bạn có thể thêm lại ImageButton gọi hàm này nếu muốn)
     private void OnRewindClicked(object sender, EventArgs e)
         => _audioService.SeekTo(Math.Max(0, _audioService.CurrentPosition - 10));
 
@@ -103,8 +105,6 @@ public partial class StoryAudioPage : ContentPage
         var seekTo = (ProgressSlider.Value / 100.0) * _audioService.Duration;
         _audioService.SeekTo(seekTo);
     }
-
-    // === Callbacks từ AudioService ===
 
     private void OnPlaybackStateChanged(object? sender, bool isPlaying)
         => MainThread.BeginInvokeOnMainThread(() => UpdatePlayPauseButton(isPlaying));
@@ -124,7 +124,9 @@ public partial class StoryAudioPage : ContentPage
     }
 
     private void UpdatePlayPauseButton(bool isPlaying)
-        => PlayPauseIcon.Source = isPlaying ? "icon_pause_white.png" : "icon_play_white.png";
+    {
+        PlayPauseIcon.Source = isPlaying ? "icon_pause_dark.png" : "icon_play_dark.png";
+    }
 
     private static string FormatTime(double seconds)
     {

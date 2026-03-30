@@ -16,5 +16,8 @@ public partial class AppShell : Shell
             typeof(Pages.NumpadPage));
         Routing.RegisterRoute(nameof(Pages.StoryAudioPage),
             typeof(Pages.StoryAudioPage));
+        Routing.RegisterRoute(nameof(Pages.AnimalListPage),
+           typeof(Pages.AnimalListPage));
+
     }
 }

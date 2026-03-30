@@ -12,15 +12,25 @@ public partial class HomePage : ContentPage
     {
         try
         {
-            var mapPage = IPlatformApplication.Current.Services.GetService<AppThaoCamVien.Pages.MapPage>();
-
-            if (mapPage == null)
+            // Hiệu ứng UX khi nhấn
+            if (sender is View view)
             {
-                await DisplayAlert("Lỗi", "Không thể mở bản đồ. Vui lòng thử lại.", "OK");
-                return;
+                await view.FadeTo(0.5, 100);
+                await view.FadeTo(1, 100);
             }
 
-            await Navigation.PushAsync(mapPage);
+            // Cách chuẩn trong MAUI để lấy Page đã được đăng ký cùng với các Services của nó
+            var mapPage = Handler?.MauiContext?.Services.GetService<AppThaoCamVien.Pages.MapPage>();
+
+            if (mapPage != null)
+            {
+                await Navigation.PushAsync(mapPage);
+            }
+            else
+            {
+                // Nếu null, tức là bạn chưa đăng ký MapPage trong file MauiProgram.cs
+                await DisplayAlert("Lỗi", "Không thể tải Bản đồ. Hãy đảm bảo MapPage đã được đăng ký trong MauiProgram.cs (builder.Services.AddTransient<MapPage>();)", "OK");
+            }
         }
         catch (Exception ex)
         {
