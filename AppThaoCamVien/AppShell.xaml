@@ -12,24 +12,24 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:AppThaoCamVien.Pages"
        xmlns:views="clr-namespace:AppThaoCamVien.Views"
-       x:Class="AppThaoCamVien.AppShell"
-       FlyoutBehavior="Flyout"
-       FlyoutHeaderBehavior="Fixed">
-
+       x:Class="AppThaoCamVien.AppShell">
+    
+<!--  Đây là phần 3 chấm ngang cũ
     <Shell.FlyoutBackground>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
             <GradientStop Color="#89d957" Offset="0.1"/>
             <GradientStop Color="#c9e265" Offset="1.0"/>
         </LinearGradientBrush>
-    </Shell.FlyoutBackground>
+    </Shell.FlyoutBackground> 
 
+    
     <Shell.FlyoutHeader>
         <views:FlyoutHeaderView/>
     </Shell.FlyoutHeader>
 
     <Shell.FlyoutFooter>
         <views:FlyoutFooterView/>
-    </Shell.FlyoutFooter>
+    </Shell.FlyoutFooter> 
 
     <Shell.ItemTemplate>
         <DataTemplate>
@@ -43,7 +43,7 @@
                        VerticalOptions="Center"/>
             </Grid>
         </DataTemplate>
-    </Shell.ItemTemplate>
+    </Shell.ItemTemplate> -->
 
     <!-- Trang chủ: HomePage (dùng factory trong AppShell.xaml.cs) -->
     <FlyoutItem Title="Trang chủ" Icon="menu_white.png" Route="home">

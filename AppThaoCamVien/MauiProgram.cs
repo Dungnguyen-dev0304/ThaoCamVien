@@ -41,6 +41,7 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<NumpadPage>();
             builder.Services.AddTransient<StoryAudioPage>();
             builder.Services.AddTransient<AboutPage>();
+            builder.Services.AddTransient<AnimalListPage>();
 
 #if DEBUG
             builder.Logging.AddDebug();

@@ -15,22 +15,23 @@
     </Application.Resources>
 
     <Application.MainPage>
-        <Shell FlyoutBehavior="Flyout" FlyoutHeaderBehavior="Fixed" FlyoutVerticalScrollMode="Auto">
+        <Shell >
 
             <Shell.FlyoutBackground>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                     <GradientStop Color="#89d957" Offset="0.1"/>
-                    <GradientStop Color="#c9e265" Offset="1.0"/>    
+                    <GradientStop Color="#c9e265" Offset="1.0"/>
                 </LinearGradientBrush>
             </Shell.FlyoutBackground>
-
+            
+            <!--
             <Shell.FlyoutHeader>
                 <views:FlyoutHeaderView></views:FlyoutHeaderView>
             </Shell.FlyoutHeader>
 
             <Shell.FlyoutFooter>
                 <views:FlyoutFooterView></views:FlyoutFooterView>
-            </Shell.FlyoutFooter>
+            </Shell.FlyoutFooter> -->
 
             <Shell.ItemTemplate>
                 <DataTemplate>
@@ -48,7 +49,10 @@
                 </DataTemplate>
             </Shell.ItemTemplate>
 
-            <FlyoutItem Title="Trang chủ" Icon="menu_white.png">
+            <TabBar x:Name="Main">
+                <Tab Title="Trang chủ" Icon="menu_white.png" >
+                    <ShellContent ContentTemplate="{DataTemplate local:HomePage}"/>
+                </Tab>
                 <Tab Title="QR" Icon="qr_white.png">
                     <ShellContent ContentTemplate="{DataTemplate local:QrPage}" />
                 </Tab>
@@ -56,62 +60,12 @@
                     <ShellContent ContentTemplate="{DataTemplate local:NumpadPage}" />
                 </Tab>
                 <Tab Title="Câu chuyện" Icon="story_white.png">
-                    <ShellContent ContentTemplate="{DataTemplate local:StoryAudioPage}" />
+                    <ShellContent ContentTemplate="{DataTemplate local:AnimalListPage}" />
                 </Tab>
                 <Tab Title="Sơ đồ" Icon="map_white.png">
                     <ShellContent ContentTemplate="{DataTemplate local:MapPage}" />
                 </Tab>
-            </FlyoutItem>
-
-            <FlyoutItem Title="Introduction">
-                <Shell.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="0.25*,0.75*" Padding="20,25">
-                            <Image Source="{Binding FlyoutIcon}"
-                                   HeightRequest="60" HorizontalOptions="Center"/>
-
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{Binding Title}"
-                                       TextColor="White"
-                                       FontSize="Medium"
-                                       FontAttributes="Bold"/>
-
-                                <Label Text="Giới thiệu chung về khu du lịch"
-                                       TextColor="White"
-                                       FontSize="Small" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </DataTemplate>
-                </Shell.ItemTemplate>
-
-                <ShellContent ContentTemplate="{DataTemplate local:MapPage}" />
-            </FlyoutItem>
-
-            <FlyoutItem Title="Language" >
-                <Shell.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="0.25*,0.75*" Padding="20,25">
-                            <Image Source="{Binding FlyoutIcon}"
-                                   HeightRequest="60" 
-                                   HorizontalOptions="Center"/>
-
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{Binding Title}"
-                                       TextColor="White"
-                                       FontSize="Medium"
-                                       FontAttributes="Bold"/>
-
-                                <Label Text="Cài đặt về ngôn ngữ sử dụng"
-                                       TextColor="White"
-                                       FontSize="Small" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </DataTemplate>
-                </Shell.ItemTemplate>
-
-                <ShellContent ContentTemplate="{DataTemplate local:HomePage}" />
-            </FlyoutItem>
-
+            </TabBar>
         </Shell>
     </Application.MainPage>
 </Application>
