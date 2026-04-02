@@ -7,66 +7,70 @@ namespace AppThaoCamVien.Pages;
 public partial class AnimalListPage : ContentPage
 {
     private readonly DatabaseService _databaseService;
+    private readonly IServiceProvider _serviceProvider; // Dùng cái này để chống Crash
 
-    // Danh sách để bind ra giao diện
     public ObservableCollection<Poi> AnimalsList { get; set; } = new ObservableCollection<Poi>();
 
-    // Sử dụng Dependency Injection để truyền DatabaseService vào
-    public AnimalListPage(DatabaseService databaseService)
+    public AnimalListPage(DatabaseService databaseService, IServiceProvider serviceProvider)
     {
         InitializeComponent();
         _databaseService = databaseService;
-
-        // Gán nguồn dữ liệu cho CollectionView
+        _serviceProvider = serviceProvider;
         AnimalsCollectionView.ItemsSource = AnimalsList;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await LoadRealDataAsync();
+        await LoadDataAsync();
     }
 
-    private async Task LoadRealDataAsync()
+    private async Task LoadDataAsync()
     {
-        // 1. Xóa danh sách cũ mỗi khi mở lại trang
-        AnimalsList.Clear();
+        // 1. Đảm bảo có dữ liệu
+        await _databaseService.SyncDataFromApiAsync();
 
-        // 2. Lấy dữ liệu thật từ SQLite (chỉ lấy các POI đang active)
+        // 2. Lấy dữ liệu từ DB
         var pois = await _databaseService.GetAllPoisAsync();
 
-        // 3. Đưa vào danh sách hiển thị
-        foreach (var poi in pois)
+        // 3. Đưa lên UI (Bắt buộc chạy trên MainThread để không bị màn hình trắng)
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            // Nếu bạn chỉ muốn hiển thị "Động vật" thì kiểm tra: if (poi.CategoryId == 1)
-            AnimalsList.Add(poi);
-        }
+            AnimalsList.Clear();
+            foreach (var poi in pois)
+            {
+                AnimalsList.Add(poi);
+            }
+        });
     }
 
-    // Sự kiện khi nhấn vào MỘT THẺ CON VẬT
     private async void OnAnimalTapped(object sender, TappedEventArgs e)
     {
         if (e.Parameter is Poi selectedAnimal)
         {
-            // Hiệu ứng UX
+            // Hiệu ứng nhấp nháy
             if (sender is View view)
             {
                 await view.FadeTo(0.5, 100);
                 await view.FadeTo(1, 100);
             }
 
-            // Gọi StoryAudioPage và truyền dữ liệu sang
-            var storyPage = Handler?.MauiContext?.Services.GetService<StoryAudioPage>();
-            if (storyPage != null)
+            try
             {
-                storyPage.LoadPoi(selectedAnimal);
-                await Navigation.PushAsync(storyPage);
+                // CÁCH GỌI TRANG AN TOÀN CHỐNG CRASH
+                var storyPage = _serviceProvider.GetService<StoryAudioPage>();
+                if (storyPage != null)
+                {
+                    storyPage.LoadPoi(selectedAnimal);
+                    await Navigation.PushAsync(storyPage);
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Lỗi Hệ Thống", $"Không thể mở câu chuyện: {ex.Message}", "OK");
             }
         }
     }
 
-    private async void OnBackClicked(object sender, EventArgs e)
-    {
-        await Navigation.PopAsync();
-    }
+    private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
 }

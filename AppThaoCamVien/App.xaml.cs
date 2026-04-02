@@ -7,11 +7,12 @@ namespace AppThaoCamVien
         public App()
         {
             InitializeComponent();
-        }
 
-        //protected override Window CreateWindow(IActivationState? activationState)
-        //{
-        //    return new Window(new AppShell());
-        //}
+            // Load ngôn ngữ từ bộ nhớ ngay khi mở App
+            AppThaoCamVien.Services.LanguageManager.LoadCurrentLanguage();
+
+            // Bắt buộc phải có dòng này để gọi Giao diện chính lên
+            MainPage = new AppShell();
+        }
     }
 }

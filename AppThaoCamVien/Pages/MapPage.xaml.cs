@@ -57,20 +57,25 @@ public partial class MapPage : ContentPage
 
     private async Task LoadPoisAsync()
     {
-        await _databaseService.SeedDataAsync();
-        // Chỉ lấy POI đang active (IsActive = true)
+        // Cập nhật dữ liệu từ API hoặc Offline
+        await _databaseService.SyncDataFromApiAsync();
+
+        // Lấy danh sách POI
         _allPois = await _databaseService.GetAllPoisAsync();
 
         ZooMap.Pins.Clear();
-        foreach (var poi in _allPois)
+        if (_allPois != null)
         {
-            ZooMap.Pins.Add(new Pin(ZooMap)
+            foreach (var poi in _allPois)
             {
-                Label = poi.Name,
-                Position = new Position((double)poi.Latitude, (double)poi.Longitude),
-                Type = PinType.Pin,
-                Color = Colors.Red
-            });
+                ZooMap.Pins.Add(new Mapsui.UI.Maui.Pin(ZooMap)
+                {
+                    Label = poi.Name,
+                    Position = new Mapsui.UI.Maui.Position((double)poi.Latitude, (double)poi.Longitude),
+                    Type = Mapsui.UI.Maui.PinType.Pin,
+                    Color = Colors.Red
+                });
+            }
         }
     }
 
