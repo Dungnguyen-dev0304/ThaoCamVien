@@ -1,17 +1,15 @@
 using ApiThaoCamVien.Models;
 using Microsoft.EntityFrameworkCore;
-using ApiThaoCamVien.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Thêm dịch vụ cần thiết
 builder.Services.AddControllersWithViews();
 
-// 2. Kết nối Database SQLite (Dùng WebContext như bạn đã đặt tên)
+// 2. Kết nối Database SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<WebContext>(options =>
-    options.UseSqlite(connectionString));
-
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 

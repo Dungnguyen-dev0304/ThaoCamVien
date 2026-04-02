@@ -1,27 +1,130 @@
 ﻿@{
     Layout = "_adminlayout";
-    ViewData["Title"] = "tổng quan";
+    ViewData["Title"] = "Tổng quan Quản trị";
     ViewData["Active"] = "index";
-    ViewData["PageTitle"] = "Hệ thống quản trị nội dung";
+    ViewData["PageTitle"] = "Hệ thống quản trị nội dung Thảo Cầm Viên";
 }
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card p-4 border-start border-success border-5">
-            <h6 class="text-muted small uppercase">tổng địa điểm</h6>
-            <h2 class="fw-bold mb-0 text-success">128</h2>
+<style>
+    .bg-gradient-admin {
+        background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); 
+    }
+    .card-hover:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .sidebar-link {
+        transition: all 0.2s;
+        border-radius: 8px;
+        margin: 4px 0;
+    }
+    .sidebar-link:hover {
+        background: rgba(137, 217, 87, 0.1);
+        color: #89d957 !important;
+    }
+    .sidebar-link.active {
+        background: #89d957;
+        color: white !important;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm min-vh-100 p-3">
+            <div class="text-center mb-4">
+                <div class="p-2 rounded-circle bg-gradient-admin d-inline-block shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 40px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /> [cite: 7]
+                    </svg>
+                </div>
+                <h6 class="mt-2 fw-bold text-dark">ThaoCamVien Admin</h6>
+            </div>
+
+            <nav class="nav flex-column">
+                <a class="nav-link sidebar-link active" href="/Admin/Index">
+                    <i class="bi bi-speedometer2 me-2"></i> Tổng quan
+                </a>
+                <a class="nav-link sidebar-link text-dark" href="/Admin/PoiList">
+                    <i class="bi bi-geo-alt me-2"></i> Quản lý POI
+                </a>
+                <a class="nav-link sidebar-link text-dark" href="/Admin/Categories">
+                    <i class="bi bi-tags me-2"></i> Danh mục
+                </a>
+                <a class="nav-link sidebar-link text-dark" href="/Admin/Tours">
+                    <i class="bi bi-map me-2"></i> Quản lý Tour
+                </a>
+                <hr>
+                <a class="nav-link sidebar-link text-danger" href="/Admin/Logout">
+                    <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                </a>
+            </nav>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card p-4 border-start border-primary border-5">
-            <h6 class="text-muted small">tệp âm thanh</h6>
-            <h2 class="fw-bold mb-0 text-primary">95</h2>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card p-4 border-start border-warning border-5">
-            <h6 class="text-muted small">lượt quét qr</h6>
-            <h2 class="fw-bold mb-0 text-warning">1,402</h2>
-        </div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 fw-bold">Bảng điều khiển</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/Admin/CreatePoi" class="btn bg-gradient-admin text-white fw-bold shadow-sm">
+                        <i class="bi bi-plus-lg"></i> Thêm POI mới
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card p-4 border-0 shadow-sm border-start border-success border-5 card-hover">
+                        <h6 class="text-muted small text-uppercase fw-bold">Tổng địa điểm (POI)</h6> 
+                        <h2 class="fw-bold mb-0 text-success">128</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4 border-0 shadow-sm border-start border-primary border-5 card-hover">
+                        <h6 class="text-muted small text-uppercase fw-bold">Tệp âm thanh</h6> 
+                        <h2 class="fw-bold mb-0 text-primary">95</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4 border-0 shadow-sm border-start border-warning border-5 card-hover">
+                        <h6 class="text-muted small text-uppercase fw-bold">Lượt quét QR</h6> 
+                        <h2 class="fw-bold mb-0 text-warning">1,402</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Thao tác nhanh</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center g-3">
+                        <div class="col-6 col-md-3">
+                            <a href="/Admin/PoiList" class="d-block p-3 rounded bg-light text-decoration-none text-dark hover-shadow">
+                                <i class="bi bi-list-ul fs-2 text-success"></i>
+                                <p class="mb-0 mt-2">Danh sách POI</p>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="/Admin/MediaManager" class="d-block p-3 rounded bg-light text-decoration-none text-dark">
+                                <i class="bi bi-image fs-2 text-primary"></i>
+                                <p class="mb-0 mt-2">Quản lý Media</p>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="/Admin/QrGenerator" class="d-block p-3 rounded bg-light text-decoration-none text-dark">
+                                <i class="bi bi-qr-code fs-2 text-warning"></i>
+                                <p class="mb-0 mt-2">Tạo mã QR</p>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="/Admin/Analytics" class="d-block p-3 rounded bg-light text-decoration-none text-dark">
+                                <i class="bi bi-graph-up fs-2 text-info"></i>
+                                <p class="mb-0 mt-2">Báo cáo</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>

@@ -9,11 +9,16 @@
   <ItemGroup>
     <PackageReference Include="Mapsui.Maui" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.5" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ApiThaoCamVien\ApiThaoCamVien.csproj" />
     <ProjectReference Include="..\SharedThaoCamVien\SharedThaoCamVien.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\images\pois\" />
   </ItemGroup>
 
 </Project>

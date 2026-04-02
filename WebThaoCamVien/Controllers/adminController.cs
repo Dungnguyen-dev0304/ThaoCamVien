@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ApiThaoCamVien.Models;
 using SharedThaoCamVien.Models;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebThaoCamVien.Controllers
 {
@@ -9,10 +9,69 @@ namespace WebThaoCamVien.Controllers
     {
         private readonly WebContext _context;
 
-        // 3. Tiêm WebContext vào Controller để sử dụng
+        // Ranh giới Thảo Cầm Viên (polygon)
+        private static readonly (double Lat, double Lng)[] BoundaryPolygon =
+        {
+            (10.790530958743389, 106.70681254947431),
+            (10.790456999508692, 106.70671698845888),
+            (10.790257700153376, 106.70651554322427),
+            (10.79042812075069,  106.70628133432854),
+            (10.790440902291763, 106.70618591588868),
+            (10.79041107869567,  106.70598640460645),
+            (10.790483507424142, 106.70586496295732),
+            (10.790658188404294, 106.70571749809534),
+            (10.790530373063206, 106.70559171924418),
+            (10.790564457159661, 106.70547895199752),
+            (10.788817019051919, 106.70383791235048),
+            (10.788177937888548, 106.70454487624346),
+            (10.787977692177435, 106.7043323533548),
+            (10.784948471879815, 106.70767588372479),
+            (10.785033683695005, 106.70775395335602),
+            (10.78498255660898,  106.70786672060262),
+            (10.785157240784699, 106.70799683665604),
+            (10.785072029004596, 106.70815731312257),
+            (10.787234071848147, 106.70907826576183),
+            (10.78740363601608,  106.70870791908663),
+            (10.787693353724208, 106.70829154771366),
+            (10.788434688943752, 106.70767132785807),
+            (10.788928911406757, 106.70735037492676),
+            (10.790530958743389, 106.70681254947431),
+        };
+
+        // Bán kính tối thiểu giữa 2 POI (mét)
+        private const double MinDistanceMeters = 5.0;
+
         public AdminController(WebContext context)
         {
             _context = context;
+        }
+
+        // Kiểm tra điểm có nằm trong polygon không (Ray Casting)
+        private static bool IsInsideBoundary(double lat, double lng)
+        {
+            bool inside = false;
+            int n = BoundaryPolygon.Length;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                double xi = BoundaryPolygon[i].Lat, yi = BoundaryPolygon[i].Lng;
+                double xj = BoundaryPolygon[j].Lat, yj = BoundaryPolygon[j].Lng;
+                bool intersect = ((yi > lng) != (yj > lng)) &&
+                                 (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // Tính khoảng cách giữa 2 tọa độ (mét) theo công thức Haversine
+        private static double CalculateDistance(double lat1, double lng1, double lat2, double lng2)
+        {
+            const double R = 6371000;
+            double dLat = (lat2 - lat1) * Math.PI / 180;
+            double dLng = (lng2 - lng1) * Math.PI / 180;
+            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                       Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                       Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+            return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         }
 
         // GET: /admin/index
@@ -21,31 +80,83 @@ namespace WebThaoCamVien.Controllers
             return View();
         }
 
-        // GET: /admin/AddPOI (Hiển thị trang thêm mới)
+        // GET: /admin/AddPOI
         public IActionResult AddPOI()
         {
-            return View();
+            ViewData["Active"] = "addpoi";
+            ViewData["Title"] = "Thêm POI";
+            ViewData["PageTitle"] = "Quản lý điểm tham quan";
+            return View(new Poi());
         }
 
-        // 4. POST: /admin/AddPOI (Hàm này sẽ chạy khi bạn nhấn nút "Lưu")
+        // POST: /admin/AddPOI
         [HttpPost]
-        public async Task<IActionResult> AddPOI(Poi model)
+        public async Task<IActionResult> AddPOI(Poi model, IFormFile imageFile)
         {
-            // Kiểm tra nếu dữ liệu hợp lệ (không trống tên, đúng định dạng...)
-            if (ModelState.IsValid)
+            ModelState.Remove("ImageThumbnail");
+
+            ViewData["Active"] = "addpoi";
+            ViewData["Title"] = "Thêm POI";
+            ViewData["PageTitle"] = "Quản lý điểm tham quan";
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            double lat = (double)model.Latitude;
+            double lng = (double)model.Longitude;
+
+            // Validation 1: Kiểm tra nằm trong ranh giới Thảo Cầm Viên
+            if (!IsInsideBoundary(lat, lng))
             {
-                model.CreatedAt = System.DateTime.Now; // Gán ngày tạo tự động
-                model.IsActive = true; // Mặc định cho hiển thị
-
-                _context.Pois.Add(model); // Thêm vào bộ nhớ tạm
-                await _context.SaveChangesAsync(); // Lưu thực sự xuống SQLite
-
-                // Sau khi lưu xong, chuyển hướng về trang Index
-                return RedirectToAction("Index");
+                ModelState.AddModelError("", "Vị trí được chọn nằm ngoài ranh giới Thảo Cầm Viên. Vui lòng chọn lại.");
+                return View(model);
             }
 
-            // Nếu có lỗi, trả lại View kèm dữ liệu đã nhập để người dùng sửa
-            return View(model);
+            // Validation 2: Kiểm tra trùng vị trí với POI đã có trong database
+            var existingPois = await _context.Pois.ToListAsync();
+            var duplicate = existingPois.FirstOrDefault(p =>
+                CalculateDistance(lat, lng, (double)p.Latitude, (double)p.Longitude) < MinDistanceMeters);
+
+            if (duplicate != null)
+            {
+                ModelState.AddModelError("", $"Vị trí này quá gần với POI đã tồn tại: \"{duplicate.Name}\" (cách {MinDistanceMeters}m). Vui lòng chọn vị trí khác.");
+                return View(model);
+            }
+
+            // Xử lý upload ảnh
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                string originalName = Path.GetFileNameWithoutExtension(imageFile.FileName);
+                string extension = Path.GetExtension(imageFile.FileName);
+                string fileName = originalName + extension;
+
+                string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "pois");
+                Directory.CreateDirectory(uploadPath);
+
+                string filePath = Path.Combine(uploadPath, fileName);
+                int counter = 1;
+                while (System.IO.File.Exists(filePath))
+                {
+                    fileName = $"{originalName}_{counter}{extension}";
+                    filePath = Path.Combine(uploadPath, fileName);
+                    counter++;
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                model.ImageThumbnail = fileName;
+            }
+
+            model.CreatedAt = DateTime.Now;
+            model.IsActive = true;
+
+            _context.Pois.Add(model);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("AddPOI");
         }
     }
 }
