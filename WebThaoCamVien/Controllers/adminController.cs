@@ -8,8 +8,9 @@ namespace WebThaoCamVien.Controllers
     public class AdminController : Controller
     {
         private readonly WebContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        // Ranh giới Thảo Cầm Viên (polygon)
+
         private static readonly (double Lat, double Lng)[] BoundaryPolygon =
         {
             (10.790530958743389, 106.70681254947431),
@@ -38,15 +39,16 @@ namespace WebThaoCamVien.Controllers
             (10.790530958743389, 106.70681254947431),
         };
 
-        // Bán kính tối thiểu giữa 2 POI (mét)
         private const double MinDistanceMeters = 5.0;
 
-        public AdminController(WebContext context)
+
+
+        public AdminController(WebContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
-        // Kiểm tra điểm có nằm trong polygon không (Ray Casting)
         private static bool IsInsideBoundary(double lat, double lng)
         {
             bool inside = false;
@@ -62,7 +64,6 @@ namespace WebThaoCamVien.Controllers
             return inside;
         }
 
-        // Tính khoảng cách giữa 2 tọa độ (mét) theo công thức Haversine
         private static double CalculateDistance(double lat1, double lng1, double lat2, double lng2)
         {
             const double R = 6371000;
@@ -74,30 +75,53 @@ namespace WebThaoCamVien.Controllers
             return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         }
 
+        private void SetViewData(string active, string title, string pageTitle)
+        {
+            ViewData["Active"] = active;
+            ViewData["Title"] = title;
+            ViewData["PageTitle"] = pageTitle;
+        }
+
         // GET: /admin/index
         public IActionResult Index()
         {
             return View();
         }
 
-        // GET: /admin/AddPOI
+        // GET: /Admin/PoiList
+        public async Task<IActionResult> PoiList()
+        {
+            ViewData["Active"] = "poilist";
+            ViewData["Title"] = "Danh sách địa điểm";
+            ViewData["PageTitle"] = "Quản lý điểm tham quan";
+
+            var list = await _context.Pois.OrderByDescending(p => p.CreatedAt).ToListAsync();
+            return View(list);
+        }
+
+        // ── ADD POI ──────────────────────────────────────────────────────
+
         public IActionResult AddPOI()
         {
-            ViewData["Active"] = "addpoi";
-            ViewData["Title"] = "Thêm POI";
-            ViewData["PageTitle"] = "Quản lý điểm tham quan";
+            SetViewData("addpoi", "Thêm POI", "Quản lý điểm tham quan");
             return View(new Poi());
         }
 
         // POST: /admin/AddPOI
         [HttpPost]
-        public async Task<IActionResult> AddPOI(Poi model, IFormFile imageFile)
+        public async Task<IActionResult> AddPOI(Poi model, IFormFile? imageFile)
         {
             ModelState.Remove("ImageThumbnail");
 
             ViewData["Active"] = "addpoi";
             ViewData["Title"] = "Thêm POI";
             ViewData["PageTitle"] = "Quản lý điểm tham quan";
+
+            // KIỂM TRA THỦ CÔNG: Bắt buộc phải có ảnh khi thêm mới
+            if (imageFile == null || imageFile.Length == 0)
+            {
+                ModelState.AddModelError("", "Vui lòng chọn hình ảnh đại diện cho địa điểm.");
+            }
 
             if (!ModelState.IsValid)
                 return View(model);
@@ -157,6 +181,130 @@ namespace WebThaoCamVien.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("AddPOI");
+        }
+
+        // ── EDIT POI ─────────────────────────────────────────────────────
+
+        public async Task<IActionResult> EditPOI(int id)
+        {
+            SetViewData("poilist", "Chỉnh sửa POI", "Quản lý điểm tham quan");
+            var poi = await _context.Pois.FindAsync(id);
+            if (poi == null) return NotFound();
+            return View(poi);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPOI(Poi model, IFormFile? imageFile)
+        {
+            ModelState.Remove("ImageThumbnail");
+            SetViewData("poilist", "Chỉnh sửa POI", "Quản lý điểm tham quan");
+
+            if (!ModelState.IsValid) return View(model);
+
+            double lat = (double)model.Latitude;
+            double lng = (double)model.Longitude;
+
+            if (!IsInsideBoundary(lat, lng))
+            {
+                ModelState.AddModelError("", "Vị trí được chọn nằm ngoài ranh giới Thảo Cầm Viên. Vui lòng chọn lại.");
+                return View(model);
+            }
+
+            // Bỏ qua chính POI đang sửa khi kiểm tra trùng vị trí
+            var existingPois = await _context.Pois.Where(p => p.PoiId != model.PoiId).ToListAsync();
+            var duplicate = existingPois.FirstOrDefault(p =>
+                CalculateDistance(lat, lng, (double)p.Latitude, (double)p.Longitude) < MinDistanceMeters);
+
+            if (duplicate != null)
+            {
+                ModelState.AddModelError("", $"Vị trí này quá gần với POI đã tồn tại: \"{duplicate.Name}\" (trong vòng {MinDistanceMeters}m). Vui lòng chọn vị trí khác.");
+                return View(model);
+            }
+
+            var existing = await _context.Pois.FindAsync(model.PoiId);
+            if (existing == null) return NotFound();
+
+            existing.Name = model.Name;
+            existing.CategoryId = model.CategoryId;
+            existing.Latitude = model.Latitude;
+            existing.Longitude = model.Longitude;
+            existing.Description = model.Description;
+
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                // Xóa ảnh cũ trước khi lưu ảnh mới
+                if (!string.IsNullOrEmpty(existing.ImageThumbnail))
+                {
+                    string oldPath = Path.Combine(_env.WebRootPath, "images", "pois", existing.ImageThumbnail);
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
+
+                await SaveImageAsync(imageFile, existing);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("PoiList");
+        }
+
+        // ── DELETE POI ───────────────────────────────────────────────────
+
+        // GET: Hiển thị trang xác nhận
+        public async Task<IActionResult> DeletePOI(int id)
+        {
+            SetViewData("poilist", "Xóa POI", "Quản lý điểm tham quan");
+            var poi = await _context.Pois.FindAsync(id);
+            if (poi == null) return NotFound();
+            return View(poi);
+        }
+
+        // POST: Thực hiện xóa
+        [HttpPost, ActionName("DeletePOI")]
+        public async Task<IActionResult> DeletePOIConfirmed(int PoiId)
+        {
+            var poi = await _context.Pois.FindAsync(PoiId);
+            if (poi == null) return NotFound();
+
+            if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+            {
+                string imagePath = Path.Combine(_env.WebRootPath, "images", "pois", poi.ImageThumbnail);
+                if (System.IO.File.Exists(imagePath))
+                    System.IO.File.Delete(imagePath);
+            }
+
+            _context.Pois.Remove(poi);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("PoiList");
+        }
+
+        // ── HELPER: LƯU ẢNH ─────────────────────────────────────────────
+
+        private async Task SaveImageAsync(IFormFile imageFile, Poi model)
+        {
+            if (imageFile == null || imageFile.Length == 0) return;
+
+            string originalName = Path.GetFileNameWithoutExtension(imageFile.FileName);
+            string extension = Path.GetExtension(imageFile.FileName);
+            string fileName = originalName + extension;
+
+            string uploadPath = Path.Combine(_env.WebRootPath, "images", "pois");
+            Directory.CreateDirectory(uploadPath);
+
+            string filePath = Path.Combine(uploadPath, fileName);
+            int counter = 1;
+            while (System.IO.File.Exists(filePath))
+            {
+                fileName = $"{originalName}_{counter}{extension}";
+                filePath = Path.Combine(uploadPath, fileName);
+                counter++;
+            }
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            model.ImageThumbnail = fileName;
         }
     }
 }

@@ -1,0 +1,244 @@
+@model SharedThaoCamVien.Models.Poi
+@{
+    Layout = "_adminlayout";
+}
+
+<style>
+    .bg-custom-primary { background-color: #89d957; }
+    .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
+    #map { height: 600px; width: 100%; border-radius: 24px; z-index: 1; }
+
+    .upload-area { border: 2px dashed #89d957; background: #f9fff4; cursor: pointer; transition: all 0.3s ease; }
+    .upload-area:hover { background: #f0fce6; border-color: #c9e265; }
+
+    .opt-dong-vat { color: #e67e22; font-weight: bold; }
+    .opt-thuc-vat { color: #27ae60; font-weight: bold; }
+    .opt-di-tich { color: #8e44ad; font-weight: bold; }
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="p-4 grid grid-cols-1 xl:grid-cols-12 gap-6">
+    <div class="xl:col-span-5 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+        <h3 class="text-lg font-black text-slate-800 uppercase mb-6 flex items-center">
+            <span class="w-8 h-8 bg-custom-primary text-white rounded-lg flex items-center justify-center mr-3">
+                <i class="bi bi-pencil"></i>
+            </span>
+            Chỉnh sửa địa điểm
+        </h3>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-medium">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <p>⚠️ @error.ErrorMessage</p>
+                }
+            </div>
+        }
+
+        <form asp-controller="Admin" asp-action="EditPOI" method="post" enctype="multipart/form-data" class="space-y-5">
+            <input type="hidden" asp-for="PoiId" />
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Tên địa điểm</label>
+                <input asp-for="Name" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all font-medium" placeholder="Nhập tên địa điểm...">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Danh mục</label>
+                <select asp-for="CategoryId" id="CategorySelect" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all font-medium">
+                    <option value="">-- Chọn loại hình --</option>
+                    <option value="1" class="opt-dong-vat">Động vật</option>
+                    <option value="2" class="opt-thuc-vat">Thực vật</option>
+                    <option value="3" class="opt-di-tich">Di tích</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Hình ảnh (Thumbnail)</label>
+                @if (!string.IsNullOrEmpty(Model.ImageThumbnail))
+                {
+                    <div class="mb-2">
+                        <p class="text-[10px] text-slate-400 mb-1 uppercase font-bold">Ảnh hiện tại:</p>
+                        <img src="/images/pois/@Model.ImageThumbnail" class="w-full h-32 object-cover rounded-xl shadow-sm" />
+                    </div>
+                }
+                <div class="upload-area p-5 rounded-xl text-center relative" onclick="document.getElementById('imageFile').click()">
+                    <div id="uploadText">
+                        <i class="bi bi-image text-2xl text-[#89d957]"></i>
+                        <p class="text-[10px] font-bold text-slate-500 mt-1 uppercase">Chọn ảnh mới (để trống nếu không đổi)</p>
+                    </div>
+                    <img id="imgPreview" src="#" class="hidden w-full h-32 object-cover rounded-lg shadow-sm" />
+                    <input type="file" id="imageFile" name="imageFile" class="hidden" accept="image/*" onchange="handlePreview(this)">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Vĩ độ</label>
+                    <input asp-for="Latitude" id="Latitude" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all font-mono text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Kinh độ</label>
+                    <input asp-for="Longitude" id="Longitude" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all font-mono text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Mô tả</label>
+                <textarea asp-for="Description" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="flex-1 py-4 bg-gradient-custom text-white font-black rounded-xl shadow-lg shadow-[#89d957]/20 uppercase tracking-widest text-[11px]">
+                    Lưu thay đổi
+                </button>
+                <a href="/admin/PoiList" class="py-4 px-6 bg-slate-100 text-slate-500 font-black rounded-xl uppercase tracking-widest text-[11px] flex items-center">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="xl:col-span-7 bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden relative">
+        <div id="mapError" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-[999] bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg whitespace-nowrap"></div>
+        <div id="map"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const categoryColors = {
+            "1": "#e67e22",
+            "2": "#27ae60",
+            "3": "#8e44ad"
+        };
+
+        function createCustomIcon(color) {
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `<svg width="30" height="42" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
+                iconSize: [30, 42],
+                iconAnchor: [15, 42]
+            });
+        }
+
+        // Tọa độ hiện tại của POI
+        const currentLat = @Model.Latitude;
+        const currentLng = @Model.Longitude;
+
+        const map = L.map('map').setView([currentLat, currentLng], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Ranh giới Thảo Cầm Viên
+        const boundary = [
+            [10.790530958743389, 106.70681254947431],
+            [10.790456999508692, 106.70671698845888],
+            [10.790257700153376, 106.70651554322427],
+            [10.79042812075069,  106.70628133432854],
+            [10.790440902291763, 106.70618591588868],
+            [10.79041107869567,  106.70598640460645],
+            [10.790483507424142, 106.70586496295732],
+            [10.790658188404294, 106.70571749809534],
+            [10.790530373063206, 106.70559171924418],
+            [10.790564457159661, 106.70547895199752],
+            [10.788817019051919, 106.70383791235048],
+            [10.788177937888548, 106.70454487624346],
+            [10.787977692177435, 106.7043323533548],
+            [10.784948471879815, 106.70767588372479],
+            [10.785033683695005, 106.70775395335602],
+            [10.78498255660898,  106.70786672060262],
+            [10.785157240784699, 106.70799683665604],
+            [10.785072029004596, 106.70815731312257],
+            [10.787234071848147, 106.70907826576183],
+            [10.78740363601608,  106.70870791908663],
+            [10.787693353724208, 106.70829154771366],
+            [10.788434688943752, 106.70767132785807],
+            [10.788928911406757, 106.70735037492676],
+        ];
+        L.polygon(boundary, { color: '#ef4444', weight: 2, fillOpacity: 0.05 }).addTo(map);
+
+        function isInsideBoundary(lat, lng) {
+            let inside = false;
+            for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
+                const xi = boundary[i][0], yi = boundary[i][1];
+                const xj = boundary[j][0], yj = boundary[j][1];
+                const intersect = ((yi > lng) !== (yj > lng)) &&
+                    (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        function showMapError(msg) {
+            const el = document.getElementById('mapError');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+
+        const categorySelect = document.getElementById('CategorySelect');
+        let marker = null;
+
+        function updateMarker(lat, lng) {
+            const catId = categorySelect.value;
+            const color = categoryColors[catId] || "#89d957";
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([lat, lng], { icon: createCustomIcon(color) }).addTo(map);
+            document.getElementById('Latitude').value = lat;
+            document.getElementById('Longitude').value = lng;
+        }
+
+        // Đặt marker tại vị trí hiện tại của POI
+        updateMarker(currentLat, currentLng);
+
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            if (!isInsideBoundary(lat, lng)) {
+                showMapError('⚠️ Vị trí nằm ngoài ranh giới Thảo Cầm Viên!');
+                return;
+            }
+            updateMarker(lat.toFixed(8), lng.toFixed(8));
+        });
+
+        categorySelect.addEventListener('change', function() {
+            const lat = document.getElementById('Latitude').value;
+            const lng = document.getElementById('Longitude').value;
+            if (lat && lng) updateMarker(lat, lng);
+        });
+
+        // Nhập tọa độ tay
+        document.getElementById('Latitude').addEventListener('change', updateMarkerFromInput);
+        document.getElementById('Longitude').addEventListener('change', updateMarkerFromInput);
+
+        function updateMarkerFromInput() {
+            const lat = parseFloat(document.getElementById('Latitude').value);
+            const lng = parseFloat(document.getElementById('Longitude').value);
+            if (isNaN(lat) || isNaN(lng)) return;
+            if (!isInsideBoundary(lat, lng)) {
+                showMapError('⚠️ Vị trí nằm ngoài ranh giới Thảo Cầm Viên!');
+                return;
+            }
+            updateMarker(lat.toFixed(8), lng.toFixed(8));
+            map.setView([lat, lng], 17);
+        }
+
+        function handlePreview(input) {
+            const preview = document.getElementById('imgPreview');
+            const text = document.getElementById('uploadText');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    text.classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

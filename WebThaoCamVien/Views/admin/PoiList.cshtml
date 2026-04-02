@@ -1,0 +1,62 @@
+﻿@model IEnumerable<SharedThaoCamVien.Models.Poi>
+@{
+    Layout = "_adminlayout";
+}
+
+<div class="p-4">
+    <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+        @* Phần tiêu đề chỉ giữ lại tên trang *@
+        <div class="p-8 border-b border-slate-50">
+            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">
+                Quản lý địa điểm (Chỉnh sửa & Xóa)
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">Chọn một địa điểm dưới đây để thực hiện thay đổi hoặc gỡ bỏ</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Địa điểm</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Danh mục</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-4">
+                                    @if (!string.IsNullOrEmpty(item.ImageThumbnail))
+                                    {
+                                        <img src="/images/pois/@item.ImageThumbnail" class="w-12 h-12 rounded-xl object-cover shadow-sm" />
+                                      
+                                    }
+                                    <span class="font-bold text-slate-700">@item.Name</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter
+                                    @(item.CategoryId == 1 ? "bg-orange-100 text-orange-600" :
+                                                                            item.CategoryId == 2 ? "bg-green-100 text-green-600" : "bg-purple-100 text-purple-600")">
+                                    @(item.CategoryId == 1 ? "Động vật" : item.CategoryId == 2 ? "Thực vật" : "Di tích")
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right space-x-2">
+                                @* Nút dẫn đến EditPOI kèm ID *@
+                                <a href="/Admin/EditPOI/@item.PoiId" class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                @* Nút dẫn đến DeletePOI kèm ID *@
+                                <a href="/Admin/DeletePOI/@item.PoiId" class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                    <i class="bi bi-trash3"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

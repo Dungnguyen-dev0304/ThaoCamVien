@@ -7,6 +7,33 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\images\pois\cay_di_san.jpg" />
+    <Content Remove="wwwroot\images\pois\chuong_ca_sau.jpg" />
+    <Content Remove="wwwroot\images\pois\chuong_khi.jpg" />
+    <Content Remove="wwwroot\images\pois\den_hung.jpg" />
+    <Content Remove="wwwroot\images\pois\elephant.jpg" />
+    <Content Remove="wwwroot\images\pois\gau.jpg" />
+    <Content Remove="wwwroot\images\pois\giraffe.jpg" />
+    <Content Remove="wwwroot\images\pois\ha_ma.jpg" />
+    <Content Remove="wwwroot\images\pois\icon_pause_dark.svg" />
+    <Content Remove="wwwroot\images\pois\icon_play_dark.svg" />
+    <Content Remove="wwwroot\images\pois\khi_soc.jpg" />
+    <Content Remove="wwwroot\images\pois\khu_bo_sat.jpg" />
+    <Content Remove="wwwroot\images\pois\logothaocamvien.png" />
+    <Content Remove="wwwroot\images\pois\map_white.svg" />
+    <Content Remove="wwwroot\images\pois\menu_white.svg" />
+    <Content Remove="wwwroot\images\pois\nha_hoa_lan_kieng.jpg" />
+    <Content Remove="wwwroot\images\pois\numpad_white.svg" />
+    <Content Remove="wwwroot\images\pois\qr_white.svg" />
+    <Content Remove="wwwroot\images\pois\quan_nhan_huong.jpg" />
+    <Content Remove="wwwroot\images\pois\setting.svg" />
+    <Content Remove="wwwroot\images\pois\story_white.svg" />
+    <Content Remove="wwwroot\images\pois\tiger.jpg" />
+    <Content Remove="wwwroot\images\pois\vuon_buom.jpg" />
+    <Content Remove="wwwroot\images\pois\zero_hero.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mapsui.Maui" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.5" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
@@ -18,7 +45,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\images\pois\" />
+    <MauiImage Include="wwwroot\images\pois\cay_di_san.jpg" />
+    <MauiImage Include="wwwroot\images\pois\chuong_ca_sau.jpg" />
+    <MauiImage Include="wwwroot\images\pois\chuong_khi.jpg" />
+    <MauiImage Include="wwwroot\images\pois\den_hung.jpg" />
+    <MauiImage Include="wwwroot\images\pois\elephant.jpg" />
+    <MauiImage Include="wwwroot\images\pois\gau.jpg" />
+    <MauiImage Include="wwwroot\images\pois\giraffe.jpg" />
+    <MauiImage Include="wwwroot\images\pois\icon_pause_dark.svg" />
+    <MauiImage Include="wwwroot\images\pois\icon_play_dark.svg" />
+    <MauiImage Include="wwwroot\images\pois\khi_soc.jpg" />
+    <MauiImage Include="wwwroot\images\pois\khu_bo_sat.jpg" />
+    <MauiImage Include="wwwroot\images\pois\logothaocamvien.png">
+      <Resize>True</Resize>
+      <BaseSize>300,185</BaseSize>
+    </MauiImage>
+    <MauiImage Include="wwwroot\images\pois\map_white.svg" />
+    <MauiImage Include="wwwroot\images\pois\menu_white.svg" />
+    <MauiImage Include="wwwroot\images\pois\nha_hoa_lan_kieng.jpg" />
+    <MauiImage Include="wwwroot\images\pois\numpad_white.svg" />
+    <MauiImage Include="wwwroot\images\pois\qr_white.svg" />
+    <MauiImage Include="wwwroot\images\pois\quan_nhan_huong.jpg" />
+    <MauiImage Include="wwwroot\images\pois\setting.svg" />
+    <MauiImage Include="wwwroot\images\pois\story_white.svg" />
+    <MauiImage Include="wwwroot\images\pois\tiger.jpg" />
+    <MauiImage Include="wwwroot\images\pois\vuon_buom.jpg" />
+    <MauiImage Include="wwwroot\images\pois\zero_hero.jpg" />
   </ItemGroup>
 
 </Project>
