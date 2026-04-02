@@ -19,8 +19,8 @@
         <VerticalStackLayout Grid.Row="1" Padding="20,10,20,20" Spacing="15">
             <!-- Tiêu đề -->
             <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-                <Label Text="🌿 Vương quốc động vật" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
-                <Label Text="Khám phá thế giới muôn loài tuyệt đẹp tại Thảo Cầm Viên" FontSize="12" TextColor="#A0C8B4" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                <Label Text="{DynamicResource TxtAnimalKingdom}" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                <Label Text="{DynamicResource TxtAnimalDesc}" FontSize="12" TextColor="#A0C8B4" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
             </VerticalStackLayout>
 
             <BoxView HeightRequest="4" WidthRequest="4" CornerRadius="2" BackgroundColor="#D32F2F" HorizontalOptions="Center"/>
@@ -32,7 +32,7 @@
                 </Border.StrokeShape>
                 <Grid ColumnDefinitions="Auto, *">
                     <Label Grid.Column="0" Text="🔍" FontSize="18" VerticalOptions="Center" Margin="15,0,5,0"/>
-                    <Entry Grid.Column="1" x:Name="SearchEntry" Placeholder="Tìm kiếm động vật..." TextColor="#333333" PlaceholderColor="#999999" BackgroundColor="Transparent" VerticalOptions="Center"/>
+                    <Entry Grid.Column="1" x:Name="SearchEntry" Placeholder="{DynamicResource TxtSearchPlaceholder}" TextColor="#333333" PlaceholderColor="#999999" BackgroundColor="Transparent" VerticalOptions="Center"/>
                 </Grid>
             </Border>
         </VerticalStackLayout>

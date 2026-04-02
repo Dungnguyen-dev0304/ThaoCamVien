@@ -27,7 +27,9 @@ public partial class StoryAudioPage : ContentPage
         base.OnAppearing();
         if (_currentPoi == null) return;
 
-        UpdateUiWithPoi(_currentPoi);
+        // ĐÃ SỬA Ở ĐÂY: Gọi đúng tên hàm Async và thêm await
+        await UpdateUiWithPoiAsync(_currentPoi);
+
         await StartAudioAsync();
     }
 
@@ -38,46 +40,45 @@ public partial class StoryAudioPage : ContentPage
         UpdatePlayPauseButton(false);
     }
 
-    private void UpdateUiWithPoi(Poi poi)
+    // HÀM MỚI: Đã đổi tên thành Async và tự động dịch
+    private async Task UpdateUiWithPoiAsync(Poi poi)
     {
+        // 1. Hiển thị tạm tiếng Việt để UI không bị trống trong lúc chờ dịch
         PoiNameLabel.Text = poi.Name;
-        PoiSubtitleLabel.Text = $"Mã định danh: TCVN-{poi.PoiId:D3}";
         PoiDescTitleLabel.Text = $"Câu chuyện {poi.Name}";
+        PoiSubtitleLabel.Text = $"Mã định danh: TCVN-{poi.PoiId:D3}";
+        PoiDescLabel.Text = "Đang dịch nội dung... / Translating...";
+        ShortIntroLabel.Text = "";
 
-        // Đổ dữ liệu Description từ Database vào UI
-        PoiDescLabel.Text = string.IsNullOrEmpty(poi.Description) ? "Đang cập nhật nội dung chi tiết..." : poi.Description;
-
-        // Trích một đoạn ngắn gọn cho phần Intro (Lấy 100 ký tự đầu tiên nếu có)
-        if (!string.IsNullOrEmpty(poi.Description))
-        {
-            ShortIntroLabel.Text = poi.Description.Length > 100
-                ? poi.Description.Substring(0, 100) + "..."
-                : poi.Description;
-        }
-        else
-        {
-            ShortIntroLabel.Text = "Cùng lắng nghe câu chuyện thú vị về địa điểm này nhé.";
-        }
-
-        // Xử lý hình ảnh từ Database (Ví dụ trong DB đang lưu là 'ha_ma.jpg')
+        // Load ảnh
         if (!string.IsNullOrEmpty(poi.ImageThumbnail))
-        {
-            if (poi.ImageThumbnail.StartsWith("http"))
-            {
-                // Nếu lưu link mạng
-                PoiImage.Source = ImageSource.FromUri(new Uri(poi.ImageThumbnail));
-            }
-            else
-            {
-                // Nếu lưu tên file local, MAUI sẽ tự tìm trong thư mục Resources/Images
-                PoiImage.Source = poi.ImageThumbnail;
-            }
-        }
+            PoiImage.Source = poi.ImageThumbnail.StartsWith("http") ? ImageSource.FromUri(new Uri(poi.ImageThumbnail)) : poi.ImageThumbnail;
         else
-        {
-            // Ảnh mặc định nếu DB bị null
             PoiImage.Source = "placeholder_animal.png";
+
+        // 2. GỌI GOOGLE DỊCH
+        var translator = IPlatformApplication.Current.Services.GetService<AutoTranslateService>();
+        var databaseService = IPlatformApplication.Current.Services.GetService<DatabaseService>();
+        string currentLang = databaseService?.CurrentLanguage ?? "vi";
+
+        string translatedName = poi.Name;
+        string translatedDesc = poi.Description ?? "Chưa có thông tin.";
+
+        if (translator != null && currentLang != "vi")
+        {
+            translatedName = await translator.TranslateAsync(poi.Name, currentLang);
+            translatedDesc = await translator.TranslateAsync(poi.Description ?? "", currentLang);
         }
+
+        // 3. Cập nhật lại UI sau khi có bản dịch (Ép chạy trên luồng chính)
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            PoiNameLabel.Text = translatedName;
+            PoiDescTitleLabel.Text = currentLang == "vi" ? $"Câu chuyện {translatedName}" : $"{translatedName} Story";
+            PoiDescLabel.Text = translatedDesc;
+
+            ShortIntroLabel.Text = translatedDesc.Length > 100 ? translatedDesc.Substring(0, 100) + "..." : translatedDesc;
+        });
     }
 
     private async Task StartAudioAsync()
@@ -91,7 +92,8 @@ public partial class StoryAudioPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Không có audio", $"Chưa có file thuyết minh cho khu vực này.\n({ex.Message})", "OK");
+            // Tắt popup báo lỗi đi để TTS tự động đọc mà không làm phiền người dùng
+            System.Diagnostics.Debug.WriteLine($"[StoryAudioPage] Chuyển sang TTS vì: {ex.Message}");
         }
         finally
         {
@@ -112,8 +114,6 @@ public partial class StoryAudioPage : ContentPage
             _audioService.Resume();
     }
 
-    // Các nút Tua đi / Tua lại (Tôi đã ẩn icon đi trong UI để giao diện gọn giống ảnh mẫu, 
-    // nhưng bạn có thể thêm lại ImageButton gọi hàm này nếu muốn)
     private void OnRewindClicked(object sender, EventArgs e)
         => _audioService.SeekTo(Math.Max(0, _audioService.CurrentPosition - 10));
 

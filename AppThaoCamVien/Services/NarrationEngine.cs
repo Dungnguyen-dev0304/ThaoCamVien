@@ -92,18 +92,25 @@ namespace AppThaoCamVien.Services
         {
             _ttsCts = new CancellationTokenSource();
 
-            // Test Case 4: Không có Description
-            string textToSpeak = !string.IsNullOrWhiteSpace(poi.Description)
-                ? poi.Description
-                : $"Chào mừng bạn đến với khu vực {poi.Name}. Rất tiếc, hiện chưa có thông tin chi tiết cho địa điểm này.";
+            // 1. LẤY BẢN DỊCH TỰ ĐỘNG TỪ GOOGLE
+            var translator = IPlatformApplication.Current.Services.GetService<AutoTranslateService>();
+            string textToSpeak = poi.Description ?? $"Chào mừng bạn đến với khu vực {poi.Name}.";
+
+            if (translator != null && CurrentLanguage != "vi")
+            {
+                System.Diagnostics.Debug.WriteLine($"[Narration] Đang nhờ Google dịch sang {CurrentLanguage}...");
+                // Dịch nội dung sang ngôn ngữ hiện tại
+                textToSpeak = await translator.TranslateAsync(textToSpeak, CurrentLanguage);
+            }
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[Narration] Đang đọc TTS cho {poi.Name}...");
+                System.Diagnostics.Debug.WriteLine($"[Narration] Đang đọc TTS: {textToSpeak}");
 
+                // 2. CHỌN GIỌNG ĐỌC TƯƠNG ỨNG CỦA ĐIỆN THOẠI
                 var locales = await TextToSpeech.Default.GetLocalesAsync();
-                var locale = locales.FirstOrDefault(l => l.Language.Contains(CurrentLanguage, StringComparison.OrdinalIgnoreCase))
-                             ?? locales.FirstOrDefault();
+                Locale locale = locales.FirstOrDefault(l => l.Language.StartsWith(CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+                             ?? locales.FirstOrDefault(l => l.Language.StartsWith("vi")); // Fallback tiếng Việt
 
                 var options = new SpeechOptions() { Pitch = 1.0f, Volume = 1.0f, Locale = locale };
 
@@ -111,11 +118,11 @@ namespace AppThaoCamVien.Services
             }
             catch (TaskCanceledException)
             {
-                System.Diagnostics.Debug.WriteLine("[Narration] TTS đã bị người dùng ngắt ngang.");
+                System.Diagnostics.Debug.WriteLine("[Narration] TTS bị ngắt ngang.");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[Narration] Lỗi hệ thống TTS: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[Narration] Lỗi TTS: {ex.Message}");
             }
         }
 
