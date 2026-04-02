@@ -97,37 +97,49 @@ public partial class MapPage : ContentPage
         _ = _audioService.StopAsync();
     }
 
+    // Chỉnh sửa hàm OnLocationUpdated trong MapPage.xaml.cs
     private void OnLocationUpdated(object? sender, Location userLocation)
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             try
             {
-                ZooMap.MyLocationLayer.UpdateMyLocation(
-                    new Position(userLocation.Latitude, userLocation.Longitude));
+                // 1. Cập nhật chấm xanh trên bản đồ
+                ZooMap.MyLocationLayer.UpdateMyLocation(new Position(userLocation.Latitude, userLocation.Longitude));
 
+                // 2. Geofencing: Quét xem có đang đứng gần chuồng thú nào không
                 bool isNearAnyPoi = false;
                 foreach (var poi in _allPois)
                 {
-                    // Dùng poi.Radius (nullable int) — GeofencingEngine tự xử lý null
                     if (_geofencingEngine.IsWithinRadius(userLocation, poi))
                     {
                         isNearAnyPoi = true;
+
+                        // Nếu là POI mới (chưa phát) -> Kích hoạt Narration Engine
                         if (_currentActivePoi?.PoiId != poi.PoiId)
                         {
                             _currentActivePoi = poi;
-                            await OnEnterPoiZoneAsync(poi);
+
+                            // Lấy NarrationEngine từ DI và phát âm thanh
+                            var narrationEngine = IPlatformApplication.Current.Services.GetService<NarrationEngine>();
+                            if (narrationEngine != null)
+                            {
+                                await narrationEngine.PlayNarrativeAsync(poi);
+                            }
                         }
                         break;
                     }
                 }
 
+                // Nếu đi ra khỏi vùng bán kính của tất cả POI, reset lại trạng thái
                 if (!isNearAnyPoi)
+                {
                     _currentActivePoi = null;
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[MapPage] Location error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[MapPage] Lỗi GPS: {ex.Message}");
             }
         });
     }

@@ -8,40 +8,33 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<WebContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Cấu hình JSON (Chống vòng lặp)
+// 2. Cấu hình JSON (Chống vòng lặp vô tận - Đã fix lỗi 500)
 builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-// --- BỔ SUNG 1: Cấu hình CORS (Để Web App của Dương không bị lỗi trắng trang) ---
+// 3. Cấu hình CORS (Đăng ký 1 lần duy nhất để App và Web không bị lỗi)
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
 
-// --- BỔ SUNG 2: Swagger (Để Dương và bạn mình dễ test API trên trình duyệt) ---
+// 4. Swagger (Giao diện test API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Thêm dịch vụ CORS
-builder.Services.AddCors(options => {
-    options.AddDefaultPolicy(policy => {
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-    });
-});
-
 var app = builder.Build();
 
-app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+// --- CÁC MIDDLEWARE XỬ LÝ REQUEST ---
 
-// --- BỔ SUNG 3: Sử dụng Swagger và CORS ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseCors(); // Phải đặt trước MapControllers
+// Gọi UseCors 1 lần duy nhất, bắt buộc phải nằm TRƯỚC MapControllers
+app.UseCors();
 
 app.UseAuthorization();
 app.MapControllers();

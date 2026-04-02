@@ -1,0 +1,42 @@
+﻿@model SharedThaoCamVien.Models.PoiMedium
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>PoiMedium</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.MediaType)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.MediaType)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.MediaUrl)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.MediaUrl)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Language)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Language)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Poi)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Poi.Description)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.MediaId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

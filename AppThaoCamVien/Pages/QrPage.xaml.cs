@@ -78,22 +78,30 @@ public partial class QrPage : ContentPage
 
     private async Task HandleScannedCodeAsync(string qrData)
     {
-        StatusLabel.Text = $"Đã nhận mã, đang tra cứu...";
-
-        // Tra cứu POI theo QrCodeData trong bảng QrCode
+        StatusLabel.Text = $"Đang tải thông tin...";
         var poi = await _databaseService.GetPoiByQrDataAsync(qrData);
 
         if (poi != null)
         {
-            await NavigateToAudioAsync(poi);
+            // Kích hoạt Engine đọc/phát nhạc ngay lập tức
+            var narrationEngine = IPlatformApplication.Current.Services.GetService<NarrationEngine>();
+            await narrationEngine?.PlayNarrativeAsync(poi);
+
+            // Chuyển sang trang Audio để người dùng xem hình và điều khiển
+            var audioPage = IPlatformApplication.Current.Services.GetService<StoryAudioPage>();
+            if (audioPage != null)
+            {
+                audioPage.LoadPoi(poi);
+                await narrationEngine.PlayNarrativeAsync(poi, forcePlay: true);
+            }
         }
         else
         {
-            await DisplayAlert("Không nhận ra",
-                $"Mã QR không hợp lệ hoặc chưa được đăng ký.\nVui lòng thử lại.", "OK");
-            _isProcessing = false;
-            StatusLabel.Text = "Đang tìm kiếm mã QR...";
+            await DisplayAlert("Lỗi", "Mã QR chưa được đăng ký hệ thống.", "OK");
         }
+
+        _isProcessing = false;
+        StatusLabel.Text = "Đang tìm kiếm mã QR...";
     }
 
     private async Task NavigateToAudioAsync(Poi poi)

@@ -1,5 +1,7 @@
 ﻿using SQLite;
+using Newtonsoft.Json;
 using SharedThaoCamVien.Models;
+using System.Net.Http.Json;
 
 namespace AppThaoCamVien.Services
 {
@@ -136,6 +138,36 @@ namespace AppThaoCamVien.Services
                 CreatedAt = DateTime.Now
             }).ToList();
             await db.InsertAllAsync(qrCodes);
+        }
+
+        // Bổ sung vào DatabaseService.cs
+        private string ApiUrl = "http://10.0.2.2:5281/api/Pois"; // IP máy ảo Android
+
+        public async Task SyncDataFromApiAsync()
+        {
+            // Đổi IP này thành IP máy ảo (10.0.2.2) hoặc Domain API của bạn
+            string apiUrl = "http://10.0.2.2:5281/api";
+
+            try
+            {
+                using var client = new HttpClient();
+
+                // 1. Kéo bảng POIS
+                var pois = await client.GetFromJsonAsync<List<Poi>>($"{apiUrl}/map/pois");
+                if (pois != null)
+                {
+                    var db = await GetDatabaseAsync();
+                    await db.DeleteAllAsync<Poi>(); // Xóa cũ
+                    await db.InsertAllAsync(pois);  // Thêm mới
+                }
+
+                // Tương tự, bạn có thể tạo API kéo bảng poi_media và qr_codes về đây...
+                System.Diagnostics.Debug.WriteLine("[Sync] Đồng bộ dữ liệu thành công!");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Sync Error] {ex.Message}");
+            }
         }
     }
 }

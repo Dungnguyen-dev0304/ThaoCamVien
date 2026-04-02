@@ -24,22 +24,37 @@ namespace AppThaoCamVien.Services
             try
             {
                 Geolocation.LocationChanged += Geolocation_LocationChanged;
-
-                // Lấy vị trí với độ chính xác cao nhất (High), cập nhật mỗi 2 giây
                 var request = new GeolocationListeningRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(2));
                 await Geolocation.StartListeningForegroundAsync(request);
+
+#if ANDROID
+                // Kích hoạt tiến trình chạy ngầm trên Android
+                var context = global::Android.App.Application.Context;
+                var intent = new global::Android.Content.Intent(context, typeof(AppThaoCamVien.Platforms.Android.AndroidLocationService));
+                if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
+                {
+                    context.StartForegroundService(intent);
+                }
+                else
+                {
+                    context.StartService(intent);
+                }
+#endif
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Lỗi bật GPS: {ex.Message}");
-            }
+            catch (Exception ex) { Console.WriteLine($"Lỗi bật GPS: {ex.Message}"); }
         }
 
-        // Dừng theo dõi (để tiết kiệm pin khi tắt app)
         public void StopTracking()
         {
             Geolocation.LocationChanged -= Geolocation_LocationChanged;
             Geolocation.StopListeningForeground();
+
+#if ANDROID
+            // Tắt tiến trình chạy ngầm
+            var context = global::Android.App.Application.Context;
+            var intent = new global::Android.Content.Intent(context, typeof(AppThaoCamVien.Platforms.Android.AndroidLocationService));
+            context.StopService(intent);
+#endif
         }
 
         private void Geolocation_LocationChanged(object sender, GeolocationLocationChangedEventArgs e)

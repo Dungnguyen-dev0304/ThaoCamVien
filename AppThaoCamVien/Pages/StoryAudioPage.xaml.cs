@@ -41,22 +41,43 @@ public partial class StoryAudioPage : ContentPage
     private void UpdateUiWithPoi(Poi poi)
     {
         PoiNameLabel.Text = poi.Name;
-        // Nếu database của bạn có trường Tên khoa học, có thể gán thay vì text cứng
-        PoiSubtitleLabel.Text = $"Thảo Cầm Viên Sài Gòn • Mã: {poi.PoiId:D3}";
+        PoiSubtitleLabel.Text = $"Mã định danh: TCVN-{poi.PoiId:D3}";
         PoiDescTitleLabel.Text = $"Câu chuyện {poi.Name}";
-        PoiDescLabel.Text = poi.Description ?? "Chưa có thông tin chi tiết.";
 
-        // Ảnh thumbnail (local hoặc URL)
-        if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+        // Đổ dữ liệu Description từ Database vào UI
+        PoiDescLabel.Text = string.IsNullOrEmpty(poi.Description) ? "Đang cập nhật nội dung chi tiết..." : poi.Description;
+
+        // Trích một đoạn ngắn gọn cho phần Intro (Lấy 100 ký tự đầu tiên nếu có)
+        if (!string.IsNullOrEmpty(poi.Description))
         {
-            PoiImage.Source = poi.ImageThumbnail.StartsWith("http")
-                ? ImageSource.FromUri(new Uri(poi.ImageThumbnail))
-                : ImageSource.FromFile(poi.ImageThumbnail);
+            ShortIntroLabel.Text = poi.Description.Length > 100
+                ? poi.Description.Substring(0, 100) + "..."
+                : poi.Description;
+        }
+        else
+        {
+            ShortIntroLabel.Text = "Cùng lắng nghe câu chuyện thú vị về địa điểm này nhé.";
         }
 
-        // Ghi chú: Các thông số trong 4 ô vuông (Số lượng, Tuổi thọ...) hiện đang được hardcode trong XAML. 
-        // Nếu trong Model 'Poi' của bạn có các thuộc tính này, bạn có thể gán giá trị tại đây.
-        // Ví dụ: lblWeight.Text = poi.Weight;
+        // Xử lý hình ảnh từ Database (Ví dụ trong DB đang lưu là 'ha_ma.jpg')
+        if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+        {
+            if (poi.ImageThumbnail.StartsWith("http"))
+            {
+                // Nếu lưu link mạng
+                PoiImage.Source = ImageSource.FromUri(new Uri(poi.ImageThumbnail));
+            }
+            else
+            {
+                // Nếu lưu tên file local, MAUI sẽ tự tìm trong thư mục Resources/Images
+                PoiImage.Source = poi.ImageThumbnail;
+            }
+        }
+        else
+        {
+            // Ảnh mặc định nếu DB bị null
+            PoiImage.Source = "placeholder_animal.png";
+        }
     }
 
     private async Task StartAudioAsync()

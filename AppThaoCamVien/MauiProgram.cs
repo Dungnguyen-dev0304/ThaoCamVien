@@ -42,6 +42,8 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<StoryAudioPage>();
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
+            // Trong MauiProgram.cs
+            builder.Services.AddSingleton<NarrationEngine>(); // Thêm dòng này
 
 #if DEBUG
             builder.Logging.AddDebug();

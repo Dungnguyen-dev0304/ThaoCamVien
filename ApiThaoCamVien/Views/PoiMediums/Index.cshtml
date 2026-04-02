@@ -1,0 +1,53 @@
+﻿@model IEnumerable<SharedThaoCamVien.Models.PoiMedium>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.MediaType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MediaUrl)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Language)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Poi)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.MediaType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MediaUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Language)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Poi.Description)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.MediaId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.MediaId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.MediaId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
