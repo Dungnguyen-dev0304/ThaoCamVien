@@ -27,6 +27,8 @@ public partial class WebContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UserLocationLog> UserLocationLogs { get; set; }
 
+    public virtual DbSet<PoiTranslation> PoiTranslations { get; set; }
+
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //    => optionsBuilder.UseSqlServer("Server=.;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
 
@@ -163,6 +165,24 @@ public partial class WebContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserLocationLogs)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_location_user");
+        });
+
+        // Thêm vào cấu hình cho bảng POI_TRANSLATIONS
+        modelBuilder.Entity<PoiTranslation>(entity =>
+        {
+            entity.HasKey(e => e.TranslationId).HasName("PK_poi_translations");
+            entity.ToTable("poi_translations");
+            entity.Property(e => e.TranslationId).HasColumnName("translation_id");
+            entity.Property(e => e.PoiId).HasColumnName("poi_id");
+            entity.Property(e => e.LanguageCode).HasMaxLength(10).HasColumnName("language_code");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Description).HasColumnName("description");
+
+            entity.HasOne(d => d.Poi)
+                .WithMany()
+                .HasForeignKey(d => d.PoiId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_translations_poi");
         });
 
         OnModelCreatingPartial(modelBuilder);
