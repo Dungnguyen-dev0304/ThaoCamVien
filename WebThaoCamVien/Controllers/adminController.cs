@@ -2,6 +2,7 @@
 using ApiThaoCamVien.Models;
 using SharedThaoCamVien.Models;
 using Microsoft.EntityFrameworkCore;
+using WebThaoCamVien.ViewModels;
 
 namespace WebThaoCamVien.Controllers
 {
@@ -185,21 +186,34 @@ namespace WebThaoCamVien.Controllers
 
         // ── EDIT POI ─────────────────────────────────────────────────────
 
+        // GET: /Admin/EditPOI?id=1  (THAY THẾ action EditPOI GET cũ)
         public async Task<IActionResult> EditPOI(int id)
         {
             SetViewData("poilist", "Chỉnh sửa POI", "Quản lý điểm tham quan");
             var poi = await _context.Pois.FindAsync(id);
             if (poi == null) return NotFound();
-            return View(poi);
+
+            var translations = await _context.PoiTranslations
+                .Where(t => t.PoiId == id)
+                .ToListAsync();
+
+            return View(new EditPOIViewModel { Poi = poi, Translations = translations });
         }
 
+        // POST: /Admin/EditPOI  (THAY THẾ action EditPOI POST cũ)
         [HttpPost]
-        public async Task<IActionResult> EditPOI(Poi model, IFormFile? imageFile)
+        public async Task<IActionResult> EditPOI(EditPOIViewModel viewModel, IFormFile? imageFile)
         {
-            ModelState.Remove("ImageThumbnail");
+            var model = viewModel.Poi;
+            ModelState.Remove("Poi.ImageThumbnail");
             SetViewData("poilist", "Chỉnh sửa POI", "Quản lý điểm tham quan");
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                viewModel.Translations = await _context.PoiTranslations
+                    .Where(t => t.PoiId == model.PoiId).ToListAsync();
+                return View(viewModel);
+            }
 
             double lat = (double)model.Latitude;
             double lng = (double)model.Longitude;
@@ -207,18 +221,21 @@ namespace WebThaoCamVien.Controllers
             if (!IsInsideBoundary(lat, lng))
             {
                 ModelState.AddModelError("", "Vị trí được chọn nằm ngoài ranh giới Thảo Cầm Viên. Vui lòng chọn lại.");
-                return View(model);
+                viewModel.Translations = await _context.PoiTranslations
+                    .Where(t => t.PoiId == model.PoiId).ToListAsync();
+                return View(viewModel);
             }
 
-            // Bỏ qua chính POI đang sửa khi kiểm tra trùng vị trí
             var existingPois = await _context.Pois.Where(p => p.PoiId != model.PoiId).ToListAsync();
             var duplicate = existingPois.FirstOrDefault(p =>
                 CalculateDistance(lat, lng, (double)p.Latitude, (double)p.Longitude) < MinDistanceMeters);
 
             if (duplicate != null)
             {
-                ModelState.AddModelError("", $"Vị trí này quá gần với POI đã tồn tại: \"{duplicate.Name}\" (trong vòng {MinDistanceMeters}m). Vui lòng chọn vị trí khác.");
-                return View(model);
+                ModelState.AddModelError("", $"Vị trí này quá gần với POI \"{duplicate.Name}\" (trong vòng {MinDistanceMeters}m).");
+                viewModel.Translations = await _context.PoiTranslations
+                    .Where(t => t.PoiId == model.PoiId).ToListAsync();
+                return View(viewModel);
             }
 
             var existing = await _context.Pois.FindAsync(model.PoiId);
@@ -232,14 +249,12 @@ namespace WebThaoCamVien.Controllers
 
             if (imageFile != null && imageFile.Length > 0)
             {
-                // Xóa ảnh cũ trước khi lưu ảnh mới
+                // Xóa ảnh cũ
                 if (!string.IsNullOrEmpty(existing.ImageThumbnail))
                 {
                     string oldPath = Path.Combine(_env.WebRootPath, "images", "pois", existing.ImageThumbnail);
-                    if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
+                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
                 }
-
                 await SaveImageAsync(imageFile, existing);
             }
 
@@ -247,34 +262,49 @@ namespace WebThaoCamVien.Controllers
             return RedirectToAction("PoiList");
         }
 
-        // ── DELETE POI ───────────────────────────────────────────────────
-
-        // GET: Hiển thị trang xác nhận
-        public async Task<IActionResult> DeletePOI(int id)
+        // POST: /Admin/SaveTranslation
+        [HttpPost]
+        public async Task<IActionResult> SaveTranslation(int TranslationId, int PoiId, string LanguageCode, string Name, string Description)
         {
-            SetViewData("poilist", "Xóa POI", "Quản lý điểm tham quan");
-            var poi = await _context.Pois.FindAsync(id);
-            if (poi == null) return NotFound();
-            return View(poi);
-        }
-
-        // POST: Thực hiện xóa
-        [HttpPost, ActionName("DeletePOI")]
-        public async Task<IActionResult> DeletePOIConfirmed(int PoiId)
-        {
-            var poi = await _context.Pois.FindAsync(PoiId);
-            if (poi == null) return NotFound();
-
-            if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+            if (TranslationId == 0)
             {
-                string imagePath = Path.Combine(_env.WebRootPath, "images", "pois", poi.ImageThumbnail);
-                if (System.IO.File.Exists(imagePath))
-                    System.IO.File.Delete(imagePath);
+                // Thêm mới
+                var translation = new PoiTranslation
+                {
+                    PoiId = PoiId,
+                    LanguageCode = LanguageCode,
+                    Name = Name,
+                    Description = Description
+                };
+                _context.PoiTranslations.Add(translation);
+            }
+            else
+            {
+                // Cập nhật
+                var existing = await _context.PoiTranslations.FindAsync(TranslationId);
+                if (existing != null)
+                {
+                    existing.Name = Name;
+                    existing.Description = Description;
+                }
             }
 
-            _context.Pois.Remove(poi);
             await _context.SaveChangesAsync();
-            return RedirectToAction("PoiList");
+            return RedirectToAction("EditPOI", new { id = PoiId });
+        }
+
+        // ── DELETE POI ─────────────────────────────────────────────────────
+        // POST: /Admin/DeleteTranslation
+        [HttpPost]
+        public async Task<IActionResult> DeleteTranslation(int TranslationId, int PoiId)
+        {
+            var translation = await _context.PoiTranslations.FindAsync(TranslationId);
+            if (translation != null)
+            {
+                _context.PoiTranslations.Remove(translation);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction("EditPOI", new { id = PoiId });
         }
 
         // ── HELPER: LƯU ẢNH ─────────────────────────────────────────────

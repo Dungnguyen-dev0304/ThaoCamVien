@@ -1,6 +1,6 @@
 ﻿using SharedThaoCamVien.Models;
 
-namespace WebThaoCamVien.Views.ViewModels
+namespace WebThaoCamVien.ViewModels
 {
     public class EditPOIViewModel
     {
