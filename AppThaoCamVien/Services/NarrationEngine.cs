@@ -1,147 +1,112 @@
-﻿using Microsoft.Maui.Media;
+﻿#if ANDROID
+using Android.Speech.Tts;
+#endif
 using SharedThaoCamVien.Models;
 
 namespace AppThaoCamVien.Services
 {
-    public class NarrationEngine
+    /// <summary>
+    /// NarrationEngine — điều phối toàn bộ việc phát thuyết minh.
+    /// Luồng: cooldown check → mutex lock → thử MP3 → fallback TTS đa ngôn ngữ.
+    /// </summary>
+    public class NarrationEngine : IDisposable
     {
         private readonly AudioService _audioService;
         private readonly DatabaseService _databaseService;
+        private readonly TtsEngine _ttsEngine;
 
-        // Từ điển lưu lịch sử để chống spam (Test Case 5)
         private readonly Dictionary<int, DateTime> _playedHistory = new();
         private const int COOLDOWN_MINUTES = 5;
-
-        // Cờ khóa luồng (Mutex/Semaphore) để tránh phát 2 âm thanh đè nhau
-        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-
-        // Token để hủy TTS giữa chừng (Test Case 6)
-        private CancellationTokenSource? _ttsCts;
+        private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
         public string CurrentLanguage { get; set; } = "vi";
 
-        public NarrationEngine(AudioService audioService, DatabaseService databaseService)
+        public NarrationEngine(AudioService audioService, DatabaseService databaseService, TtsEngine ttsEngine)
         {
             _audioService = audioService;
             _databaseService = databaseService;
+            _ttsEngine = ttsEngine;
+            CurrentLanguage = databaseService.CurrentLanguage;
         }
 
-        // forcePlay = true dùng cho quét QR (bỏ qua Cooldown)
         public async Task PlayNarrativeAsync(Poi poi, bool forcePlay = false)
         {
-            // 1. KIỂM TRA COOLDOWN (Chống spam khi lượn lờ ở 1 khu vực)
+            // Đồng bộ ngôn ngữ trước mỗi lần phát
+            CurrentLanguage = _databaseService.CurrentLanguage;
+
+            // Cooldown check — bỏ qua nếu forcePlay (user nhấn tay)
             if (!forcePlay && _playedHistory.TryGetValue(poi.PoiId, out var lastPlayed))
             {
                 if ((DateTime.Now - lastPlayed).TotalMinutes < COOLDOWN_MINUTES)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Narration] Bỏ qua {poi.Name} (Đang trong Cooldown).");
+                    System.Diagnostics.Debug.WriteLine($"[Narration] ⏸ Cooldown: {poi.Name}");
                     return;
                 }
             }
 
-            // 2. KHÓA LUỒNG: Đảm bảo không có 2 lệnh Play chạy song song
-            if (!await _semaphore.WaitAsync(0))
+            if (forcePlay)
             {
-                System.Diagnostics.Debug.WriteLine("[Narration] Đang có tiến trình phát khác, từ chối lệnh mới.");
-                return;
+                // Dừng bài cũ ngay lập tức, rồi chờ mutex
+                await StopCurrentNarrationAsync();
+                await _semaphore.WaitAsync();
+            }
+            else
+            {
+                // GPS trigger: nếu đang bận thì bỏ qua (không xếp hàng)
+                if (!await _semaphore.WaitAsync(0))
+                {
+                    System.Diagnostics.Debug.WriteLine("[Narration] 🔒 Đang phát, bỏ qua GPS trigger");
+                    return;
+                }
             }
 
             try
             {
                 _playedHistory[poi.PoiId] = DateTime.Now;
-
-                // 3. DỪNG MỌI THỨ ĐANG PHÁT
-                await StopCurrentNarrationAsync();
-
-                // 4. KIỂM TRA MP3 TRONG DATABASE
-                var media = await _databaseService.GetAudioForPoiAsync(poi.PoiId, CurrentLanguage);
-                bool isMp3Success = false;
-
-                // Test Case 1 & 2: Có URL nhưng có thể lỗi mạng hoặc file 404
-                if (media != null && !string.IsNullOrWhiteSpace(media.MediaUrl))
-                {
-                    try
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[Narration] Thử phát MP3 cho {poi.Name}...");
-                        await _audioService.PlayPoiAudioAsync(poi.PoiId);
-                        isMp3Success = true; // Phát MP3 thành công!
-                    }
-                    catch (Exception ex)
-                    {
-                        // Lỗi stream (rớt mạng, file hỏng) -> Ghi log và cho rớt xuống TTS
-                        System.Diagnostics.Debug.WriteLine($"[Narration] MP3 lỗi ({ex.Message}). Fallback sang TTS.");
-                        isMp3Success = false;
-                    }
-                }
-
-                // 5. FALLBACK SANG TTS (Test Case 3)
-                if (!isMp3Success)
-                {
-                    await PlayTTSAsync(poi);
-                }
+                await PlayInternalAsync(poi);
             }
             finally
             {
-                // Luôn mở khóa luồng dù có lỗi hay không
                 _semaphore.Release();
             }
         }
 
-        // Hàm xử lý Text To Speech với Cancellation Token
-        private async Task PlayTTSAsync(Poi poi)
+        private async Task PlayInternalAsync(Poi poi)
         {
-            _ttsCts = new CancellationTokenSource();
+            System.Diagnostics.Debug.WriteLine($"[Narration] ▶ '{poi.Name}' [{CurrentLanguage}]");
 
-            // 1. LẤY BẢN DỊCH TỰ ĐỘNG TỪ GOOGLE
-            var translator = IPlatformApplication.Current.Services.GetService<AutoTranslateService>();
-            string textToSpeak = poi.Description ?? $"Chào mừng bạn đến với khu vực {poi.Name}.";
-
-            if (translator != null && CurrentLanguage != "vi")
+            // Bước 1: Thử file MP3 từ server
+            var media = await _databaseService.GetAudioForPoiAsync(poi.PoiId, CurrentLanguage);
+            if (media != null && !string.IsNullOrWhiteSpace(media.MediaUrl))
             {
-                System.Diagnostics.Debug.WriteLine($"[Narration] Đang nhờ Google dịch sang {CurrentLanguage}...");
-                // Dịch nội dung sang ngôn ngữ hiện tại
-                textToSpeak = await translator.TranslateAsync(textToSpeak, CurrentLanguage);
+                try
+                {
+                    await _audioService.PlayPoiAudioAsync(poi.PoiId);
+                    System.Diagnostics.Debug.WriteLine($"[Narration] 🎵 MP3 OK");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Narration] ⚠️ MP3 lỗi: {ex.Message}");
+                }
             }
 
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"[Narration] Đang đọc TTS: {textToSpeak}");
-
-                // 2. CHỌN GIỌNG ĐỌC TƯƠNG ỨNG CỦA ĐIỆN THOẠI
-                var locales = await TextToSpeech.Default.GetLocalesAsync();
-                Locale locale = locales.FirstOrDefault(l => l.Language.StartsWith(CurrentLanguage, StringComparison.OrdinalIgnoreCase))
-                             ?? locales.FirstOrDefault(l => l.Language.StartsWith("vi")); // Fallback tiếng Việt
-
-                var options = new SpeechOptions() { Pitch = 1.0f, Volume = 1.0f, Locale = locale };
-
-                await TextToSpeech.Default.SpeakAsync(textToSpeak, options, cancelToken: _ttsCts.Token);
-            }
-            catch (TaskCanceledException)
-            {
-                System.Diagnostics.Debug.WriteLine("[Narration] TTS bị ngắt ngang.");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Narration] Lỗi TTS: {ex.Message}");
-            }
+            // Bước 2: Fallback TTS chất lượng cao
+            System.Diagnostics.Debug.WriteLine($"[Narration] 📝 TTS [{CurrentLanguage}]");
+            await _ttsEngine.SpeakPoiAsync(poi, CurrentLanguage);
         }
 
-        // Hàm cưỡng chế dừng mọi âm thanh đang phát
         public async Task StopCurrentNarrationAsync()
         {
-            // Cắt MP3
             if (_audioService.IsPlaying)
-            {
                 await _audioService.StopAsync();
-            }
+            await _ttsEngine.StopAsync();
+        }
 
-            // Cắt TTS
-            if (_ttsCts != null && !_ttsCts.IsCancellationRequested)
-            {
-                _ttsCts.Cancel();
-                _ttsCts.Dispose();
-                _ttsCts = null;
-            }
+        public void Dispose()
+        {
+            _ = StopCurrentNarrationAsync();
+            _semaphore.Dispose();
         }
     }
 }

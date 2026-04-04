@@ -4,7 +4,6 @@
              x:Class="AppThaoCamVien.Pages.HomePage"
              NavigationPage.HasNavigationBar="False">
 
-    <!-- Đặt nền Gradient Xanh Rừng cho toàn bộ trang -->
     <ContentPage.Background>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#0a2e1f" Offset="0.0" />
@@ -14,31 +13,34 @@
 
     <Grid RowDefinitions="*, Auto">
 
-        <!-- Main Scrollable Content -->
         <ScrollView Grid.Row="0" VerticalScrollBarVisibility="Never">
             <VerticalStackLayout Spacing="0">
 
-                <!-- Header: Logo .NET + Title -->
-                <!-- Thay thế cụm HorizontalStackLayout ở phần Header bằng đoạn này -->
-                <HorizontalStackLayout HorizontalOptions="Center" 
-                       Spacing="12" 
-                       Padding="0,20,0,10">
-                    <Image Source="splash.png" WidthRequest="36" HeightRequest="36" VerticalOptions="Center"/>
-                    <VerticalStackLayout VerticalOptions="Center">
-                        <!-- Đã đổi LetterSpacing thành CharacterSpacing -->
-                        <Label Text="{DynamicResource TxtZooName}" TextColor="White" FontSize="18" FontAttributes="Bold" CharacterSpacing="1"/>
-                        <Label Text="{DynamicResource TxtAudioGuide}" TextColor="#a5d6a7" FontSize="11" CharacterSpacing="2"/>
-                    </VerticalStackLayout>
-                </HorizontalStackLayout>
-                <Border Grid.Column="2" BackgroundColor="#1a5c40" Stroke="#ffca28" StrokeThickness="1" Padding="8,4" VerticalOptions="Center">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8"/>
-                    </Border.StrokeShape>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnLanguageTapped"/>
-                    </Border.GestureRecognizers>
-                    <Label x:Name="LangLabel" Text="🇻🇳 VI" TextColor="White" FontAttributes="Bold" FontSize="13"/>
-                </Border>
+                <!-- Header: Logo + Tên Zoo + Nút Đổi Ngôn Ngữ -->
+                <Grid ColumnDefinitions="*, Auto" Padding="16,20,16,10">
+                    <HorizontalStackLayout Grid.Column="0" Spacing="12" VerticalOptions="Center">
+                        <Image Source="splash.png" WidthRequest="36" HeightRequest="36" VerticalOptions="Center"/>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="{DynamicResource TxtZooName}" TextColor="White"
+                                   FontSize="16" FontAttributes="Bold" CharacterSpacing="1"/>
+                            <Label Text="{DynamicResource TxtAudioGuide}" TextColor="#a5d6a7"
+                                   FontSize="11" CharacterSpacing="2"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+
+                    <!-- Nút chuyển ngôn ngữ -->
+                    <Border Grid.Column="1" BackgroundColor="#1a5c40" Stroke="#ffca28"
+                            StrokeThickness="1" Padding="10,6" VerticalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="10"/>
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnLanguageTapped"/>
+                        </Border.GestureRecognizers>
+                        <Label x:Name="LangLabel" Text="🇻🇳 VI" TextColor="White"
+                               FontAttributes="Bold" FontSize="13"/>
+                    </Border>
+                </Grid>
 
                 <!-- Hero Image Section -->
                 <Grid HeightRequest="260" Margin="16,10,16,0">
@@ -47,30 +49,29 @@
                             <RoundRectangle CornerRadius="20"/>
                         </Border.StrokeShape>
                         <Grid>
-                            <!-- Background Image -->
                             <Image Source="zoo_hero.jpg" Aspect="AspectFill" HeightRequest="260"/>
-
-                            <!-- Dark Overlay Gradient -->
                             <BoxView Color="#000000" Opacity="0.45" HeightRequest="260"/>
 
-                            <!-- Bottom Text + Button -->
                             <VerticalStackLayout VerticalOptions="End" Padding="16,0,16,20" Spacing="10">
-                                <!-- Title -->
-                                <Label Text="Hành Trình Âm Thanh" TextColor="White" FontSize="24" FontAttributes="Bold"/>
-
-                                <!-- Address -->
+                                <!-- DynamicResource: tiêu đề hero đổi theo ngôn ngữ -->
+                                <Label Text="{DynamicResource TxtHeroTitle}" TextColor="White"
+                                       FontSize="24" FontAttributes="Bold"/>
                                 <HorizontalStackLayout Spacing="6">
                                     <Label Text="📍" FontSize="14" TextColor="#ffca28"/>
-                                    <Label Text="2 Nguyễn Bỉnh Khiêm, Quận 1" TextColor="#E8F5E9" FontSize="13"/>
+                                    <Label Text="{DynamicResource TxtHeroAddress}" TextColor="#E8F5E9" FontSize="13"/>
                                 </HorizontalStackLayout>
 
-                                <!-- Start Tour Button -->
+                                <!-- Nút Bắt đầu -->
                                 <Border BackgroundColor="#ffca28" HeightRequest="44" StrokeThickness="0" Margin="0,8,0,0">
                                     <Border.StrokeShape>
                                         <RoundRectangle CornerRadius="22"/>
                                     </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnStartTourTapped"/>
+                                    </Border.GestureRecognizers>
                                     <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
-                                        <Label Text="BẮT ĐẦU CHUYẾN ĐI" TextColor="#0a2e1f" FontSize="14" FontAttributes="Bold" VerticalOptions="Center"/>
+                                        <Label Text="{DynamicResource TxtStartTour}" TextColor="#0a2e1f"
+                                               FontSize="14" FontAttributes="Bold" VerticalOptions="Center"/>
                                         <Label Text="▶" TextColor="#0a2e1f" FontSize="12" VerticalOptions="Center"/>
                                     </HorizontalStackLayout>
                                 </Border>
@@ -79,49 +80,54 @@
                     </Border>
                 </Grid>
 
-                <!-- Info Cards Row -->
+                <!-- Info Cards: Giờ mở cửa + Giá vé -->
                 <Grid ColumnDefinitions="*, *" Margin="16,20,16,0" ColumnSpacing="12">
 
-                    <!-- Hours Card -->
-                    <Border Grid.Column="0" BackgroundColor="#123d2a" Padding="14,12" Stroke="#ffca28" StrokeThickness="1">
+                    <Border Grid.Column="0" BackgroundColor="#123d2a" Padding="14,12"
+                            Stroke="#ffca28" StrokeThickness="1">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="16"/>
                         </Border.StrokeShape>
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="🕐 Giờ mở cửa" FontSize="13" FontAttributes="Bold" TextColor="#ffca28"/>
-                            <Label Text="7:00 - 18:30" FontSize="15" FontAttributes="Bold" TextColor="White"/>
-                            <Label Text="Mở cửa tất cả các ngày" FontSize="11" TextColor="#a5d6a7"/>
+                            <Label Text="{DynamicResource TxtOpenHours}" FontSize="13"
+                                   FontAttributes="Bold" TextColor="#ffca28"/>
+                            <Label Text="{DynamicResource TxtHoursDetail}" FontSize="15"
+                                   FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="{DynamicResource TxtHoursNote}" FontSize="11" TextColor="#a5d6a7"/>
                         </VerticalStackLayout>
                     </Border>
 
-                    <!-- Ticket Price Card -->
-                    <Border Grid.Column="1" BackgroundColor="#123d2a" Padding="14,12" Stroke="#ffca28" StrokeThickness="1">
+                    <Border Grid.Column="1" BackgroundColor="#123d2a" Padding="14,12"
+                            Stroke="#ffca28" StrokeThickness="1">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="16"/>
                         </Border.StrokeShape>
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="{DynamicResource TxtTicketTitle}" FontSize="13" FontAttributes="Bold" TextColor="#ffca28"/>
-                            <Label Text="{DynamicResource TxtTicketFree}" FontSize="12" TextColor="White" FontAttributes="Bold"/>
-                            <Label Text="{DynamicResource TxtTicketChild}" FontSize="12" TextColor="White" FontAttributes="Bold"/>
-                            <Label Text="{DynamicResource TxtTicketAdult}" FontSize="12" TextColor="White" FontAttributes="Bold"/>
+                            <Label Text="{DynamicResource TxtTicketTitle}" FontSize="13"
+                                   FontAttributes="Bold" TextColor="#ffca28"/>
+                            <Label Text="{DynamicResource TxtTicketFree}" FontSize="12"
+                                   TextColor="White" FontAttributes="Bold"/>
+                            <Label Text="{DynamicResource TxtTicketChild}" FontSize="12"
+                                   TextColor="White" FontAttributes="Bold"/>
+                            <Label Text="{DynamicResource TxtTicketAdult}" FontSize="12"
+                                   TextColor="White" FontAttributes="Bold"/>
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
 
-                <!-- Highlights / Audio Tours Section -->
+                <!-- Tour Section -->
                 <VerticalStackLayout Margin="16,24,16,0" Spacing="14">
-
-                    <!-- Section Header -->
                     <Grid ColumnDefinitions="*, Auto">
-                        <Label Grid.Column="0" Text="CHỌN TOUR CỦA BẠN" FontSize="16" FontAttributes="Bold" TextColor="White" VerticalOptions="Center"/>
-                        <Label Grid.Column="1" Text="Xem tất cả" FontSize="13" TextColor="#ffca28" VerticalOptions="Center"/>
+                        <Label Grid.Column="0" Text="{DynamicResource TxtChooseTour}"
+                               FontSize="16" FontAttributes="Bold" TextColor="White" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="{DynamicResource TxtViewAll}"
+                               FontSize="13" TextColor="#ffca28" VerticalOptions="Center"/>
                     </Grid>
 
-                    <!-- Tour Cards Row -->
                     <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                         <HorizontalStackLayout Spacing="16" Padding="0,0,16,20">
 
-                            <!-- Audio Tour Card 1: Voi Châu Á -->
+                            <!-- Tour Card 1: Voi Châu Á -->
                             <Border BackgroundColor="#0f3322" WidthRequest="220" Stroke="#ffca28" StrokeThickness="1">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="16"/>
@@ -129,20 +135,25 @@
                                 <Grid RowDefinitions="140, Auto">
                                     <Image Grid.Row="0" Source="elephant.jpg" Aspect="AspectFill" HeightRequest="140"/>
                                     <VerticalStackLayout Grid.Row="1" Padding="12" Spacing="8">
-                                        <Label Text="Vương Quốc Voi Châu Á" FontSize="15" FontAttributes="Bold" TextColor="White"/>
-
-                                        <!-- Duration & Stops -->
+                                        <Label Text="{DynamicResource TxtTour1Title}" FontSize="15"
+                                               FontAttributes="Bold" TextColor="White"/>
                                         <HorizontalStackLayout Spacing="10">
-                                            <Label Text="⏱ 15 MIN" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
-                                            <Label Text="📍 3 STOPS" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="⏱ 15" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="{DynamicResource TxtTourMin}" FontSize="11"
+                                                   TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="📍 3" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="{DynamicResource TxtTourStops}" FontSize="11"
+                                                   TextColor="#ffca28" FontAttributes="Bold"/>
                                         </HorizontalStackLayout>
-
-                                        <Button Text="🔊 NGHE NGAY" BackgroundColor="#2E7D32" TextColor="White" HeightRequest="36" CornerRadius="18" FontSize="12" FontAttributes="Bold" Margin="0,4,0,0"/>
+                                        <Button Text="{DynamicResource TxtListenNow}" BackgroundColor="#2E7D32"
+                                                TextColor="White" HeightRequest="36" CornerRadius="18"
+                                                FontSize="12" FontAttributes="Bold" Margin="0,4,0,0"
+                                                Clicked="OnTour1Clicked"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>
 
-                            <!-- Audio Tour Card 2: Hổ Đông Dương -->
+                            <!-- Tour Card 2: Hổ -->
                             <Border BackgroundColor="#0f3322" WidthRequest="220" Stroke="#ffca28" StrokeThickness="1">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="16"/>
@@ -150,19 +161,25 @@
                                 <Grid RowDefinitions="140, Auto">
                                     <Image Grid.Row="0" Source="tiger.jpg" Aspect="AspectFill" HeightRequest="140"/>
                                     <VerticalStackLayout Grid.Row="1" Padding="12" Spacing="8">
-                                        <Label Text="Chúa Tể Sơn Lâm" FontSize="15" FontAttributes="Bold" TextColor="White"/>
-
+                                        <Label Text="{DynamicResource TxtTour2Title}" FontSize="15"
+                                               FontAttributes="Bold" TextColor="White"/>
                                         <HorizontalStackLayout Spacing="10">
-                                            <Label Text="⏱ 20 MIN" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
-                                            <Label Text="📍 5 STOPS" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="⏱ 20" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="{DynamicResource TxtTourMin}" FontSize="11"
+                                                   TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="📍 5" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="{DynamicResource TxtTourStops}" FontSize="11"
+                                                   TextColor="#ffca28" FontAttributes="Bold"/>
                                         </HorizontalStackLayout>
-
-                                        <Button Text="🔊 NGHE NGAY" BackgroundColor="#2E7D32" TextColor="White" HeightRequest="36" CornerRadius="18" FontSize="12" FontAttributes="Bold" Margin="0,4,0,0"/>
+                                        <Button Text="{DynamicResource TxtListenNow}" BackgroundColor="#2E7D32"
+                                                TextColor="White" HeightRequest="36" CornerRadius="18"
+                                                FontSize="12" FontAttributes="Bold" Margin="0,4,0,0"
+                                                Clicked="OnTour2Clicked"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>
 
-                            <!-- Audio Tour Card 3: Hươu Cao Cổ -->
+                            <!-- Tour Card 3: Hươu Cao Cổ -->
                             <Border BackgroundColor="#0f3322" WidthRequest="220" Stroke="#ffca28" StrokeThickness="1">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="16"/>
@@ -170,31 +187,30 @@
                                 <Grid RowDefinitions="140, Auto">
                                     <Image Grid.Row="0" Source="giraffe.jpg" Aspect="AspectFill" HeightRequest="140"/>
                                     <VerticalStackLayout Grid.Row="1" Padding="12" Spacing="8">
-                                        <Label Text="Gã Khổng Lồ Châu Phi" FontSize="15" FontAttributes="Bold" TextColor="White"/>
-
+                                        <Label Text="{DynamicResource TxtTour3Title}" FontSize="15"
+                                               FontAttributes="Bold" TextColor="White"/>
                                         <HorizontalStackLayout Spacing="10">
-                                            <Label Text="⏱ 10 MIN" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
-                                            <Label Text="📍 2 STOPS" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="⏱ 10" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="{DynamicResource TxtTourMin}" FontSize="11"
+                                                   TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="📍 2" FontSize="11" TextColor="#ffca28" FontAttributes="Bold"/>
+                                            <Label Text="{DynamicResource TxtTourStops}" FontSize="11"
+                                                   TextColor="#ffca28" FontAttributes="Bold"/>
                                         </HorizontalStackLayout>
-
-                                        <Button Text="🔊 NGHE NGAY" BackgroundColor="#2E7D32" TextColor="White" HeightRequest="36" CornerRadius="18" FontSize="12" FontAttributes="Bold" Margin="0,4,0,0"/>
+                                        <Button Text="{DynamicResource TxtListenNow}" BackgroundColor="#2E7D32"
+                                                TextColor="White" HeightRequest="36" CornerRadius="18"
+                                                FontSize="12" FontAttributes="Bold" Margin="0,4,0,0"
+                                                Clicked="OnTour3Clicked"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>
 
                         </HorizontalStackLayout>
                     </ScrollView>
-
                 </VerticalStackLayout>
 
-                <!-- Bottom padding -->
                 <BoxView HeightRequest="40" Color="Transparent"/>
-
             </VerticalStackLayout>
         </ScrollView>
-
-        <!-- Bottom Navigation Bar (Dark Theme) -->
-      
-
     </Grid>
 </ContentPage>

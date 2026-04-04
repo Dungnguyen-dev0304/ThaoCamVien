@@ -2,52 +2,421 @@
 
 namespace AppThaoCamVien.Services
 {
+    /// <summary>
+    /// Quản lý ngôn ngữ toàn cục cho app.
+    /// Nguyên lý: Mỗi chuỗi text trong UI có một "key" duy nhất (ví dụ: "TxtZooName").
+    /// Khi đổi ngôn ngữ, hàm SetLanguage() cập nhật giá trị của tất cả các key đó
+    /// trong Application.Current.Resources. Vì XAML dùng {DynamicResource}, 
+    /// UI sẽ tự động cập nhật ngay lập tức mà không cần reload trang.
+    /// </summary>
     public static class LanguageManager
     {
+        // Danh sách ngôn ngữ hỗ trợ để hiển thị trên nút chuyển đổi
+        public static readonly List<(string Code, string Flag, string Label)> SupportedLanguages = new()
+        {
+            ("vi", "🇻🇳", "VI"),
+            ("en", "🇬🇧", "EN"),
+            ("th", "🇹🇭", "TH"),
+            ("id", "🇮🇩", "ID"),
+            ("ms", "🇲🇾", "MS"),
+            ("km", "🇰🇭", "KM"),
+        };
+
+        /// <summary>
+        /// Gọi khi app khởi động để load ngôn ngữ đã lưu từ lần trước.
+        /// </summary>
         public static void LoadCurrentLanguage()
         {
             string lang = Preferences.Get("AppLang", "vi");
             SetLanguage(lang);
         }
 
+        /// <summary>
+        /// Đặt toàn bộ chuỗi text theo ngôn ngữ chỉ định.
+        /// Tất cả key phải tồn tại trong App.xaml Resources để DynamicResource hoạt động.
+        /// </summary>
         public static void SetLanguage(string lang)
         {
-            var res = Application.Current.Resources;
+            // Lưu lại để các Service khác (NarrationEngine, AudioService) biết dùng ngôn ngữ nào
+            Preferences.Set("AppLang", lang);
 
-            switch (lang)
-            {
-                case "en":
-                    res["TabHome"] = "Home"; res["TabQR"] = "Scan QR"; res["TabNumpad"] = "Code";
-                    res["TabStory"] = "Animals"; res["TabMap"] = "Map"; res["TabAbout"] = "About";
-                    res["TxtAppInfo"] = "App Information";
-                    // Thêm các từ vựng trang chủ tại đây...
-                    break;
-                case "th":
-                    res["TabHome"] = "หน้าแรก"; res["TabQR"] = "สแกน QR"; res["TabNumpad"] = "รหัส";
-                    res["TabStory"] = "สัตว์"; res["TabMap"] = "แผนที่"; res["TabAbout"] = "เกี่ยวกับ";
-                    res["TxtAppInfo"] = "ข้อมูลแอป";
-                    break;
-                case "id":
-                    res["TabHome"] = "Beranda"; res["TabQR"] = "Pindai QR"; res["TabNumpad"] = "Kode";
-                    res["TabStory"] = "Hewan"; res["TabMap"] = "Peta"; res["TabAbout"] = "Tentang";
-                    res["TxtAppInfo"] = "Info Aplikasi";
-                    break;
-                case "ms":
-                    res["TabHome"] = "Utama"; res["TabQR"] = "Imbas QR"; res["TabNumpad"] = "Kod";
-                    res["TabStory"] = "Haiwan"; res["TabMap"] = "Peta"; res["TabAbout"] = "Tentang";
-                    res["TxtAppInfo"] = "Maklumat Aplikasi";
-                    break;
-                case "km":
-                    res["TabHome"] = "ទំព័រដើម"; res["TabQR"] = "ស្កេន QR"; res["TabNumpad"] = "លេខកូដ";
-                    res["TabStory"] = "សត្វ"; res["TabMap"] = "ផែនទី"; res["TabAbout"] = "អំពី";
-                    res["TxtAppInfo"] = "ព័ត៌មានកម្មវិធី";
-                    break;
-                default: // "vi"
-                    res["TabHome"] = "Trang chủ"; res["TabQR"] = "Mã QR"; res["TabNumpad"] = "Nhập Số";
-                    res["TabStory"] = "Câu chuyện"; res["TabMap"] = "Sơ đồ"; res["TabAbout"] = "Giới thiệu";
-                    res["TxtAppInfo"] = "Thông tin ứng dụng";
-                    break;
-            }
+            var res = Application.Current?.Resources;
+            if (res == null) return;
+
+            // Dùng một dictionary trung gian để code gọn hơn
+            var strings = GetStrings(lang);
+            foreach (var kv in strings)
+                res[kv.Key] = kv.Value;
         }
+
+        public static string GetCurrentLanguage()
+            => Preferences.Get("AppLang", "vi");
+
+        // =====================================================================
+        // TẤT CẢ CHUỖI TEXT THEO TỪNG NGÔN NGỮ
+        // Thêm key mới vào đây và vào App.xaml Resources (giá trị mặc định tiếng Việt)
+        // =====================================================================
+        private static Dictionary<string, string> GetStrings(string lang) => lang switch
+        {
+            "en" => new()
+            {
+                // === Tab Bar ===
+                ["TabHome"] = "Home",
+                ["TabQR"] = "Scan QR",
+                ["TabNumpad"] = "Code",
+                ["TabStory"] = "Animals",
+                ["TabMap"] = "Map",
+                ["TabAbout"] = "About",
+
+                // === HomePage ===
+                ["TxtZooName"] = "SAIGON ZOO & BOTANICAL GARDENS",
+                ["TxtAudioGuide"] = "AUDIO GUIDE TOUR",
+                ["TxtHeroTitle"] = "The Sound Journey",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, District 1",
+                ["TxtStartTour"] = "START YOUR JOURNEY",
+                ["TxtOpenHours"] = "🕐 Opening Hours",
+                ["TxtHoursDetail"] = "7:00 - 18:30",
+                ["TxtHoursNote"] = "Open every day",
+                ["TxtTicketTitle"] = "🎟️ Entrance Fee",
+                ["TxtTicketFree"] = "Under 1m: Free",
+                ["TxtTicketChild"] = "1m - 1.3m: 40,000đ",
+                ["TxtTicketAdult"] = "Over 1.3m: 60,000đ",
+                ["TxtChooseTour"] = "CHOOSE YOUR TOUR",
+                ["TxtViewAll"] = "View all",
+
+                // === Tour Cards (HomePage) ===
+                ["TxtTour1Title"] = "Asian Elephant Kingdom",
+                ["TxtTour2Title"] = "King of the Jungle",
+                ["TxtTour3Title"] = "The African Giant",
+                ["TxtTourMin"] = "MIN",
+                ["TxtTourStops"] = "STOPS",
+                ["TxtListenNow"] = "🔊 LISTEN NOW",
+
+                // === AnimalListPage ===
+                ["TxtAnimalKingdom"] = "🌿 Animal Kingdom",
+                ["TxtAnimalDesc"] = "Discover the amazing world of wildlife at Saigon Zoo",
+                ["TxtSearchPlaceholder"] = "Search animals...",
+
+                // === StoryAudioPage ===
+                ["TxtInfo"] = "Info",
+                ["TxtImages"] = "Gallery",
+                ["TxtMap"] = "Map",
+                ["TxtEnclosure"] = "Enclosure Location",
+
+                // === NumpadPage ===
+                ["TxtNumpadTitle"] = "Enter Code",
+                ["TxtNumpadInstruction"] = "Enter the code on the sign",
+
+                // === QrPage ===
+                ["TxtQrTitle"] = "Scan at enclosure",
+                ["TxtQrInstruction"] = "Point camera at QR code",
+                ["TxtQrSearching"] = "Searching for QR code...",
+                ["TxtFlash"] = "Flash",
+                ["TxtManualCode"] = "Enter code",
+
+                // === MapPage ===
+                ["TxtMapTitle"] = "🗺️ Zoo Map",
+                ["TxtNearPoi"] = "Nearby",
+                ["TxtInZone"] = "● In zone",
+                ["TxtApproaching"] = "○ Approaching",
+                ["TxtListenBtn"] = "🔊 Listen",
+                ["TxtAttractions"] = "Attractions",
+                ["TxtPoints"] = "points",
+
+                // === AboutPage ===
+                ["TxtAboutApp"] = "About",
+                ["TxtAppVersion"] = "Version 1.0.0",
+                ["TxtAboutTitle"] = "About the app",
+                ["TxtAboutDesc"] = "Smart audio guide for Saigon Zoo & Botanical Gardens. Supports GPS, automatic enclosure detection, and vivid audio narration.",
+                ["TxtDeveloper"] = "Developed by: Dũng Nguyễn",
+                ["TxtAppInfo"] = "App Information",
+            },
+
+            "th" => new()
+            {
+                ["TabHome"] = "หน้าแรก",
+                ["TabQR"] = "สแกน QR",
+                ["TabNumpad"] = "รหัส",
+                ["TabStory"] = "สัตว์",
+                ["TabMap"] = "แผนที่",
+                ["TabAbout"] = "เกี่ยวกับ",
+                ["TxtZooName"] = "สวนสัตว์ไซง่อน",
+                ["TxtAudioGuide"] = "นำเที่ยวด้วยเสียง",
+                ["TxtHeroTitle"] = "การเดินทางแห่งเสียง",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, เขต 1",
+                ["TxtStartTour"] = "เริ่มการเดินทาง",
+                ["TxtOpenHours"] = "🕐 เวลาเปิด",
+                ["TxtHoursDetail"] = "7:00 - 18:30",
+                ["TxtHoursNote"] = "เปิดทุกวัน",
+                ["TxtTicketTitle"] = "🎟️ ค่าเข้าชม",
+                ["TxtTicketFree"] = "ต่ำกว่า 1ม.: ฟรี",
+                ["TxtTicketChild"] = "1ม. - 1.3ม.: 40,000₫",
+                ["TxtTicketAdult"] = "สูงกว่า 1.3ม.: 60,000₫",
+                ["TxtChooseTour"] = "เลือกทัวร์ของคุณ",
+                ["TxtViewAll"] = "ดูทั้งหมด",
+                ["TxtTour1Title"] = "อาณาจักรช้างเอเชีย",
+                ["TxtTour2Title"] = "ราชาแห่งป่า",
+                ["TxtTour3Title"] = "ยักษ์แอฟริกา",
+                ["TxtTourMin"] = "นาที",
+                ["TxtTourStops"] = "จุดหยุด",
+                ["TxtListenNow"] = "🔊 ฟังเลย",
+                ["TxtAnimalKingdom"] = "🌿 อาณาจักรสัตว์",
+                ["TxtAnimalDesc"] = "ค้นพบโลกสัตว์ป่าที่น่าทึ่ง",
+                ["TxtSearchPlaceholder"] = "ค้นหาสัตว์...",
+                ["TxtInfo"] = "ข้อมูล",
+                ["TxtImages"] = "รูปภาพ",
+                ["TxtMap"] = "แผนที่",
+                ["TxtEnclosure"] = "ที่ตั้งกรง",
+                ["TxtNumpadTitle"] = "ใส่รหัส",
+                ["TxtNumpadInstruction"] = "ใส่รหัสบนป้าย",
+                ["TxtQrTitle"] = "สแกนที่กรงสัตว์",
+                ["TxtQrInstruction"] = "ชี้กล้องที่ QR",
+                ["TxtQrSearching"] = "กำลังค้นหา QR...",
+                ["TxtFlash"] = "แฟลช",
+                ["TxtManualCode"] = "ใส่รหัส",
+                ["TxtMapTitle"] = "🗺️ แผนที่สวนสัตว์",
+                ["TxtNearPoi"] = "ใกล้เคียง",
+                ["TxtInZone"] = "● ในพื้นที่",
+                ["TxtApproaching"] = "○ กำลังเข้าใกล้",
+                ["TxtListenBtn"] = "🔊 ฟัง",
+                ["TxtAttractions"] = "สถานที่ท่องเที่ยว",
+                ["TxtPoints"] = "จุด",
+                ["TxtAboutApp"] = "เกี่ยวกับ",
+                ["TxtAppVersion"] = "เวอร์ชัน 1.0.0",
+                ["TxtAboutTitle"] = "เกี่ยวกับแอป",
+                ["TxtAboutDesc"] = "แอปนำเที่ยวสวนสัตว์ไซง่อนด้วยเสียงอัจฉริยะ",
+                ["TxtDeveloper"] = "พัฒนาโดย: Dũng Nguyễn",
+                ["TxtAppInfo"] = "ข้อมูลแอป",
+            },
+
+            "id" => new()
+            {
+                ["TabHome"] = "Beranda",
+                ["TabQR"] = "Pindai QR",
+                ["TabNumpad"] = "Kode",
+                ["TabStory"] = "Hewan",
+                ["TabMap"] = "Peta",
+                ["TabAbout"] = "Tentang",
+                ["TxtZooName"] = "KEBUN BINATANG SAIGON",
+                ["TxtAudioGuide"] = "PANDUAN AUDIO WISATA",
+                ["TxtHeroTitle"] = "Perjalanan Suara",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, Distrik 1",
+                ["TxtStartTour"] = "MULAI PERJALANAN",
+                ["TxtOpenHours"] = "🕐 Jam Buka",
+                ["TxtHoursDetail"] = "7:00 - 18:30",
+                ["TxtHoursNote"] = "Buka setiap hari",
+                ["TxtTicketTitle"] = "🎟️ Harga Tiket",
+                ["TxtTicketFree"] = "Di bawah 1m: Gratis",
+                ["TxtTicketChild"] = "1m - 1,3m: 40.000₫",
+                ["TxtTicketAdult"] = "Di atas 1,3m: 60.000₫",
+                ["TxtChooseTour"] = "PILIH TUR ANDA",
+                ["TxtViewAll"] = "Lihat semua",
+                ["TxtTour1Title"] = "Kerajaan Gajah Asia",
+                ["TxtTour2Title"] = "Raja Hutan",
+                ["TxtTour3Title"] = "Raksasa Afrika",
+                ["TxtTourMin"] = "MENIT",
+                ["TxtTourStops"] = "TITIK",
+                ["TxtListenNow"] = "🔊 DENGARKAN",
+                ["TxtAnimalKingdom"] = "🌿 Kerajaan Hewan",
+                ["TxtAnimalDesc"] = "Jelajahi dunia satwa liar yang menakjubkan",
+                ["TxtSearchPlaceholder"] = "Cari hewan...",
+                ["TxtInfo"] = "Info",
+                ["TxtImages"] = "Galeri",
+                ["TxtMap"] = "Peta",
+                ["TxtEnclosure"] = "Lokasi Kandang",
+                ["TxtNumpadTitle"] = "Masukkan Kode",
+                ["TxtNumpadInstruction"] = "Masukkan kode di papan",
+                ["TxtQrTitle"] = "Pindai di kandang",
+                ["TxtQrInstruction"] = "Arahkan kamera ke QR",
+                ["TxtQrSearching"] = "Mencari kode QR...",
+                ["TxtFlash"] = "Flash",
+                ["TxtManualCode"] = "Masukkan kode",
+                ["TxtMapTitle"] = "🗺️ Peta Kebun Binatang",
+                ["TxtNearPoi"] = "Terdekat",
+                ["TxtInZone"] = "● Di zona",
+                ["TxtApproaching"] = "○ Mendekat",
+                ["TxtListenBtn"] = "🔊 Dengar",
+                ["TxtAttractions"] = "Atraksi",
+                ["TxtPoints"] = "titik",
+                ["TxtAboutApp"] = "Tentang",
+                ["TxtAppVersion"] = "Versi 1.0.0",
+                ["TxtAboutTitle"] = "Tentang aplikasi",
+                ["TxtAboutDesc"] = "Panduan audio cerdas untuk Kebun Binatang Saigon.",
+                ["TxtDeveloper"] = "Dikembangkan oleh: Dũng Nguyễn",
+                ["TxtAppInfo"] = "Informasi Aplikasi",
+            },
+
+            "ms" => new()
+            {
+                ["TabHome"] = "Utama",
+                ["TabQR"] = "Imbas QR",
+                ["TabNumpad"] = "Kod",
+                ["TabStory"] = "Haiwan",
+                ["TabMap"] = "Peta",
+                ["TabAbout"] = "Tentang",
+                ["TxtZooName"] = "ZOO SAIGON",
+                ["TxtAudioGuide"] = "PANDUAN AUDIO LAWATAN",
+                ["TxtHeroTitle"] = "Perjalanan Bunyi",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, Daerah 1",
+                ["TxtStartTour"] = "MULAKAN PERJALANAN",
+                ["TxtOpenHours"] = "🕐 Waktu Buka",
+                ["TxtHoursDetail"] = "7:00 - 18:30",
+                ["TxtHoursNote"] = "Buka setiap hari",
+                ["TxtTicketTitle"] = "🎟️ Harga Tiket",
+                ["TxtTicketFree"] = "Bawah 1m: Percuma",
+                ["TxtTicketChild"] = "1m - 1.3m: 40,000₫",
+                ["TxtTicketAdult"] = "Atas 1.3m: 60,000₫",
+                ["TxtChooseTour"] = "PILIH LAWATAN ANDA",
+                ["TxtViewAll"] = "Lihat semua",
+                ["TxtTour1Title"] = "Kerajaan Gajah Asia",
+                ["TxtTour2Title"] = "Raja Rimba",
+                ["TxtTour3Title"] = "Gergasi Afrika",
+                ["TxtTourMin"] = "MIN",
+                ["TxtTourStops"] = "HENTI",
+                ["TxtListenNow"] = "🔊 DENGAR SEKARANG",
+                ["TxtAnimalKingdom"] = "🌿 Kerajaan Haiwan",
+                ["TxtAnimalDesc"] = "Teroka dunia hidupan liar yang menakjubkan",
+                ["TxtSearchPlaceholder"] = "Cari haiwan...",
+                ["TxtInfo"] = "Maklumat",
+                ["TxtImages"] = "Galeri",
+                ["TxtMap"] = "Peta",
+                ["TxtEnclosure"] = "Lokasi Kandang",
+                ["TxtNumpadTitle"] = "Masukkan Kod",
+                ["TxtNumpadInstruction"] = "Masukkan kod pada papan tanda",
+                ["TxtQrTitle"] = "Imbas di kandang",
+                ["TxtQrInstruction"] = "Arahkan kamera ke QR",
+                ["TxtQrSearching"] = "Mencari kod QR...",
+                ["TxtFlash"] = "Suluh",
+                ["TxtManualCode"] = "Masukkan kod",
+                ["TxtMapTitle"] = "🗺️ Peta Zoo",
+                ["TxtNearPoi"] = "Berdekatan",
+                ["TxtInZone"] = "● Dalam zon",
+                ["TxtApproaching"] = "○ Menghampiri",
+                ["TxtListenBtn"] = "🔊 Dengar",
+                ["TxtAttractions"] = "Tarikan",
+                ["TxtPoints"] = "titik",
+                ["TxtAboutApp"] = "Tentang",
+                ["TxtAppVersion"] = "Versi 1.0.0",
+                ["TxtAboutTitle"] = "Tentang aplikasi",
+                ["TxtAboutDesc"] = "Panduan audio pintar untuk Zoo Saigon.",
+                ["TxtDeveloper"] = "Dibangunkan oleh: Dũng Nguyễn",
+                ["TxtAppInfo"] = "Maklumat Aplikasi",
+            },
+
+            "km" => new()
+            {
+                ["TabHome"] = "ទំព័រដើម",
+                ["TabQR"] = "ស្កេន QR",
+                ["TabNumpad"] = "លេខកូដ",
+                ["TabStory"] = "សត្វ",
+                ["TabMap"] = "ផែនទី",
+                ["TabAbout"] = "អំពី",
+                ["TxtZooName"] = "សួនសត្វសៃហ្គន",
+                ["TxtAudioGuide"] = "ការណែនាំអូឌីយ៉ូ",
+                ["TxtHeroTitle"] = "ដំណើរសំឡេង",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, ស្រុកទី 1",
+                ["TxtStartTour"] = "ចាប់ផ្តើមដំណើរ",
+                ["TxtOpenHours"] = "🕐 ម៉ោងបើក",
+                ["TxtHoursDetail"] = "7:00 - 18:30",
+                ["TxtHoursNote"] = "បើកជារៀងរាល់ថ្ងៃ",
+                ["TxtTicketTitle"] = "🎟️ តម្លៃសំបុត្រ",
+                ["TxtTicketFree"] = "ក្រោម 1ម: ឥតគិតថ្លៃ",
+                ["TxtTicketChild"] = "1ម - 1.3ម: 40,000₫",
+                ["TxtTicketAdult"] = "លើ 1.3ម: 60,000₫",
+                ["TxtChooseTour"] = "ជ្រើសរើសដំណើររបស់អ្នក",
+                ["TxtViewAll"] = "មើលទាំងអស់",
+                ["TxtTour1Title"] = "នគររាជដំរីអាស៊ី",
+                ["TxtTour2Title"] = "ស្ដេចព្រៃ",
+                ["TxtTour3Title"] = "យក្សអាហ្វ្រិក",
+                ["TxtTourMin"] = "នាទី",
+                ["TxtTourStops"] = "ចំណុច",
+                ["TxtListenNow"] = "🔊 ស្ដាប់ឥឡូវ",
+                ["TxtAnimalKingdom"] = "🌿 នគរសត្វ",
+                ["TxtAnimalDesc"] = "រុករកពិភពសត្វព្រៃដ៏អស្ចារ្យ",
+                ["TxtSearchPlaceholder"] = "ស្វែងរកសត្វ...",
+                ["TxtInfo"] = "ព័ត៌មាន",
+                ["TxtImages"] = "រូបភាព",
+                ["TxtMap"] = "ផែនទី",
+                ["TxtEnclosure"] = "ទីតាំងទ្រុង",
+                ["TxtNumpadTitle"] = "បញ្ចូលកូដ",
+                ["TxtNumpadInstruction"] = "បញ្ចូលកូដនៅលើស្លាក",
+                ["TxtQrTitle"] = "ស្កេននៅទ្រុងសត្វ",
+                ["TxtQrInstruction"] = "ចង្អុលកាមេរ៉ាទៅ QR",
+                ["TxtQrSearching"] = "កំពុងស្វែងរក QR...",
+                ["TxtFlash"] = "ភ្លើង",
+                ["TxtManualCode"] = "បញ្ចូលកូដ",
+                ["TxtMapTitle"] = "🗺️ ផែនទីសួនសត្វ",
+                ["TxtNearPoi"] = "ជិត",
+                ["TxtInZone"] = "● នៅក្នុងតំបន់",
+                ["TxtApproaching"] = "○ កំពុងជិតដល់",
+                ["TxtListenBtn"] = "🔊 ស្ដាប់",
+                ["TxtAttractions"] = "កន្លែងទស្សនា",
+                ["TxtPoints"] = "ចំណុច",
+                ["TxtAboutApp"] = "អំពី",
+                ["TxtAppVersion"] = "កំណែ 1.0.0",
+                ["TxtAboutTitle"] = "អំពីកម្មវិធី",
+                ["TxtAboutDesc"] = "ការណែនាំអូឌីយ៉ូឆ្លាតសម្រាប់សួនសត្វសៃហ្គន",
+                ["TxtDeveloper"] = "បង្កើតដោយ: Dũng Nguyễn",
+                ["TxtAppInfo"] = "ព័ត៌មានកម្មវិធី",
+            },
+
+            // Mặc định: tiếng Việt
+            _ => new()
+            {
+                ["TabHome"] = "Trang chủ",
+                ["TabQR"] = "Mã QR",
+                ["TabNumpad"] = "Nhập Số",
+                ["TabStory"] = "Câu chuyện",
+                ["TabMap"] = "Sơ đồ",
+                ["TabAbout"] = "Giới thiệu",
+                ["TxtZooName"] = "THẢO CẦM VIÊN SÀI GÒN",
+                ["TxtAudioGuide"] = "AUDIO GUIDE TOUR",
+                ["TxtHeroTitle"] = "Hành Trình Âm Thanh",
+                ["TxtHeroAddress"] = "2 Nguyễn Bỉnh Khiêm, Quận 1",
+                ["TxtStartTour"] = "BẮT ĐẦU CHUYẾN ĐI",
+                ["TxtOpenHours"] = "🕐 Giờ mở cửa",
+                ["TxtHoursDetail"] = "7:00 - 18:30",
+                ["TxtHoursNote"] = "Mở cửa tất cả các ngày",
+                ["TxtTicketTitle"] = "🎟️ Vé vào cổng",
+                ["TxtTicketFree"] = "Dưới 1m: Miễn phí",
+                ["TxtTicketChild"] = "1m - 1m3: 40.000đ",
+                ["TxtTicketAdult"] = "Trên 1m3: 60.000đ",
+                ["TxtChooseTour"] = "CHỌN TOUR CỦA BẠN",
+                ["TxtViewAll"] = "Xem tất cả",
+                ["TxtTour1Title"] = "Vương Quốc Voi Châu Á",
+                ["TxtTour2Title"] = "Chúa Tể Sơn Lâm",
+                ["TxtTour3Title"] = "Gã Khổng Lồ Châu Phi",
+                ["TxtTourMin"] = "PHÚT",
+                ["TxtTourStops"] = "ĐIỂM",
+                ["TxtListenNow"] = "🔊 NGHE NGAY",
+                ["TxtAnimalKingdom"] = "🌿 Vương quốc động vật",
+                ["TxtAnimalDesc"] = "Khám phá thế giới muôn loài tuyệt đẹp tại Thảo Cầm Viên",
+                ["TxtSearchPlaceholder"] = "Tìm kiếm động vật...",
+                ["TxtInfo"] = "Thông tin",
+                ["TxtImages"] = "Hình ảnh",
+                ["TxtMap"] = "Bản đồ",
+                ["TxtEnclosure"] = "Vị trí chuồng nuôi",
+                ["TxtNumpadTitle"] = "Nhập mã số",
+                ["TxtNumpadInstruction"] = "Nhập mã trên biển báo",
+                ["TxtQrTitle"] = "Quét mã tại chuồng thú",
+                ["TxtQrInstruction"] = "Hướng camera vào mã QR",
+                ["TxtQrSearching"] = "Đang tìm kiếm mã QR...",
+                ["TxtFlash"] = "Bật đèn",
+                ["TxtManualCode"] = "Nhập mã tay",
+                ["TxtMapTitle"] = "🗺️ Bản đồ Thảo Cầm Viên",
+                ["TxtNearPoi"] = "Gần nhất",
+                ["TxtInZone"] = "● Trong vùng",
+                ["TxtApproaching"] = "○ Đang tiếp cận",
+                ["TxtListenBtn"] = "🔊 Nghe",
+                ["TxtAttractions"] = "Các điểm tham quan",
+                ["TxtPoints"] = "điểm",
+                ["TxtAboutApp"] = "Giới thiệu",
+                ["TxtAppVersion"] = "Phiên bản 1.0.0",
+                ["TxtAboutTitle"] = "Về ứng dụng",
+                ["TxtAboutDesc"] = "Ứng dụng hướng dẫn tham quan Thảo Cầm Viên thông minh. Hỗ trợ định vị GPS, phát hiện khu vực chuồng thú tự động và cung cấp các câu chuyện thuyết minh sinh động.",
+                ["TxtDeveloper"] = "Phát triển bởi: Dũng Nguyễn",
+                ["TxtAppInfo"] = "Thông tin ứng dụng",
+            }
+        };
     }
 }

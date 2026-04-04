@@ -6,94 +6,87 @@ namespace AppThaoCamVien.Pages;
 public partial class StoryAudioPage : ContentPage
 {
     private readonly AudioService _audioService;
+    private readonly NarrationEngine _narrationEngine;
+    private readonly DatabaseService _databaseService;
+
     private Poi? _currentPoi;
     private bool _isSliderDragging = false;
 
-    public StoryAudioPage(AudioService audioService)
+    public StoryAudioPage(AudioService audioService, NarrationEngine narrationEngine, DatabaseService databaseService)
     {
         InitializeComponent();
         _audioService = audioService;
+        _narrationEngine = narrationEngine;
+        _databaseService = databaseService;
+
         _audioService.PlaybackStateChanged += OnPlaybackStateChanged;
         _audioService.ProgressChanged += OnProgressChanged;
     }
 
-    public void LoadPoi(Poi poi)
-    {
-        _currentPoi = poi;
-    }
+    public void LoadPoi(Poi poi) => _currentPoi = poi;
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         if (_currentPoi == null) return;
-
-        // ĐÃ SỬA Ở ĐÂY: Gọi đúng tên hàm Async và thêm await
-        await UpdateUiWithPoiAsync(_currentPoi);
-
-        await StartAudioAsync();
+        UpdateUiWithPoi(_currentPoi);
+        await StartNarrationAsync();
     }
 
     protected override async void OnDisappearing()
     {
         base.OnDisappearing();
-        await _audioService.StopAsync();
+        await _narrationEngine.StopCurrentNarrationAsync();
         UpdatePlayPauseButton(false);
     }
 
-    // HÀM MỚI: Đã đổi tên thành Async và tự động dịch
-    private async Task UpdateUiWithPoiAsync(Poi poi)
+    // Cập nhật toàn bộ UI với dữ liệu động từ POI
+    private void UpdateUiWithPoi(Poi poi)
     {
-        // 1. Hiển thị tạm tiếng Việt để UI không bị trống trong lúc chờ dịch
+        var lang = _databaseService.CurrentLanguage;
+
         PoiNameLabel.Text = poi.Name;
-        PoiDescTitleLabel.Text = $"Câu chuyện {poi.Name}";
-        PoiSubtitleLabel.Text = $"Mã định danh: TCVN-{poi.PoiId:D3}";
-        PoiDescLabel.Text = "Đang dịch nội dung... / Translating...";
-        ShortIntroLabel.Text = "";
+        PoiSubtitleLabel.Text = $"Thảo Cầm Viên Sài Gòn • Mã: TCVN-{poi.PoiId:D3}";
+        PoiDescTitleLabel.Text = GetStoryTitle(poi.Name, lang);
+        PoiDescLabel.Text = poi.Description ?? "Chưa có thông tin chi tiết.";
 
-        // Load ảnh
-        if (!string.IsNullOrEmpty(poi.ImageThumbnail))
-            PoiImage.Source = poi.ImageThumbnail.StartsWith("http") ? ImageSource.FromUri(new Uri(poi.ImageThumbnail)) : poi.ImageThumbnail;
-        else
-            PoiImage.Source = "placeholder_animal.png";
+        // Intro ngắn: 120 ký tự đầu
+        ShortIntroLabel.Text = (poi.Description?.Length ?? 0) > 120
+            ? poi.Description![..120] + "..."
+            : poi.Description ?? "";
 
-        // 2. GỌI GOOGLE DỊCH
-        var translator = IPlatformApplication.Current.Services.GetService<AutoTranslateService>();
-        var databaseService = IPlatformApplication.Current.Services.GetService<DatabaseService>();
-        string currentLang = databaseService?.CurrentLanguage ?? "vi";
+        // Ảnh: URL từ server hoặc file local
+        PoiImage.Source = !string.IsNullOrEmpty(poi.ImageThumbnail)
+            ? (poi.ImageThumbnail.StartsWith("http")
+                ? ImageSource.FromUri(new Uri(poi.ImageThumbnail))
+                : ImageSource.FromFile(poi.ImageThumbnail))
+            : "placeholder_animal.png";
 
-        string translatedName = poi.Name;
-        string translatedDesc = poi.Description ?? "Chưa có thông tin.";
-
-        if (translator != null && currentLang != "vi")
-        {
-            translatedName = await translator.TranslateAsync(poi.Name, currentLang);
-            translatedDesc = await translator.TranslateAsync(poi.Description ?? "", currentLang);
-        }
-
-        // 3. Cập nhật lại UI sau khi có bản dịch (Ép chạy trên luồng chính)
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            PoiNameLabel.Text = translatedName;
-            PoiDescTitleLabel.Text = currentLang == "vi" ? $"Câu chuyện {translatedName}" : $"{translatedName} Story";
-            PoiDescLabel.Text = translatedDesc;
-
-            ShortIntroLabel.Text = translatedDesc.Length > 100 ? translatedDesc.Substring(0, 100) + "..." : translatedDesc;
-        });
+        // Reset tiến trình
+        ProgressSlider.Value = 0;
+        CurrentTimeLabel.Text = "00:00";
+        TotalTimeLabel.Text = "00:00";
     }
 
-    private async Task StartAudioAsync()
+    private static string GetStoryTitle(string name, string lang) => lang switch
     {
+        "en" => $"{name} Story",
+        "th" => $"เรื่องราวของ{name}",
+        "id" => $"Kisah {name}",
+        "ms" => $"Kisah {name}",
+        "km" => $"រឿងរ៉ាវ{name}",
+        _ => $"Câu chuyện {name}",
+    };
+
+    private async Task StartNarrationAsync()
+    {
+        if (_currentPoi == null) return;
         try
         {
             LoadingIndicator.IsVisible = true;
             LoadingIndicator.IsRunning = true;
-
-            await _audioService.PlayPoiAudioAsync(_currentPoi!.PoiId);
-        }
-        catch (Exception ex)
-        {
-            // Tắt popup báo lỗi đi để TTS tự động đọc mà không làm phiền người dùng
-            System.Diagnostics.Debug.WriteLine($"[StoryAudioPage] Chuyển sang TTS vì: {ex.Message}");
+            // NarrationEngine tự quyết: MP3 hay TTS, đúng ngôn ngữ
+            await _narrationEngine.PlayNarrativeAsync(_currentPoi, forcePlay: true);
         }
         finally
         {
@@ -105,13 +98,9 @@ public partial class StoryAudioPage : ContentPage
     private async void OnPlayPauseClicked(object sender, TappedEventArgs e)
     {
         if (_currentPoi == null) return;
-
-        if (_audioService.IsPlaying)
-            _audioService.Pause();
-        else if (_audioService.Duration == 0)
-            await StartAudioAsync();
-        else
-            _audioService.Resume();
+        if (_audioService.IsPlaying) _audioService.Pause();
+        else if (_audioService.Duration == 0) await StartNarrationAsync();
+        else _audioService.Resume();
     }
 
     private void OnRewindClicked(object sender, EventArgs e)
@@ -123,8 +112,7 @@ public partial class StoryAudioPage : ContentPage
     private void OnSliderDragCompleted(object sender, EventArgs e)
     {
         _isSliderDragging = false;
-        var seekTo = (ProgressSlider.Value / 100.0) * _audioService.Duration;
-        _audioService.SeekTo(seekTo);
+        _audioService.SeekTo((ProgressSlider.Value / 100.0) * _audioService.Duration);
     }
 
     private void OnPlaybackStateChanged(object? sender, bool isPlaying)
@@ -136,22 +124,18 @@ public partial class StoryAudioPage : ContentPage
         MainThread.BeginInvokeOnMainThread(() =>
         {
             var duration = _audioService.Duration;
-            if (duration > 0)
-                ProgressSlider.Value = (currentPos / duration) * 100;
-
+            if (duration > 0) ProgressSlider.Value = (currentPos / duration) * 100;
             CurrentTimeLabel.Text = FormatTime(currentPos);
             TotalTimeLabel.Text = FormatTime(duration);
         });
     }
 
     private void UpdatePlayPauseButton(bool isPlaying)
-    {
-        PlayPauseIcon.Source = isPlaying ? "icon_pause_dark.png" : "icon_play_dark.png";
-    }
+        => PlayPauseIcon.Source = isPlaying ? "icon_pause_dark.png" : "icon_play_dark.png";
 
-    private static string FormatTime(double seconds)
+    private static string FormatTime(double s)
     {
-        var ts = TimeSpan.FromSeconds(seconds);
+        var ts = TimeSpan.FromSeconds(s);
         return $"{(int)ts.TotalMinutes:D2}:{ts.Seconds:D2}";
     }
 

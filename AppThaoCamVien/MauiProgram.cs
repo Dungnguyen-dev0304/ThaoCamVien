@@ -1,10 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
-using SkiaSharp.Views.Maui.Controls.Hosting;
-using AppThaoCamVien.Services;
+﻿#if ANDROID
+using Android.Speech.Tts;
+#endif
 using AppThaoCamVien.Pages;
-using ZXing.Net.Maui.Controls;
+using AppThaoCamVien.Services;
 using CommunityToolkit.Maui;
+using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
+using SkiaSharp.Views.Maui.Controls.Hosting;
+using ZXing.Net.Maui.Controls;
 
 namespace AppThaoCamVien
 {
@@ -17,8 +20,8 @@ namespace AppThaoCamVien
                 .UseMauiApp<App>()
                 .UseMauiMaps()
                 .UseSkiaSharp()
-                .UseBarcodeReader()           // ZXing QR scanner
-                .UseMauiCommunityToolkit()    // CommunityToolkit helpers
+                .UseBarcodeReader()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -33,8 +36,11 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<LocationService>();
             builder.Services.AddSingleton<GeofencingEngine>();
             builder.Services.AddSingleton<AudioService>();
+            builder.Services.AddSingleton<TtsEngine>();          // ← MỚI: engine TTS đa ngôn ngữ
+            builder.Services.AddSingleton<NarrationEngine>();    // ← đã cập nhật nhận TtsEngine
+            builder.Services.AddSingleton<AutoTranslateService>();
 
-            // === PAGES (Transient = tạo mới mỗi lần navigate) ===
+            // === PAGES ===
             builder.Services.AddTransient<HomePage>();
             builder.Services.AddTransient<MapPage>();
             builder.Services.AddTransient<QrPage>();
@@ -42,8 +48,6 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<StoryAudioPage>();
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
-            // Trong MauiProgram.cs
-            builder.Services.AddSingleton<NarrationEngine>(); // Thêm dòng này
 
 #if DEBUG
             builder.Logging.AddDebug();

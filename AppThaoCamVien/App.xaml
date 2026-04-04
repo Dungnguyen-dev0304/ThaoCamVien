@@ -9,6 +9,84 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!--
+                QUAN TRỌNG: Tất cả key dùng DynamicResource PHẢI được khai báo tại đây
+                với giá trị mặc định (tiếng Việt). Nếu thiếu key, app sẽ không hiển thị gì.
+                LanguageManager.SetLanguage() sẽ ghi đè các giá trị này khi đổi ngôn ngữ.
+            -->
+
+            <!-- Tab Bar -->
+            <x:String x:Key="TabHome">Trang chủ</x:String>
+            <x:String x:Key="TabQR">Mã QR</x:String>
+            <x:String x:Key="TabNumpad">Nhập Số</x:String>
+            <x:String x:Key="TabStory">Câu chuyện</x:String>
+            <x:String x:Key="TabMap">Sơ đồ</x:String>
+            <x:String x:Key="TabAbout">Giới thiệu</x:String>
+
+            <!-- HomePage -->
+            <x:String x:Key="TxtZooName">THẢO CẦM VIÊN SÀI GÒN</x:String>
+            <x:String x:Key="TxtAudioGuide">AUDIO GUIDE TOUR</x:String>
+            <x:String x:Key="TxtHeroTitle">Hành Trình Âm Thanh</x:String>
+            <x:String x:Key="TxtHeroAddress">2 Nguyễn Bỉnh Khiêm, Quận 1</x:String>
+            <x:String x:Key="TxtStartTour">BẮT ĐẦU CHUYẾN ĐI</x:String>
+            <x:String x:Key="TxtOpenHours">🕐 Giờ mở cửa</x:String>
+            <x:String x:Key="TxtHoursDetail">7:00 - 18:30</x:String>
+            <x:String x:Key="TxtHoursNote">Mở cửa tất cả các ngày</x:String>
+            <x:String x:Key="TxtTicketTitle">🎟️ Vé vào cổng</x:String>
+            <x:String x:Key="TxtTicketFree">Dưới 1m: Miễn phí</x:String>
+            <x:String x:Key="TxtTicketChild">1m - 1m3: 40.000đ</x:String>
+            <x:String x:Key="TxtTicketAdult">Trên 1m3: 60.000đ</x:String>
+            <x:String x:Key="TxtChooseTour">CHỌN TOUR CỦA BẠN</x:String>
+            <x:String x:Key="TxtViewAll">Xem tất cả</x:String>
+
+            <!-- Tour Cards (HomePage) -->
+            <x:String x:Key="TxtTour1Title">Vương Quốc Voi Châu Á</x:String>
+            <x:String x:Key="TxtTour2Title">Chúa Tể Sơn Lâm</x:String>
+            <x:String x:Key="TxtTour3Title">Gã Khổng Lồ Châu Phi</x:String>
+            <x:String x:Key="TxtTourMin">PHÚT</x:String>
+            <x:String x:Key="TxtTourStops">ĐIỂM</x:String>
+            <x:String x:Key="TxtListenNow">🔊 NGHE NGAY</x:String>
+
+            <!-- AnimalListPage -->
+            <x:String x:Key="TxtAnimalKingdom">🌿 Vương quốc động vật</x:String>
+            <x:String x:Key="TxtAnimalDesc">Khám phá thế giới muôn loài tuyệt đẹp tại Thảo Cầm Viên</x:String>
+            <x:String x:Key="TxtSearchPlaceholder">Tìm kiếm động vật...</x:String>
+
+            <!-- StoryAudioPage -->
+            <x:String x:Key="TxtInfo">Thông tin</x:String>
+            <x:String x:Key="TxtImages">Hình ảnh</x:String>
+            <x:String x:Key="TxtMap">Bản đồ</x:String>
+            <x:String x:Key="TxtEnclosure">Vị trí chuồng nuôi</x:String>
+
+            <!-- NumpadPage -->
+            <x:String x:Key="TxtNumpadTitle">Nhập mã số</x:String>
+            <x:String x:Key="TxtNumpadInstruction">Nhập mã trên biển báo</x:String>
+
+            <!-- QrPage -->
+            <x:String x:Key="TxtQrTitle">Quét mã tại chuồng thú</x:String>
+            <x:String x:Key="TxtQrInstruction">Hướng camera vào mã QR</x:String>
+            <x:String x:Key="TxtQrSearching">Đang tìm kiếm mã QR...</x:String>
+            <x:String x:Key="TxtFlash">Bật đèn</x:String>
+            <x:String x:Key="TxtManualCode">Nhập mã tay</x:String>
+
+            <!-- MapPage -->
+            <x:String x:Key="TxtMapTitle">🗺️ Bản đồ Thảo Cầm Viên</x:String>
+            <x:String x:Key="TxtNearPoi">Gần nhất</x:String>
+            <x:String x:Key="TxtInZone">● Trong vùng</x:String>
+            <x:String x:Key="TxtApproaching">○ Đang tiếp cận</x:String>
+            <x:String x:Key="TxtListenBtn">🔊 Nghe</x:String>
+            <x:String x:Key="TxtAttractions">Các điểm tham quan</x:String>
+            <x:String x:Key="TxtPoints">điểm</x:String>
+
+            <!-- AboutPage -->
+            <x:String x:Key="TxtAboutApp">Giới thiệu</x:String>
+            <x:String x:Key="TxtAppVersion">Phiên bản 1.0.0</x:String>
+            <x:String x:Key="TxtAboutTitle">Về ứng dụng</x:String>
+            <x:String x:Key="TxtAboutDesc">Ứng dụng hướng dẫn tham quan Thảo Cầm Viên thông minh. Hỗ trợ định vị GPS, phát hiện khu vực chuồng thú tự động và cung cấp các câu chuyện thuyết minh sinh động.</x:String>
+            <x:String x:Key="TxtDeveloper">Phát triển bởi: Dũng Nguyễn</x:String>
+            <x:String x:Key="TxtAppInfo">Thông tin ứng dụng</x:String>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>
