@@ -312,19 +312,21 @@
                         <button type="submit" class="px-6 py-3 bg-gradient-custom text-white font-black rounded-xl text-[11px] uppercase tracking-widest shadow-lg shadow-[#89d957]/20">
                             <i class="bi bi-floppy mr-1"></i> Lưu @lang.Flag
                         </button>
-                        @if (existing != null)
-                        {
-                            <form asp-controller="Admin" asp-action="DeleteTranslation" method="post" class="inline">
-                                <input type="hidden" name="TranslationId" value="@existing.TranslationId" />
-                                <input type="hidden" name="PoiId" value="@Model.Poi.PoiId" />
-                                <button type="submit" onclick="return confirm('Xóa bản dịch @lang.Label này?')"
-                                        class="px-6 py-3 bg-red-50 text-red-500 font-black rounded-xl text-[11px] uppercase tracking-widest hover:bg-red-100 transition-colors">
-                                    <i class="bi bi-trash3 mr-1"></i> Xóa bản dịch
-                                </button>
-                            </form>
-                        }
                     </div>
                 </form>
+
+                @* Form xóa bản dịch đứng độc lập - KHÔNG lồng trong form SaveTranslation *@
+                @if (existing != null)
+                {
+                    <form asp-controller="Admin" asp-action="DeleteTranslation" method="post" class="mt-2">
+                        <input type="hidden" name="TranslationId" value="@existing.TranslationId" />
+                        <input type="hidden" name="PoiId" value="@Model.Poi.PoiId" />
+                        <button type="submit" onclick="return confirm('Xóa bản dịch @lang.Label này?')"
+                                class="px-6 py-3 bg-red-50 text-red-500 font-black rounded-xl text-[11px] uppercase tracking-widest hover:bg-red-100 transition-colors">
+                            <i class="bi bi-trash3 mr-1"></i> Xóa bản dịch
+                        </button>
+                    </form>
+                }
             </div>
         }
     </div>
