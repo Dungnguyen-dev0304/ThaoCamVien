@@ -1,130 +1,255 @@
-﻿@{
+﻿@model WebThaoCamVien.ViewModels.IndexViewModel
+@{
     Layout = "_adminlayout";
-    ViewData["Title"] = "Tổng quan Quản trị";
     ViewData["Active"] = "index";
-    ViewData["PageTitle"] = "Hệ thống quản trị nội dung Thảo Cầm Viên";
+    ViewData["Title"] = "Tổng quan";
+    ViewData["PageTitle"] = "Lịch sử sử dụng";
 }
 
 <style>
-    .bg-gradient-admin {
-        background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); 
-    }
-    .card-hover:hover {
-        transform: translateY(-5px);
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-    .sidebar-link {
-        transition: all 0.2s;
-        border-radius: 8px;
-        margin: 4px 0;
-    }
-    .sidebar-link:hover {
-        background: rgba(137, 217, 87, 0.1);
-        color: #89d957 !important;
-    }
-    .sidebar-link.active {
-        background: #89d957;
-        color: white !important;
-    }
+    .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
+    .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .bar { transition: height 0.6s cubic-bezier(.4,0,.2,1); }
+    .badge-dong-vat { background: #fff4ec; color: #e67e22; }
+    .badge-thuc-vat { background: #edfff0; color: #27ae60; }
+    .badge-di-tich  { background: #f5eeff; color: #8e44ad; }
 </style>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm min-vh-100 p-3">
-            <div class="text-center mb-4">
-                <div class="p-2 rounded-circle bg-gradient-admin d-inline-block shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 40px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /> [cite: 7]
-                    </svg>
-                </div>
-                <h6 class="mt-2 fw-bold text-dark">ThaoCamVien Admin</h6>
-            </div>
+<div class="space-y-6 pb-8">
 
-            <nav class="nav flex-column">
-                <a class="nav-link sidebar-link active" href="/Admin/Index">
-                    <i class="bi bi-speedometer2 me-2"></i> Tổng quan
-                </a>
-                <a class="nav-link sidebar-link text-dark" href="/Admin/PoiList">
-                    <i class="bi bi-geo-alt me-2"></i> Quản lý POI
-                </a>
-                <a class="nav-link sidebar-link text-dark" href="/Admin/Categories">
-                    <i class="bi bi-tags me-2"></i> Danh mục
-                </a>
-                <a class="nav-link sidebar-link text-dark" href="/Admin/Tours">
-                    <i class="bi bi-map me-2"></i> Quản lý Tour
-                </a>
-                <hr>
-                <a class="nav-link sidebar-link text-danger" href="/Admin/Logout">
-                    <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-                </a>
-            </nav>
+    @*START CHART*@
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng lượt thăm</span>
+                <div class="w-9 h-9 bg-gradient-custom rounded-xl flex items-center justify-center">
+                    <i class="bi bi-eye-fill text-white text-sm"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-black text-slate-800">@Model.TotalVisits.ToString("N0")</p>
+            <p class="text-[11px] text-slate-400 mt-1 font-medium">Tất cả thời gian</p>
         </div>
 
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2 fw-bold">Bảng điều khiển</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="/Admin/CreatePoi" class="btn bg-gradient-admin text-white fw-bold shadow-sm">
-                        <i class="bi bi-plus-lg"></i> Thêm POI mới
-                    </a>
+        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hôm nay</span>
+                <div class="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-calendar-day-fill text-white text-sm"></i>
                 </div>
             </div>
+            <p class="text-3xl font-black text-slate-800">@Model.TodayVisits.ToString("N0")</p>
+            <p class="text-[11px] text-slate-400 mt-1 font-medium">@DateTime.Now.ToString("dd/MM/yyyy")</p>
+        </div>
 
-            <div class="row g-4 mb-5">
-                <div class="col-md-4">
-                    <div class="card p-4 border-0 shadow-sm border-start border-success border-5 card-hover">
-                        <h6 class="text-muted small text-uppercase fw-bold">Tổng địa điểm (POI)</h6> 
-                        <h2 class="fw-bold mb-0 text-success">128</h2>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card p-4 border-0 shadow-sm border-start border-primary border-5 card-hover">
-                        <h6 class="text-muted small text-uppercase fw-bold">Tệp âm thanh</h6> 
-                        <h2 class="fw-bold mb-0 text-primary">95</h2>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card p-4 border-0 shadow-sm border-start border-warning border-5 card-hover">
-                        <h6 class="text-muted small text-uppercase fw-bold">Lượt quét QR</h6> 
-                        <h2 class="fw-bold mb-0 text-warning">1,402</h2>
-                    </div>
+        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Người dùng</span>
+                <div class="w-9 h-9 bg-purple-500 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-people-fill text-white text-sm"></i>
                 </div>
             </div>
+            <p class="text-3xl font-black text-slate-800">@Model.TotalUsers.ToString("N0")</p>
+            <p class="text-[11px] text-slate-400 mt-1 font-medium">Đã đăng ký</p>
+        </div>
 
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold">Thao tác nhanh</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center g-3">
-                        <div class="col-6 col-md-3">
-                            <a href="/Admin/PoiList" class="d-block p-3 rounded bg-light text-decoration-none text-dark hover-shadow">
-                                <i class="bi bi-list-ul fs-2 text-success"></i>
-                                <p class="mb-0 mt-2">Danh sách POI</p>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="/Admin/MediaManager" class="d-block p-3 rounded bg-light text-decoration-none text-dark">
-                                <i class="bi bi-image fs-2 text-primary"></i>
-                                <p class="mb-0 mt-2">Quản lý Media</p>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="/Admin/QrGenerator" class="d-block p-3 rounded bg-light text-decoration-none text-dark">
-                                <i class="bi bi-qr-code fs-2 text-warning"></i>
-                                <p class="mb-0 mt-2">Tạo mã QR</p>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="/Admin/Analytics" class="d-block p-3 rounded bg-light text-decoration-none text-dark">
-                                <i class="bi bi-graph-up fs-2 text-info"></i>
-                                <p class="mb-0 mt-2">Báo cáo</p>
-                            </a>
-                        </div>
-                    </div>
+        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thời gian nghe</span>
+                <div class="w-9 h-9 bg-orange-400 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-headphones text-white text-sm"></i>
                 </div>
             </div>
-        </main>
+            <p class="text-3xl font-black text-slate-800">@Model.AvgListenDuration<span class="text-lg text-slate-400">s</span></p>
+            <p class="text-[11px] text-slate-400 mt-1 font-medium">Trung bình mỗi lượt</p>
+        </div>
+
     </div>
+
+    @*CHART + BIỂU ĐỒ*@
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+
+        @*BIỂU ĐỒ 7 NGÀY*@
+        <div class="xl:col-span-8 bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">Lượt thăm 7 ngày qua</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Cập nhật theo ngày</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-gradient-custom inline-block"></span>
+                    <span class="text-[11px] text-slate-400 font-bold">Lượt thăm</span>
+                </div>
+            </div>
+
+            @*BAR CHART*@
+            <div class="flex items-end gap-3 h-40">
+                @{
+                    var maxVal = Model.Last7Days.Any() ? Model.Last7Days.Max(d => d.Count) : 1;
+                    if (maxVal == 0) maxVal = 1;
+                }
+                @foreach (var day in Model.Last7Days)
+                {
+                    var heightPct = (int)((double)day.Count / maxVal * 100);
+                    var isToday = day.Date.Date == DateTime.Today;
+                    <div class="flex-1 flex flex-col items-center gap-1">
+                        <span class="text-[10px] font-black text-slate-500">@day.Count</span>
+                        <div class="w-full rounded-t-lg @(isToday ? "bg-gradient-custom" : "bg-slate-100") bar"
+                             style="height: @(Math.Max(heightPct, 4))%">
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-400 @(isToday ? "text-[#89d957]" : "")">
+                            @(isToday ? "Hôm nay" : day.Date.ToString("dd/MM"))
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @*TOP 5 POI*@
+        <div class="xl:col-span-4 bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide mb-4">Top POI phổ biến</h3>
+            <div class="space-y-3">
+                @{int rank = 1;}
+                @foreach (var poi in Model.TopPois)
+                {
+                    var badgeClass = poi.CategoryId == 1 ? "badge-dong-vat" : poi.CategoryId == 2 ? "badge-thuc-vat" : "badge-di-tich";
+                    var catName = poi.CategoryId == 1 ? "Động vật" : poi.CategoryId == 2 ? "Thực vật" : "Di tích";
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-lg @(rank == 1 ? "bg-yellow-400" : rank == 2 ? "bg-slate-300" : rank == 3 ? "bg-orange-300" : "bg-slate-100") flex items-center justify-center text-[10px] font-black @(rank <= 3 ? "text-white" : "text-slate-400")">
+                            @rank
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-black text-slate-700 truncate">@poi.PoiName</p>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full @badgeClass">@catName</span>
+                        </div>
+                        <span class="text-xs font-black text-slate-500">@poi.VisitCount</span>
+                    </div>
+                    rank++;
+                }
+            </div>
+        </div>
+
+    </div>
+
+   @*Bảng lịch sử*@
+    <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100">
+            <div>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">Lịch sử chi tiết</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">@Model.TotalVisits lượt thăm</p>
+            </div>
+
+            @*Bo loc*@
+            <form method="get" class="flex flex-wrap gap-2">
+                <select name="poiId" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl bg-slate-50 border-none text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-[#89d957]/30">
+                    <option value="">Tất cả địa điểm</option>
+                    @foreach (var poi in Model.AllPois)
+                    {
+                        <option value="@poi.PoiId" selected="@(Model.FilterPoiId == poi.PoiId)">@poi.Name</option>
+                    }
+                </select>
+
+                <select name="days" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl bg-slate-50 border-none text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-[#89d957]/30">
+                    <option value="7"  selected="@(Model.FilterDays == 7)">7 ngày qua</option>
+                    <option value="30" selected="@(Model.FilterDays == 30)">30 ngày qua</option>
+                    <option value="90" selected="@(Model.FilterDays == 90)">90 ngày qua</option>
+                    <option value="0"  selected="@(Model.FilterDays == 0)">Tất cả</option>
+                </select>
+
+                @if (Model.FilterPoiId.HasValue || Model.FilterDays != 7)
+                {
+                    <a href="/Admin/Index" class="px-3 py-2 rounded-xl bg-red-50 text-red-400 text-xs font-black">
+                        <i class="bi bi-x-lg"></i> Xóa lọc
+                    </a>
+                }
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50">
+                        <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Thời gian</th>
+                        <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Người dùng</th>
+                        <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Địa điểm</th>
+                        <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Danh mục</th>
+                        <th class="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Thời gian nghe</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @if (!Model.RecentVisits.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-12 text-slate-300">
+                                <i class="bi bi-clock-history text-4xl block mb-2"></i>
+                                <span class="text-sm font-bold">Chưa có dữ liệu</span>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var visit in Model.RecentVisits)
+                    {
+                        var badgeClass = visit.CategoryId == 1 ? "badge-dong-vat" : visit.CategoryId == 2 ? "badge-thuc-vat" : "badge-di-tich";
+                        var catName = visit.CategoryId == 1 ? "Động vật" : visit.CategoryId == 2 ? "Thực vật" : "Di tích";
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <p class="text-xs font-bold text-slate-700">@visit.VisitTime?.ToString("HH:mm")</p>
+                                <p class="text-[10px] text-slate-400">@visit.VisitTime?.ToString("dd/MM/yyyy")</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 bg-gradient-custom rounded-lg flex items-center justify-center text-white text-[10px] font-black">
+                                        @(visit.DisplayName?.Length > 0 ? visit.DisplayName[0].ToString().ToUpper() : "?")
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-700">@(visit.DisplayName ?? "Ẩn danh")</p>
+                                        <p class="text-[10px] text-slate-400">@(visit.Email ?? "")</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-xs font-bold text-slate-700">@(visit.PoiName ?? "Không rõ")</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-[10px] font-bold px-2 py-1 rounded-full @badgeClass">@catName</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                @if (visit.ListenDuration.HasValue)
+                                {
+                                    <span class="text-xs font-black text-slate-600">@visit.ListenDuration<span class="text-slate-300">s</span></span>
+                                }
+                                else
+                                {
+                                    <span class="text-slate-300 text-xs">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @*Phan trang*@
+        @if (Model.TotalPages > 1)
+        {
+            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-[11px] text-slate-400 font-medium">
+                    Trang @Model.CurrentPage / @Model.TotalPages
+                </p>
+                <div class="flex gap-1">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        var isActive = i == Model.CurrentPage;
+                        <a href="?page=@i&poiId=@Model.FilterPoiId&days=@Model.FilterDays"
+                           class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black @(isActive ? "bg-gradient-custom text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")">
+                            @i
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
 </div>

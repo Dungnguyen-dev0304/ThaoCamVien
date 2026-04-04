@@ -84,10 +84,103 @@ namespace WebThaoCamVien.Controllers
         }
 
         // GET: /admin/index
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int? poiId, int days = 7, int page = 1)
         {
-            return View();
+            SetViewData("index", "Tổng quan", "Lịch sử sử dụng");
+
+            const int pageSize = 20;
+
+            // Query cơ bản
+            var query = _context.PoiVisitHistories
+                .Include(v => v.Poi)
+                .Include(v => v.User)
+                .AsQueryable();
+
+            // Lọc theo POI
+            if (poiId.HasValue)
+                query = query.Where(v => v.PoiId == poiId);
+
+            // Lọc theo thời gian
+            if (days > 0)
+            {
+                var from = DateTime.Now.AddDays(-days);
+                query = query.Where(v => v.VisitTime >= from);
+            }
+
+            // ── STAT CARDS ──────────────────────────────────────────
+            var today = DateTime.Today;
+            var allVisits = await _context.PoiVisitHistories.ToListAsync();
+
+            int totalVisits = await query.CountAsync();
+            int todayVisits = allVisits.Count(v => v.VisitTime?.Date == today);
+            int totalUsers = await _context.Users.CountAsync();
+            int avgListen = allVisits.Any(v => v.ListenDuration.HasValue)
+                                ? (int)allVisits.Where(v => v.ListenDuration.HasValue).Average(v => v.ListenDuration!.Value)
+                                : 0;
+
+            // ── BIỂU ĐỒ 7 NGÀY ─────────────────────────────────────
+            var last7Days = new List<DayVisitData>();
+            for (int i = 6; i >= 0; i--)
+            {
+                var date = DateTime.Today.AddDays(-i);
+                var count = allVisits.Count(v => v.VisitTime?.Date == date);
+                last7Days.Add(new DayVisitData { Date = date, Count = count });
+            }
+
+            // ── TOP 5 POI ────────────────────────────────────────────
+            var topPois = await _context.PoiVisitHistories
+                .Include(v => v.Poi)
+                .Where(v => v.Poi != null)
+                .GroupBy(v => new { v.PoiId, v.Poi!.Name, v.Poi.CategoryId })
+                .Select(g => new TopPoiData
+                {
+                    PoiName = g.Key.Name,
+                    CategoryId = g.Key.CategoryId,
+                    VisitCount = g.Count()
+                })
+                .OrderByDescending(x => x.VisitCount)
+                .Take(5)
+                .ToListAsync();
+
+            // ── BẢNG LỊCH SỬ (phân trang) ───────────────────────────
+            int totalPages = (int)Math.Ceiling(totalVisits / (double)pageSize);
+            var recentVisits = await query
+                .OrderByDescending(v => v.VisitTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(v => new VisitRowData
+                {
+                    VisitTime = v.VisitTime,
+                    DisplayName = v.User != null ? v.User.DisplayName : null,
+                    Email = v.User != null ? v.User.Email : null,
+                    PoiName = v.Poi != null ? v.Poi.Name : null,
+                    CategoryId = v.Poi != null ? v.Poi.CategoryId : null,
+                    ListenDuration = v.ListenDuration
+                })
+                .ToListAsync();
+
+            // ── ALL POIS cho dropdown lọc ────────────────────────────
+            var allPois = await _context.Pois.OrderBy(p => p.Name).ToListAsync();
+
+            var viewModel = new IndexViewModel
+            {
+                TotalVisits = totalVisits,
+                TodayVisits = todayVisits,
+                TotalUsers = totalUsers,
+                AvgListenDuration = avgListen,
+                Last7Days = last7Days,
+                TopPois = topPois,
+                RecentVisits = recentVisits,
+                AllPois = allPois,
+                FilterPoiId = poiId,
+                FilterDays = days,
+                CurrentPage = page,
+                TotalPages = Math.Max(totalPages, 1)
+            };
+
+            return View(viewModel);
         }
+
 
         // GET: /Admin/PoiList
         public async Task<IActionResult> PoiList()
@@ -293,7 +386,35 @@ namespace WebThaoCamVien.Controllers
             return RedirectToAction("EditPOI", new { id = PoiId });
         }
 
-        // ── DELETE POI ─────────────────────────────────────────────────────
+        // ── DELETE POI ────────────────────────────────────────────────────
+
+        public async Task<IActionResult> DeletePOI(int id)
+        {
+            SetViewData("poilist", "Xóa POI", "Quản lý điểm tham quan");
+            var poi = await _context.Pois.FindAsync(id);
+            if (poi == null) return NotFound();
+            return View(poi);
+        }
+
+        [HttpPost, ActionName("DeletePOI")]
+        public async Task<IActionResult> DeletePOIConfirmed(int PoiId)
+        {
+            var poi = await _context.Pois.FindAsync(PoiId);
+            if (poi == null) return NotFound();
+
+            if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+            {
+                string imagePath = Path.Combine(_env.WebRootPath, "images", "pois", poi.ImageThumbnail);
+                if (System.IO.File.Exists(imagePath))
+                    System.IO.File.Delete(imagePath);
+            }
+
+            _context.Pois.Remove(poi);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("PoiList");
+        }
+
+        // ── DELETE POI TRANSLATION─────────────────────────────────────────────────────
         // POST: /Admin/DeleteTranslation
         [HttpPost]
         public async Task<IActionResult> DeleteTranslation(int TranslationId, int PoiId)
