@@ -2,7 +2,6 @@
 @{
     Layout = "_adminlayout";
     var languages = new[] {
-        new { Code = "vi", Label = "Tiếng Việt", Flag = "🇻🇳" },
         new { Code = "en", Label = "English",    Flag = "🇬🇧" },
         new { Code = "fr", Label = "Français",   Flag = "🇫🇷" },
         new { Code = "zh", Label = "中文",        Flag = "🇨🇳" },
@@ -97,9 +96,19 @@
                 </div>
             </div>
 
-            <div>
+          <div>
                 <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Mô tả</label>
-                <textarea asp-for="Poi.Description" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all"></textarea>
+                <textarea asp-for="Poi.Description" id="desc-vi-main" rows="3"
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 transition-all"></textarea>
+                <div class="mt-2 flex justify-end">
+                    <button type="button"
+                            onclick="speakViMain()"
+                            id="tts-btn-vi-main"
+                            class="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-[#89d957]/10 border border-slate-200 rounded-xl text-xs font-black text-slate-600 transition-all">
+                        <i class="bi bi-volume-up-fill text-[#89d957]"></i>
+                        Nghe thử TTS 🇻🇳
+                    </button>
+                </div>
             </div>
 
             <div class="flex gap-3">
@@ -342,7 +351,12 @@
             document.getElementById('tab-' + code).classList.add('active');
             document.getElementById('panel-' + code).classList.add('active');
         }
-        switchTab('vi');
+        
+        const firstTab = document.querySelector('.lang-tab');
+        if (firstTab) {
+            const firstCode = firstTab.id.replace('tab-', '');
+            switchTab(firstCode);
+        }        
 
         // ── PREVIEW REALTIME ──
         function updatePreview(code) {
@@ -354,65 +368,87 @@
             if (previewDesc) previewDesc.textContent = desc;
         }
 
-        // ── TTS (Web Speech API) ──
-        const langMap = {
-            'vi': 'vi-VN', 'en': 'en-US', 'fr': 'fr-FR',
-            'zh': 'zh-CN', 'ja': 'ja-JP', 'ko': 'ko-KR'
-        };
+// ── TTS (Web Speech API) ──
+const langMap = {
+    'en': 'en-US', 'fr': 'fr-FR',
+    'zh': 'zh-CN', 'ja': 'ja-JP', 'ko': 'ko-KR'
+};
 
-        let currentUtterance = null;
+let activeSource = null;
 
-        function speakText(code, langCode) {
-            if (!window.speechSynthesis) {
-                alert('Trình duyệt không hỗ trợ TTS!');
-                return;
-            }
+function _stopCurrent() {
+    window.speechSynthesis.cancel();
+    if (activeSource === 'vi-main') {
+        _resetBtn('tts-btn-vi-main', '<i class="bi bi-volume-up-fill text-[#89d957]"></i> Nghe thử TTS 🇻🇳');
+    } else if (activeSource) {
+        _resetBtn('tts-btn-' + activeSource, '<i class="bi bi-volume-up-fill text-[#89d957]"></i> Nghe thử TTS');
+    }
+    activeSource = null;
+}
 
-            // Dừng nếu đang đọc
-            if (currentUtterance) {
-                window.speechSynthesis.cancel();
-                currentUtterance = null;
-                resetTtsBtn(code);
-                return;
-            }
+function _resetBtn(id, html) {
+    const btn = document.getElementById(id);
+    if (btn) {
+        btn.innerHTML = html;
+        btn.classList.remove('border-red-200', 'bg-red-50');
+    }
+}
 
-            const desc = document.getElementById('desc-' + code)?.value?.trim();
-            if (!desc) {
-                alert('Vui lòng nhập mô tả trước khi nghe thử!');
-                return;
-            }
+function _speak({ source, textareaId, btnId, lang, resetHtml }) {
+    if (!window.speechSynthesis) {
+        alert('Trình duyệt không hỗ trợ TTS!');
+        return;
+    }
 
-            const utterance = new SpeechSynthesisUtterance(desc);
-            utterance.lang = langMap[langCode] || 'vi-VN';
-            utterance.rate = 0.9;
+    if (activeSource !== null) {
+        _stopCurrent();
+        return;
+    }
 
-            const btn = document.getElementById('tts-btn-' + code);
-            if (btn) {
-                btn.innerHTML = '<i class="bi bi-stop-fill text-red-500"></i> Đang đọc... (click để dừng)';
-                btn.classList.add('border-red-200', 'bg-red-50');
-            }
+    const desc = document.getElementById(textareaId)?.value?.trim();
+    if (!desc) {
+        alert('Vui lòng nhập mô tả trước khi nghe thử!');
+        return;
+    }
 
-            utterance.onend = () => {
-                currentUtterance = null;
-                resetTtsBtn(code);
-            };
+    // ✅ Set activeSource ở đây, sau khi qua hết các check
+    activeSource = source;
 
-            utterance.onerror = () => {
-                currentUtterance = null;
-                resetTtsBtn(code);
-            };
+    const utterance = new SpeechSynthesisUtterance(desc);
+    utterance.lang = lang;
+    utterance.rate = 0.9;
 
-            currentUtterance = utterance;
-            window.speechSynthesis.speak(utterance);
-        }
+    const btn = document.getElementById(btnId);
+    if (btn) {
+        btn.innerHTML = '<i class="bi bi-stop-fill text-red-500"></i> Đang đọc... (click để dừng)';
+        btn.classList.add('border-red-200', 'bg-red-50');
+    }
 
-        function resetTtsBtn(code) {
-            const btn = document.getElementById('tts-btn-' + code);
-            if (btn) {
-                btn.innerHTML = '<i class="bi bi-volume-up-fill text-[#89d957]"></i> Nghe thử TTS';
-                btn.classList.remove('border-red-200', 'bg-red-50');
-            }
-        }
+    utterance.onend  = () => { activeSource = null; _resetBtn(btnId, resetHtml); };
+    utterance.onerror = () => { activeSource = null; _resetBtn(btnId, resetHtml); };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function speakViMain() {
+    _speak({
+        source:     'vi-main',
+        textareaId: 'desc-vi-main',
+        btnId:      'tts-btn-vi-main',
+        lang:       'vi-VN',
+        resetHtml:  '<i class="bi bi-volume-up-fill text-[#89d957]"></i> Nghe thử TTS 🇻🇳'
+    });
+}
+
+function speakText(code) {
+    _speak({
+        source:     code,
+        textareaId: 'desc-' + code,
+        btnId:      'tts-btn-' + code,
+        lang:       langMap[code] || 'en-US',
+        resetHtml:  '<i class="bi bi-volume-up-fill text-[#89d957]"></i> Nghe thử TTS'
+    });
+}
 
         // ── BẢN ĐỒ ──
         const categoryColors = { "1": "#e67e22", "2": "#27ae60", "3": "#8e44ad" };
