@@ -1,0 +1,167 @@
+@model WebThaoCamVien.ViewModels.TourListViewModel
+@{
+    Layout = "_adminlayout";
+    ViewData["Active"] = "tourlist";
+}
+
+<style>
+    .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
+    .bg-custom-primary  { background-color: #89d957; }
+    .tour-card {
+        background: #fff;
+        border-radius: 24px;
+        border: 1px solid #eef5e8;
+        transition: box-shadow .2s, transform .2s;
+    }
+    .tour-card:hover {
+        box-shadow: 0 8px 32px rgba(137,217,87,.15);
+        transform: translateY(-2px);
+    }
+    .badge-active   { background:#e8fad4; color:#3d7a1e; }
+    .badge-inactive { background:#f3f4f6; color:#9ca3af; }
+    .stop-pill {
+        display:inline-flex; align-items:center; gap:4px;
+        background:#f2f7ee; border-radius:99px;
+        padding:3px 10px; font-size:11px; font-weight:700; color:#5dab2f;
+    }
+    .cat-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .cat-1 { background:#e67e22; }
+    .cat-2 { background:#27ae60; }
+    .cat-3 { background:#8e44ad; }
+    .empty-state { background:#f9fff4; border:2px dashed #c9e265; border-radius:24px; }
+</style>
+
+<div class="p-4">
+
+    @*header*@
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-black text-slate-800">Tour tham quan</h2>
+            <p class="text-sm text-slate-400 mt-1">Quản lý lộ trình tham quan Thảo Cầm Viên</p>
+        </div>
+        <a href="/Tour/AddTour"
+           class="flex items-center gap-2 px-5 py-3 bg-gradient-custom text-white font-black rounded-xl shadow-lg shadow-[#89d957]/25 text-sm uppercase tracking-widest hover:opacity-90 transition-opacity">
+            <i class="bi bi-plus-lg"></i> Thêm tour mới
+        </a>
+    </div>
+
+    @*Stat row*@
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-custom flex items-center justify-center text-white text-xl shadow shadow-[#89d957]/30">
+                <i class="bi bi-signpost-split"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-800">@Model.Tours.Count</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Tổng tour</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-[#e8fad4] flex items-center justify-center text-[#3d7a1e] text-xl">
+                <i class="bi bi-eye"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-800">@Model.Tours.Count(t => t.IsActive)</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Đang hiện</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl">
+                <i class="bi bi-eye-slash"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-800">@Model.Tours.Count(t => !t.IsActive)</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Đang ẩn</p>
+            </div>
+        </div>
+    </div>
+
+    @*tour list*@
+    @if (!Model.Tours.Any())
+    {
+        <div class="empty-state p-16 text-center">
+            <div class="text-5xl mb-4">🗺️</div>
+            <p class="text-slate-500 font-bold text-lg">Chưa có tour nào</p>
+            <p class="text-slate-400 text-sm mt-1 mb-6">Tạo tour đầu tiên để hướng dẫn khách tham quan</p>
+            <a href="/Tour/AddTour" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-custom text-white font-black rounded-xl text-sm uppercase tracking-widest">
+                <i class="bi bi-plus-lg"></i> Tạo tour ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            @foreach (var tour in Model.Tours)
+            {
+                <div class="tour-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-custom flex items-center justify-center text-white shadow shadow-[#89d957]/30 flex-shrink-0">
+                                <i class="bi bi-signpost-split"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-slate-800 text-base leading-tight">@tour.Name</h3>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full @(tour.IsActive ? "badge-active" : "badge-inactive")">
+                                    @(tour.IsActive ? "● Đang hiện" : "○ Đang ẩn")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                           @*toggle active*@
+                            <form asp-controller="Tour" asp-action="ToggleActive" method="post" class="m-0">
+                                <input type="hidden" name="TourId" value="@tour.TourId" />
+                                <button type="submit"
+                                        title="@(tour.IsActive ? "Ẩn tour" : "Hiện tour")"
+                                        class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#89d957]/10 text-slate-500 hover:text-[#3d7a1e] flex items-center justify-center transition-all text-sm">
+                                    <i class="bi @(tour.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
+                                </button>
+                            </form>
+                            @*edit*@
+                            <a href="/Tour/EditTour?id=@tour.TourId"
+                               class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#89d957]/10 text-slate-500 hover:text-[#3d7a1e] flex items-center justify-center transition-all text-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            @*delete*@
+                            <form asp-controller="Tour" asp-action="DeleteTour" method="post" class="m-0"
+                                  onsubmit="return confirm('Xóa tour «@tour.Name»? Hành động này không thể hoàn tác.')">
+                                <input type="hidden" name="TourId" value="@tour.TourId" />
+                                <button type="submit"
+                                        class="w-9 h-9 rounded-xl border border-red-100 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-all text-sm">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    @*mô tả*@
+                    @if (!string.IsNullOrEmpty(tour.Description))
+                    {
+                        <p class="text-sm text-slate-500 mb-4 line-clamp-2">@tour.Description</p>
+                    }
+
+                    @*meta*@
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="stop-pill">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            @tour.TourPois.Count điểm dừng
+                        </span>
+                        @if (tour.EstimatedTime.HasValue)
+                        {
+                            <span class="stop-pill">
+                                <i class="bi bi-clock"></i>
+                                ~@tour.EstimatedTime phút
+                            </span>
+                        }
+                        <span class="text-[10px] text-slate-400 font-medium ml-auto">
+                            @tour.CreatedAt?.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+
+}

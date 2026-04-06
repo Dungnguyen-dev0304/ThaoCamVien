@@ -77,11 +77,11 @@
             <a href="/Admin/PoiList" class="nav-link @(ViewData["Active"]?.ToString() == "poilist" ? "active" : "")">
                 <i class="bi bi-geo-alt-fill"></i>
                 <span>Quản lý địa điểm</span>
-            </a> 
-            
-            <a href="#" class="nav-link">
-                <i class="bi bi-qr-code"></i>
-                <span>Mã QR</span>
+            </a>
+
+            <a href="/Tour/TourList" class="nav-link @(ViewData["Active"]?.ToString() == "tourlist" ? "active" : "")">
+                <i class="bi bi-signpost-split-fill"></i>
+                <span>Quản lý tour</span>
             </a>
             
             <div class="px-8 mt-10 mb-4">

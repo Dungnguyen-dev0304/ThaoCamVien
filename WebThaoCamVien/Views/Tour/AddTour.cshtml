@@ -1,0 +1,300 @@
+@model WebThaoCamVien.ViewModels.EditTourViewModel
+@{
+    Layout = "_adminlayout";
+    var categoryNames = new Dictionary<int?,string> { {1,"Động vật"},{2,"Thực vật"},{3,"Di tích"} };
+    var categoryIcons = new Dictionary<int?,string> { {1,"🦁"},{2,"🌿"},{3,"🏛️"} };
+    var categoryColors = new Dictionary<int?,string> { {1,"#e67e22"},{2,"#27ae60"},{3,"#8e44ad"} };
+}
+
+<style>
+    .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
+    .poi-item {
+        display:flex; align-items:center; gap:10px;
+        padding:10px 14px; border-radius:14px; background:#f9fff4;
+        border:1.5px solid #eef5e8; cursor:pointer;
+        transition: all .15s;
+    }
+    .poi-item:hover { border-color:#89d957; background:#f0fce6; }
+    .poi-item.added { opacity:.4; pointer-events:none; }
+    .stop-item {
+        display:flex; align-items:center; gap:10px;
+        padding:10px 14px; border-radius:14px; background:#fff;
+        border:1.5px solid #eef5e8; margin-bottom:8px;
+        transition: box-shadow .15s;
+    }
+    .stop-item:hover { box-shadow:0 4px 16px rgba(137,217,87,.12); }
+    .stop-number {
+        width:26px; height:26px; border-radius:8px; flex-shrink:0;
+        background: linear-gradient(135deg,#89d957,#c9e265);
+        color:#1b2e14; font-weight:900; font-size:12px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .cat-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; }
+    .drag-handle { cursor:grab; color:#cbd5e1; font-size:16px; }
+    .drag-handle:active { cursor:grabbing; }
+    .empty-drop {
+        border:2px dashed #c9e265; border-radius:14px;
+        padding:32px; text-align:center; color:#94a3b8;
+        font-size:13px; font-weight:600;
+    }
+    #stopList .sortable-ghost { opacity:.3; }
+</style>
+
+<div class="p-4">
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        @*cột trái: thông tin tour*@
+        <div class="xl:col-span-4">
+            <div class="bg-white rounded-[28px] border border-slate-100 shadow-sm p-7">
+                <h3 class="text-base font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-gradient-custom flex items-center justify-center text-white">
+                        <i class="bi bi-signpost-split"></i>
+                    </span>
+                    Thông tin tour
+                </h3>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-medium">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>⚠️ @error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+
+                <form id="tourForm" asp-controller="Tour" asp-action="AddTour" method="post" class="space-y-5">
+                    @*hidden input poi sẽ được dc xử lý bởi js*@
+                    <div id="poiInputs"></div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Tên tour *</label>
+                        <input type="text" name="Name" required
+                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 font-medium"
+                               placeholder="VD: Tour Động vật châu Phi...">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Mô tả</label>
+                        <textarea name="Description" rows="3"
+                                  class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30"
+                                  placeholder="Mô tả ngắn về lộ trình..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Thời gian ước tính (phút)</label>
+                        <input type="number" name="EstimatedTime" min="1" max="480"
+                               oninput="if(this.value < 1 && this.value !== '') this.value = 1;"
+                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-[#89d957]/30 font-mono"
+                               placeholder="VD: 60">
+                    </div>
+
+                    <div class="pt-2 flex gap-3">
+                        <button type="submit" onclick="return injectPoiInputs()"
+                                class="flex-1 py-4 bg-gradient-custom text-white font-black rounded-xl shadow-lg shadow-[#89d957]/20 uppercase tracking-widest text-[11px]">
+                            <i class="bi bi-floppy me-1"></i> Tạo tour
+                        </button>
+                        <a href="/Tour/TourList"
+                           class="py-4 px-5 bg-slate-100 text-slate-500 font-black rounded-xl uppercase tracking-widest text-[11px] flex items-center">
+                            Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @*cột giữa poi dc chọn (drop zone)*@
+        <div class="xl:col-span-4">
+            <div class="bg-white rounded-[28px] border border-slate-100 shadow-sm p-7 h-full">
+                <h3 class="text-base font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-[#e8fad4] flex items-center justify-center text-[#3d7a1e]">
+                        <i class="bi bi-list-ol"></i>
+                    </span>
+                    Lộ trình tour
+                </h3>
+                <p class="text-xs text-slate-400 font-medium mb-5">Kéo để sắp xếp thứ tự · Click <i class="bi bi-plus-circle"></i> để thêm POI</p>
+
+                <div id="stopList">
+                    <div id="emptyDrop" class="empty-drop">
+                        🗺️<br>Chưa có điểm dừng nào<br>
+                        <span class="text-[11px] text-slate-400">Chọn POI từ danh sách bên phải</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng:</span>
+                    <span id="stopCount" class="text-sm font-black text-[#3d7a1e]">0 điểm dừng</span>
+                </div>
+            </div>
+        </div>
+
+        @*cột phải danh sách poi được chọn*@
+        <div class="xl:col-span-4">
+            <div class="bg-white rounded-[28px] border border-slate-100 shadow-sm p-7 h-full">
+                <h3 class="text-base font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                        <i class="bi bi-geo-alt"></i>
+                    </span>
+                    Điểm tham quan
+                </h3>
+
+                @*search*@
+                <input type="text" id="poiSearch" oninput="filterPois(this.value)"
+                       class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm mb-4 focus:ring-2 focus:ring-[#89d957]/30"
+                       placeholder="🔍 Tìm POI...">
+
+                <div id="poiList" class="space-y-2 overflow-y-auto" style="max-height:480px;">
+                    @foreach (var poi in Model.AllPois)
+                    {
+                        var color = categoryColors.GetValueOrDefault(poi.CategoryId, "#89d957");
+                        var icon  = categoryIcons.GetValueOrDefault(poi.CategoryId, "📍");
+                        var cname = categoryNames.GetValueOrDefault(poi.CategoryId, "Khác");
+                        <div class="poi-item"
+                             id="poi-src-@poi.PoiId"
+                             data-id="@poi.PoiId"
+                             data-name="@poi.Name"
+                             data-icon="@icon"
+                             data-color="@color"
+                             data-cat="@cname"
+                             title="@poi.Name"
+                             onclick="addStop(this)">
+                            <span style="font-size:18px;">@icon</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-slate-700 leading-tight">@poi.Name</p>
+                                <p class="text-[10px] font-semibold" style="color:@color;">@cname</p>
+                            </div>
+                            <i class="bi bi-plus-circle text-[#89d957] text-lg flex-shrink-0"></i>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+    const stops = []; // [{id, name, icon, color, cat}]
+
+    // ── SortableJS ──
+    const sortable = Sortable.create(document.getElementById('stopList'), {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: updateStopNumbers
+    });
+
+    function addStop(el) {
+        const id    = el.dataset.id;
+        const name  = el.dataset.name;
+        const icon  = el.dataset.icon;
+        const color = el.dataset.color;
+        const cat   = el.dataset.cat;
+
+        if (stops.find(s => s.id === id)) return;
+        stops.push({ id, name, icon, color, cat });
+
+        // Đánh dấu POI nguồn đã được chọn
+        el.classList.add('added');
+
+        renderStops();
+    }
+
+    function removeStop(id) {
+        const idx = stops.findIndex(s => s.id === id);
+        if (idx !== -1) stops.splice(idx, 1);
+
+        const src = document.getElementById('poi-src-' + id);
+        if (src) src.classList.remove('added');
+
+        renderStops();
+    }
+
+    function renderStops() {
+        const list = document.getElementById('stopList');
+        const empty = document.getElementById('emptyDrop');
+
+        // Lấy thứ tự hiện tại từ DOM (SortableJS có thể đã sắp xếp lại)
+        const currentOrder = [...list.querySelectorAll('.stop-item')].map(el => el.dataset.id);
+
+        // Xóa các stop item cũ
+        list.querySelectorAll('.stop-item').forEach(el => el.remove());
+
+        // Rebuild theo thứ tự currentOrder, thêm stop mới ở cuối
+        const orderedIds = [...currentOrder.filter(id => stops.find(s => s.id === id)),
+                            ...stops.filter(s => !currentOrder.includes(s.id)).map(s => s.id)];
+
+        if (orderedIds.length === 0) {
+            empty.style.display = '';
+            document.getElementById('stopCount').textContent = '0 điểm dừng';
+            return;
+        }
+
+        empty.style.display = 'none';
+        orderedIds.forEach((id, idx) => {
+            const s = stops.find(s => s.id === id);
+            if (!s) return;
+            const div = document.createElement('div');
+            div.className = 'stop-item';
+            div.dataset.id = s.id;
+            div.innerHTML = `
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <span class="stop-number">${idx + 1}</span>
+                <span style="font-size:16px;">${s.icon}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-700 leading-tight" title="${s.name}">${s.name}</p>
+                    <p class="text-[10px] font-semibold" style="color:${s.color};">${s.cat}</p>
+                </div>
+                <button type="button" onclick="removeStop('${s.id}')"
+                        class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-all flex-shrink-0">
+                    <i class="bi bi-x-lg" style="font-size:11px;"></i>
+                </button>`;
+            list.appendChild(div);
+        });
+
+        document.getElementById('stopCount').textContent = `${orderedIds.length} điểm dừng`;
+    }
+
+    function updateStopNumbers() {
+        const items = document.querySelectorAll('#stopList .stop-item');
+        items.forEach((el, idx) => {
+            const num = el.querySelector('.stop-number');
+            if (num) num.textContent = idx + 1;
+        });
+    }
+
+    // Inject hidden inputs trước khi submit
+    function injectPoiInputs() {
+        const items = document.querySelectorAll('#stopList .stop-item');
+
+        if (items.length === 0) {
+            alert('⚠️ Vui lòng thêm ít nhất 1 điểm dừng cho tour!');
+            return false; // chặn submit
+        }
+
+        const container = document.getElementById('poiInputs');
+        container.innerHTML = '';
+        items.forEach(el => {
+            const input = document.createElement('input');
+            input.type  = 'hidden';
+            input.name  = 'PoiIds';
+            input.value = el.dataset.id;
+            container.appendChild(input);
+        });
+
+        return true;
+    }
+
+    // Filter POI search
+    function filterPois(q) {
+        const term = q.toLowerCase();
+        document.querySelectorAll('#poiList .poi-item').forEach(el => {
+            const match = el.dataset.name.toLowerCase().includes(term)
+                       || el.dataset.cat.toLowerCase().includes(term);
+            el.style.display = match ? '' : 'none';
+        });
+    }
+</script>
+}
