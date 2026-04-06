@@ -13,6 +13,8 @@ public partial class Tour
 
     public int? EstimatedTime { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<TourPoi> TourPois { get; set; } = new List<TourPoi>();
