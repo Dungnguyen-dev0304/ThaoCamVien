@@ -23,17 +23,18 @@
         @* HEADER: Tiêu đề và Nút thêm mới *@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">
+                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">
                     Quản lý địa điểm
-                </h1>
+                </h2>
                 <p class="text-slate-500 mt-1">
                     Hệ thống có <span class="font-bold text-custom-primary">@Model.Count()</span> địa điểm trong Thảo Cầm Viên 
                 </p>
             </div>
             
             @* NÚT CHÍNH: Dẫn đến trang AddPOI *@
-            <a href="/Admin/AddPOI" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-custom text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-[#89d957]/30 hover:scale-[1.02] active:scale-95 transition-all">
-                <i class="bi bi-plus-circle-fill text-lg"></i>
+            <a href="/Admin/AddPOI" 
+               class="flex items-center gap-2 px-5 py-3 bg-gradient-custom text-white font-black rounded-xl shadow-lg shadow-[#89d957]/25 text-sm uppercase tracking-widest hover:opacity-90 transition-opacity">
+                <i class="bi bi-plus-lg"></i> 
                 Tạo địa điểm mới
             </a>
         </div>
