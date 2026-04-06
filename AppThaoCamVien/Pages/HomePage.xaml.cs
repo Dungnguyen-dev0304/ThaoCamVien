@@ -4,93 +4,75 @@ namespace AppThaoCamVien.Pages;
 
 public partial class HomePage : ContentPage
 {
-    private readonly DatabaseService _databaseService;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly DatabaseService _db;
+    private readonly IServiceProvider _sp;
+    private int _langIdx = 0;
 
-    // Vị trí hiện tại trong danh sách ngôn ngữ hỗ trợ
-    private int _langIndex = 0;
-
-    public HomePage(DatabaseService databaseService, IServiceProvider serviceProvider)
+    public HomePage(DatabaseService db, IServiceProvider sp)
     {
         InitializeComponent();
-        _databaseService = databaseService;
-        _serviceProvider = serviceProvider;
+        _db = db;
+        _sp = sp;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        // Đồng bộ nút ngôn ngữ với trạng thái hiện tại
-        var currentLang = LanguageManager.GetCurrentLanguage();
-        _langIndex = LanguageManager.SupportedLanguages
-            .FindIndex(l => l.Code == currentLang);
-        if (_langIndex < 0) _langIndex = 0;
-        UpdateLangButton();
+        // Đồng bộ nút ngôn ngữ
+        var cur = LanguageManager.Current;
+        _langIdx = LanguageManager.Languages.FindIndex(l => l.Code == cur);
+        if (_langIdx < 0) _langIdx = 0;
+        UpdateLangBtn();
 
-        // Kéo dữ liệu mới nhất về DB chạy ngầm (không block UI)
-        _ = Task.Run(async () => await _databaseService.SyncDataFromApiAsync());
+        // Sync data ngầm
+        _ = Task.Run(() => _db.SyncDataFromApiAsync());
     }
 
-    // ===== Chuyển ngôn ngữ =====
-    // Mỗi lần nhấn sẽ xoay vòng qua các ngôn ngữ: VI → EN → TH → ID → MS → KM → VI
-    private void OnLanguageTapped(object sender, TappedEventArgs e)
+    // ── Đổi ngôn ngữ (xoay vòng 6 ngôn ngữ) ────────────────────────────
+    private void OnLangTapped(object sender, TappedEventArgs e)
     {
-        _langIndex = (_langIndex + 1) % LanguageManager.SupportedLanguages.Count;
-        var (code, _, _) = LanguageManager.SupportedLanguages[_langIndex];
+        _langIdx = (_langIdx + 1) % LanguageManager.Languages.Count;
+        var (code, _, _) = LanguageManager.Languages[_langIdx];
 
-        // Lưu vào DatabaseService để AudioService / NarrationEngine biết dùng ngôn ngữ nào
-        _databaseService.CurrentLanguage = code;
-
-        // Gọi LanguageManager để cập nhật TẤT CẢ DynamicResource trong app ngay lập tức
-        LanguageManager.SetLanguage(code);
-
-        // Cập nhật nhãn nút
-        UpdateLangButton();
+        _db.CurrentLanguage = code;
+        LanguageManager.Apply(code);
+        UpdateLangBtn();
     }
 
-    private void UpdateLangButton()
+    private void UpdateLangBtn()
     {
-        var (_, flag, label) = LanguageManager.SupportedLanguages[_langIndex];
-        LangLabel.Text = $"{flag} {label}";
+        var (_, flag, label) = LanguageManager.Languages[_langIdx];
+        LangLbl.Text = $"{flag} {label}";
     }
 
-    // ===== Nhấn "Bắt đầu chuyến đi" =====
-    private async void OnStartTourTapped(object sender, TappedEventArgs e)
+    // ── Nút Bắt đầu → mở MapPage ────────────────────────────────────────
+    private async void OnStartTapped(object sender, TappedEventArgs e)
     {
-        // Mở trang bản đồ (cần lấy qua ServiceProvider vì MapPage có DI phức tạp)
-        var mapPage = _serviceProvider.GetService<MapPage>();
-        if (mapPage != null)
-            await Navigation.PushAsync(mapPage);
+        var page = _sp.GetService<MapPage>();
+        if (page != null) await Navigation.PushAsync(page);
     }
 
-    // ===== Tour Cards =====
-    // Những nút này sẽ mở POI cụ thể (PoiId cứng theo seed data)
-    private async void OnTour1Clicked(object sender, EventArgs e)
-        => await OpenPoiById(2); // Voi Châu Á
+    // ── Tour cards → mở StoryAudioPage ──────────────────────────────────
+    private async void OnTour1Clicked(object sender, EventArgs e) => await OpenPoi(11); // Khu voi
+    private async void OnTour2Clicked(object sender, EventArgs e) => await OpenPoi(4);  // Hà mã (demo)
+    private async void OnTour3Clicked(object sender, EventArgs e) => await OpenPoi(8);  // Hươu cao cổ
 
-    private async void OnTour2Clicked(object sender, EventArgs e)
-        => await OpenPoiById(1); // Hổ Đông Dương
-
-    private async void OnTour3Clicked(object sender, EventArgs e)
-        => await OpenPoiById(3); // Hươu Cao Cổ
-
-    private async Task OpenPoiById(int poiId)
+    private async Task OpenPoi(int poiId)
     {
         try
         {
-            var poi = await _databaseService.GetPoiByIdAsync(poiId);
+            var poi = await _db.GetPoiByIdAsync(poiId);
             if (poi == null)
             {
-                await DisplayAlert("Thông báo", "Không tìm thấy thông tin điểm tham quan.", "OK");
+                await DisplayAlert("Thông báo", "Không tìm thấy điểm tham quan.", "OK");
                 return;
             }
-
-            var storyPage = _serviceProvider.GetService<StoryAudioPage>();
-            if (storyPage != null)
+            var page = _sp.GetService<StoryAudioPage>();
+            if (page != null)
             {
-                storyPage.LoadPoi(poi);
-                await Navigation.PushAsync(storyPage);
+                page.LoadPoi(poi);
+                await Navigation.PushAsync(page);
             }
         }
         catch (Exception ex)

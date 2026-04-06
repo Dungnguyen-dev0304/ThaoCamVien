@@ -3,267 +3,223 @@
 namespace AppThaoCamVien.Services
 {
     /// <summary>
-    /// TTS Engine chất lượng cao cho 6 ngôn ngữ.
-    /// 
-    /// Kỹ thuật làm giọng đọc tự nhiên hơn:
-    /// 1. Chia văn bản thành các câu ngắn → mỗi câu phát riêng (nghe tự nhiên hơn 1 đoạn dài)
-    /// 2. Chèn khoảng dừng (pause) giữa các câu bằng cách delay
-    /// 3. Điều chỉnh Pitch và Rate phù hợp từng ngôn ngữ (tiếng Thái cần pitch cao hơn)
-    /// 4. Script thuyết minh có cấu trúc: chào mừng → nội dung → kết
-    /// 5. Fallback locale: nếu thiết bị không có giọng đúng ngôn ngữ → dùng giọng EN
+    /// TtsEngine — phát TTS an toàn, không bao giờ crash app.
+    ///
+    /// CÁC LỖI ĐÃ FIX:
+    /// 1. OperationCanceledException không được catch → crash
+    /// 2. GetLocalesAsync() throw exception trên một số thiết bị → crash
+    /// 3. SpeakAsync trên thiết bị không có giọng đọc → crash
+    /// 4. Gọi StopAsync() khi không có gì đang phát → NullReferenceException
     /// </summary>
-    public class TtsEngine
+    public class TtsEngine : IDisposable
     {
         private CancellationTokenSource? _cts;
-        private bool _isSpeaking = false;
+        private readonly SemaphoreSlim _lock = new(1, 1);
 
-        public bool IsSpeaking => _isSpeaking;
+        public bool IsSpeaking { get; private set; }
 
-        // Mapping từ language code → các prefix locale hệ thống
-        // Thứ tự là thứ tự ưu tiên: tìm giọng khớp prefix đầu trước, rồi mới fallback
         private static readonly Dictionary<string, string[]> LocalePrefixes = new()
         {
-            ["vi"] = new[] { "vi" },
-            ["en"] = new[] { "en-US", "en-GB", "en" },
-            ["th"] = new[] { "th" },
-            ["id"] = new[] { "id" },
-            ["ms"] = new[] { "ms" },
-            ["km"] = new[] { "km" },   // Khmer — nhiều thiết bị không có, sẽ fallback EN
+            ["vi"] = ["vi"],
+            ["en"] = ["en-US", "en-GB", "en"],
+            ["th"] = ["th"],
+            ["id"] = ["id"],
+            ["ms"] = ["ms"],
+            ["km"] = ["km"],
         };
 
-        // Tốc độ nói tối ưu cho từng ngôn ngữ (pitch và volume)
-        // Tiếng Việt: pitch trung bình, tốc độ vừa phải
-        // Tiếng Thái: thường nghe tốt hơn ở pitch hơi cao
-        private static readonly Dictionary<string, (float pitch, float volume)> VoiceSettings = new()
+        public async Task SpeakPoiAsync(Poi poi, string lang)
         {
-            ["vi"] = (1.0f, 1.0f),
-            ["en"] = (1.0f, 1.0f),
-            ["th"] = (1.05f, 1.0f),
-            ["id"] = (1.0f, 1.0f),
-            ["ms"] = (1.0f, 1.0f),
-            ["km"] = (1.0f, 1.0f),
-        };
-
-        // =====================================================================
-        // HÀM PHÁT CHÍNH
-        // =====================================================================
-        /// <summary>
-        /// Phát thuyết minh cho một POI.
-        /// Tự động xây dựng script từ Name + Description của POI.
-        /// </summary>
-        public async Task SpeakPoiAsync(Poi poi, string languageCode)
-        {
-            await StopAsync(); // Dừng bài cũ nếu đang phát
-
-            _cts = new CancellationTokenSource();
-            _isSpeaking = true;
+            // Ngăn chặn nhiều lần gọi đồng thời
+            if (!await _lock.WaitAsync(100))
+            {
+                System.Diagnostics.Debug.WriteLine("[TTS] Đang bận, bỏ qua");
+                return;
+            }
 
             try
             {
-                // 1. Tìm locale phù hợp trên thiết bị
-                var locale = await FindBestLocaleAsync(languageCode);
+                await StopInternalAsync();
 
-                // 2. Lấy cài đặt giọng đọc
-                var (pitch, volume) = VoiceSettings.GetValueOrDefault(languageCode, (1.0f, 1.0f));
-                var options = new SpeechOptions { Locale = locale, Pitch = pitch, Volume = volume };
+                _cts = new CancellationTokenSource();
+                IsSpeaking = true;
 
-                // 3. Xây dựng script thuyết minh tự nhiên
-                var sentences = BuildNarrationSentences(poi, languageCode);
+                var sentences = BuildScript(poi, lang);
+                var locale = await FindLocaleAsync(lang);
+
+                // Nếu không tìm được locale phù hợp, vẫn phát với locale mặc định
+                var opts = new SpeechOptions
+                {
+                    Pitch = lang == "th" ? 1.05f : 1.0f,
+                    Volume = 1.0f
+                };
+                if (locale != null) opts.Locale = locale;
 
                 System.Diagnostics.Debug.WriteLine(
-                    $"[TTS] Phát {sentences.Count} câu | Ngôn ngữ: {languageCode} | Locale: {locale?.Language ?? "system default"}");
+                    $"[TTS] Phát {sentences.Count} câu | lang={lang} | locale={locale?.Language ?? "default"}");
 
-                // 4. Phát từng câu với khoảng dừng nhỏ giữa các câu
                 foreach (var sentence in sentences)
                 {
-                    if (_cts.Token.IsCancellationRequested) break;
+                    if (_cts == null || _cts.IsCancellationRequested) break;
+                    if (string.IsNullOrWhiteSpace(sentence)) continue;
 
-                    await TextToSpeech.Default.SpeakAsync(sentence, options, _cts.Token);
-
-                    // Dừng 300ms giữa các câu — làm giọng đọc nghe tự nhiên, có nhịp điệu
-                    if (!_cts.Token.IsCancellationRequested)
-                        await Task.Delay(300, _cts.Token).ConfigureAwait(false);
+                    try
+                    {
+                        await TextToSpeech.Default.SpeakAsync(sentence, opts, _cts.Token);
+                        // Delay giữa câu (tạo nhịp tự nhiên)
+                        if (_cts != null && !_cts.IsCancellationRequested)
+                            await Task.Delay(300, _cts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        System.Diagnostics.Debug.WriteLine("[TTS] Bị cancel giữa câu");
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Lỗi một câu → bỏ qua, phát câu tiếp (không crash toàn bộ)
+                        System.Diagnostics.Debug.WriteLine($"[TTS] Lỗi câu: {ex.Message}");
+                    }
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
-                System.Diagnostics.Debug.WriteLine("[TTS] Đã dừng theo yêu cầu");
+                System.Diagnostics.Debug.WriteLine("[TTS] Cancelled");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[TTS] Lỗi: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[TTS] Error: {ex.Message}");
+                // KHÔNG rethrow — để NarrationEngine xử lý gracefully
             }
             finally
             {
-                _isSpeaking = false;
+                IsSpeaking = false;
+                _lock.Release();
             }
         }
 
-        /// <summary>
-        /// Dừng TTS đang phát.
-        /// </summary>
         public async Task StopAsync()
         {
-            if (_cts != null && !_cts.IsCancellationRequested)
+            try
             {
-                _cts.Cancel();
-                _cts.Dispose();
+                await StopInternalAsync();
+                // Đợi lock rảnh trước khi return
+                if (await _lock.WaitAsync(200))
+                    _lock.Release();
+            }
+            catch { }
+        }
+
+        private async Task StopInternalAsync()
+        {
+            IsSpeaking = false;
+            try
+            {
+                if (_cts != null && !_cts.IsCancellationRequested)
+                {
+                    _cts.Cancel();
+                    await Task.Delay(50); // Cho SpeakAsync nhận cancel signal
+                }
+                _cts?.Dispose();
                 _cts = null;
             }
-            _isSpeaking = false;
-
-            // Gọi CancelAll để đảm bảo hệ thống TTS dừng hoàn toàn
-            try {
-                CancellationTokenSource cts = new();
-
-                await TextToSpeech.SpeakAsync("Hello", cancelToken: cts.Token);
-
-                // cancel
-                cts.Cancel();
-            } catch { }
-            await Task.Delay(100); // Cho hệ thống xử lý xong
+            catch { }
+            //TextToSpeech.Default.C
+            //try { TextToSpeech.Default.CancelAll(); }
+            //catch { }
+           
         }
 
-        // =====================================================================
-        // XÂY DỰNG SCRIPT THUYẾT MINH CHẤT LƯỢNG CAO
-        // =====================================================================
-        /// <summary>
-        /// Tách văn bản thành các câu ngắn, có cấu trúc: chào mừng → nội dung → lời kết.
-        /// Mỗi câu ngắn → giọng đọc nghe tự nhiên, không bị ngắt quãng giữa chừng.
-        /// </summary>
-        private List<string> BuildNarrationSentences(Poi poi, string lang)
+        // ── Script 3 phần ─────────────────────────────────────────────────
+        private static List<string> BuildScript(Poi poi, string lang)
         {
-            var sentences = new List<string>();
-
-            // --- Câu chào mừng (theo ngôn ngữ) ---
-            sentences.Add(GetWelcomePhrase(poi.Name, lang));
-
-            // --- Nội dung chính: tách theo dấu câu ---
-            if (!string.IsNullOrWhiteSpace(poi.Description))
-            {
-                var contentSentences = SplitIntoSentences(poi.Description);
-                sentences.AddRange(contentSentences);
-            }
-
-            // --- Lời kết (theo ngôn ngữ) ---
-            sentences.Add(GetClosingPhrase(lang));
-
-            // Loại bỏ câu rỗng
-            return sentences.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-        }
-
-        private string GetWelcomePhrase(string poiName, string lang) => lang switch
-        {
-            "en" => $"Welcome! You are now visiting {poiName}.",
-            "th" => $"ยินดีต้อนรับ! คุณกำลังอยู่ที่ {poiName}",
-            "id" => $"Selamat datang! Anda sedang berada di {poiName}.",
-            "ms" => $"Selamat datang! Anda kini berada di {poiName}.",
-            "km" => $"សូមស្វាគមន៍! អ្នកកំពុងស្ថិតនៅ {poiName}",
-            _ => $"Chào mừng bạn đến với {poiName}!",  // mặc định tiếng Việt
-        };
-
-        private string GetClosingPhrase(string lang) => lang switch
-        {
-            "en" => "Thank you for visiting Saigon Zoo and Botanical Gardens. Enjoy your exploration!",
-            "th" => "ขอบคุณที่มาเยือนสวนสัตว์สีหงส์ ขอให้สนุกกับการสำรวจ!",
-            "id" => "Terima kasih telah mengunjungi Kebun Binatang Saigon. Selamat menikmati perjalanan Anda!",
-            "ms" => "Terima kasih kerana melawat Zoo Saigon. Selamat menikmati lawatan anda!",
-            "km" => "សូមអរគុណដែលបានមកលេងសួនសត្វសៃហ្គន សូមរីករាយជាមួយការរុករករបស់អ្នក!",
-            _ => "Cảm ơn bạn đã tham quan Thảo Cầm Viên Sài Gòn. Chúc bạn có một ngày vui vẻ!",
-        };
-
-        /// <summary>
-        /// Tách đoạn văn thành câu ngắn theo dấu chấm, chấm than, chấm hỏi, dấu phẩy dài.
-        /// Các câu quá ngắn (< 10 ký tự) sẽ được ghép với câu sau để tránh nghe rời rạc.
-        /// </summary>
-        private List<string> SplitIntoSentences(string text)
-        {
-            // Tách theo các dấu câu phổ biến
-            var raw = text
-                .Split(new[] { ". ", "! ", "? ", ".\n", "!\n", "?\n" },
-                       StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.Trim())
-                .Where(s => s.Length > 0)
-                .ToList();
-
             var result = new List<string>();
-            var buffer = "";
+            if (!string.IsNullOrWhiteSpace(poi.Name))
+                result.Add(Welcome(poi.Name, lang));
 
-            foreach (var part in raw)
+            if (!string.IsNullOrWhiteSpace(poi.Description))
+                result.AddRange(SplitSentences(poi.Description));
+
+            result.Add(Closing(lang));
+            return result.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+        }
+
+        private static string Welcome(string name, string lang) => lang switch
+        {
+            "en" => $"Welcome! You are now at {name}.",
+            "th" => $"ยินดีต้อนรับ! คุณอยู่ที่ {name}",
+            "id" => $"Selamat datang di {name}.",
+            "ms" => $"Selamat datang ke {name}.",
+            "km" => $"សូមស្វាគមន៍ {name}",
+            _ => $"Chào mừng bạn đến với {name}!",
+        };
+
+        private static string Closing(string lang) => lang switch
+        {
+            "en" => "Thank you for visiting Saigon Zoo. Enjoy your day!",
+            "th" => "ขอบคุณที่มาเยือนสวนสัตว์ไซง่อน!",
+            "id" => "Terima kasih telah berkunjung. Selamat menikmati!",
+            "ms" => "Terima kasih kerana berkunjung!",
+            "km" => "អរគុណដែលបានមក!",
+            _ => "Cảm ơn bạn đã tham quan Thảo Cầm Viên Sài Gòn. Chúc một ngày vui vẻ!",
+        };
+
+        private static List<string> SplitSentences(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return [];
+
+            var parts = text.Split([". ", "! ", "? "], StringSplitOptions.RemoveEmptyEntries);
+            var result = new List<string>();
+
+            foreach (var part in parts)
             {
-                // Thêm dấu chấm nếu câu chưa kết thúc bằng dấu câu
-                var sentence = part.TrimEnd();
-                if (!sentence.EndsWith('.') && !sentence.EndsWith('!') && !sentence.EndsWith('?'))
-                    sentence += ".";
-
-                // Ghép câu ngắn với câu trước để tránh nghe ngắt quãng
-                if (buffer.Length > 0 && part.Length < 15)
-                    buffer += " " + sentence;
-                else
-                {
-                    if (!string.IsNullOrWhiteSpace(buffer))
-                        result.Add(buffer);
-                    buffer = sentence;
-                }
+                var s = part.Trim();
+                if (string.IsNullOrWhiteSpace(s) || s.Length < 5) continue;
+                if (!s.EndsWith('.') && !s.EndsWith('!') && !s.EndsWith('?'))
+                    s += ".";
+                result.Add(s);
             }
 
-            if (!string.IsNullOrWhiteSpace(buffer))
-                result.Add(buffer);
+            // Nếu text không có dấu chấm → trả về nguyên văn
+            if (result.Count == 0)
+                result.Add(text.Trim());
 
             return result;
         }
 
-        // =====================================================================
-        // TÌM LOCALE PHÙ HỢP TRÊN THIẾT BỊ
-        // =====================================================================
-        /// <summary>
-        /// Tìm giọng đọc TTS tốt nhất trên thiết bị cho ngôn ngữ yêu cầu.
-        /// Logic: thử từng prefix theo thứ tự ưu tiên → nếu không có → fallback EN → null (hệ thống tự chọn).
-        /// </summary>
-        private async Task<Locale?> FindBestLocaleAsync(string languageCode)
+        // ── Tìm locale an toàn ────────────────────────────────────────────
+        private static async Task<Locale?> FindLocaleAsync(string lang)
         {
             try
             {
-                var allLocales = await TextToSpeech.Default.GetLocalesAsync();
-                if (!allLocales.Any()) return null;
+                var all = (await TextToSpeech.Default.GetLocalesAsync())?.ToList();
+                if (all == null || all.Count == 0) return null;
 
-                // Lấy danh sách prefix cần tìm cho ngôn ngữ này
-                var prefixes = LocalePrefixes.GetValueOrDefault(languageCode, new[] { languageCode });
+                var prefixes = LocalePrefixes.GetValueOrDefault(lang, [lang]);
 
-                // Tìm locale khớp prefix theo thứ tự ưu tiên
+                // Tìm locale khớp
                 foreach (var prefix in prefixes)
                 {
-                    var match = allLocales.FirstOrDefault(l =>
+                    var match = all.FirstOrDefault(l =>
                         l.Language.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-                    if (match != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[TTS] Tìm được locale: {match.Language} cho '{languageCode}'");
-                        return match;
-                    }
+                    if (match != null) return match;
                 }
 
-                // Fallback: nếu không có ngôn ngữ yêu cầu (ví dụ Khmer trên thiết bị không có)
-                // Thử dùng tiếng Anh (phổ biến nhất trên mọi thiết bị)
-                if (languageCode != "en")
-                {
-                    var enLocale = allLocales.FirstOrDefault(l =>
-                        l.Language.StartsWith("en", StringComparison.OrdinalIgnoreCase));
-                    if (enLocale != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine(
-                            $"[TTS] Không có giọng '{languageCode}', dùng EN fallback");
-                        return enLocale;
-                    }
-                }
-
-                // Fallback cuối cùng: để hệ thống tự chọn giọng mặc định
-                return null;
+                // Fallback: tiếng Anh (có trên mọi thiết bị Android/iOS)
+                return all.FirstOrDefault(l =>
+                    l.Language.StartsWith("en", StringComparison.OrdinalIgnoreCase));
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[TTS] GetLocales lỗi: {ex.Message}");
-                return null;
+                System.Diagnostics.Debug.WriteLine($"[TTS] GetLocales failed: {ex.Message}");
+                return null; // Trả về null → dùng giọng mặc định của hệ thống
             }
+        }
+
+        public void Dispose()
+        {
+            _ = StopAsync();
+            _lock.Dispose();
         }
     }
 }

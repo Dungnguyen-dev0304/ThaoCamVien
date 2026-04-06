@@ -1,47 +1,53 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    QUAN TRỌNG: Shell DataTemplate KHÔNG hỗ trợ DI constructor injection.
+    Giải pháp: Chỉ dùng DataTemplate cho pages KHÔNG có DI (HomePage không có tham số phức tạp).
+    Các page có DI phức tạp sẽ được tạo qua ServiceProvider trong AppShell.xaml.cs
+-->
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-       xmlns:pages="clr-namespace:AppThaoCamVien.Pages"
        x:Class="AppThaoCamVien.AppShell">
 
     <Shell.FlyoutBackground>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#89d957" Offset="0.1"/>
-            <GradientStop Color="#c9e265" Offset="1.0"/>
+            <GradientStop Color="#0a2e1f" Offset="0.0"/>
+            <GradientStop Color="#1a5c40" Offset="1.0"/>
         </LinearGradientBrush>
     </Shell.FlyoutBackground>
 
-    <TabBar x:Name="Main">
-        <Tab Title="{DynamicResource TabHome}" Icon="menu_white.png">
-            <ShellContent ContentTemplate="{DataTemplate pages:HomePage}"/>
+    <!-- TabBar dùng ShellContent với x:Name để code-behind gán Page thủ công -->
+    <TabBar x:Name="MainBar">
+        <Tab Title="{DynamicResource TabHome}" Icon="menu_white.png" x:Name="HomeTab">
+            <ShellContent x:Name="HomeContent" Title="{DynamicResource TabHome}"/>
         </Tab>
-        <Tab Title="{DynamicResource TabQR}" Icon="qr_white.png">
-            <ShellContent ContentTemplate="{DataTemplate pages:QrPage}" />
+        <Tab Title="{DynamicResource TabQR}" Icon="qr_white.png" x:Name="QrTab">
+            <ShellContent x:Name="QrContent" Title="{DynamicResource TabQR}"/>
         </Tab>
-        <Tab Title="{DynamicResource TabNumpad}" Icon="numpad_white.png">
-            <ShellContent ContentTemplate="{DataTemplate pages:NumpadPage}" />
+        <Tab Title="{DynamicResource TabNumpad}" Icon="numpad_white.png" x:Name="NumpadTab">
+            <ShellContent x:Name="NumpadContent" Title="{DynamicResource TabNumpad}"/>
         </Tab>
-        <Tab Title="{DynamicResource TabStory}" Icon="story_white.png">
-            <ShellContent ContentTemplate="{DataTemplate pages:AnimalListPage}" />
+        <Tab Title="{DynamicResource TabStory}" Icon="story_white.png" x:Name="StoryTab">
+            <ShellContent x:Name="StoryContent" Title="{DynamicResource TabStory}"/>
         </Tab>
-        <Tab Title="{DynamicResource TabMap}" Icon="map_white.png">
-            <ShellContent ContentTemplate="{DataTemplate pages:MapPage}" />
+        <Tab Title="{DynamicResource TabMap}" Icon="map_white.png" x:Name="MapTab">
+            <ShellContent x:Name="MapContent" Title="{DynamicResource TabMap}"/>
         </Tab>
     </TabBar>
 
-    <FlyoutItem Title="{DynamicResource TabAbout}" Icon="about_white.png">
+    <FlyoutItem Title="{DynamicResource TabAbout}" Icon="about_white.png" x:Name="AboutItem">
         <Shell.ItemTemplate>
             <DataTemplate>
-                <Grid ColumnDefinitions="0.25*,0.75*" Padding="20,20">
-                    <Image Source="{Binding FlyoutIcon}" HeightRequest="50" HorizontalOptions="Center"/>
+                <Grid ColumnDefinitions="0.25*,0.75*" Padding="20">
+                    <Image Source="{Binding FlyoutIcon}" HeightRequest="46" HorizontalOptions="Center"/>
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                        <Label Text="{Binding Title}" TextColor="White" FontSize="Medium" FontAttributes="Bold"/>
-                        <Label Text="{DynamicResource TxtAppInfo}" TextColor="White" FontSize="Small"/>
+                        <Label Text="{Binding Title}" TextColor="White"
+                               FontSize="Medium" FontAttributes="Bold"/>
+                        <Label Text="{DynamicResource TxtAppInfo}" TextColor="#a5d6a7" FontSize="Small"/>
                     </VerticalStackLayout>
                 </Grid>
             </DataTemplate>
         </Shell.ItemTemplate>
-        <ShellContent ContentTemplate="{DataTemplate pages:AboutPage}"/>
+        <ShellContent x:Name="AboutContent" Title="{DynamicResource TabAbout}"/>
     </FlyoutItem>
 
 </Shell>

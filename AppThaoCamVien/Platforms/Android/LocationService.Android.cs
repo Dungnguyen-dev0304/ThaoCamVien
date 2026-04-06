@@ -26,7 +26,7 @@ namespace AppThaoCamVien.Platforms.Android
             var notification = new NotificationCompat.Builder(this, channelId)
                 .SetContentTitle("Thảo Cầm Viên Tour")
                 .SetContentText("Đang theo dõi vị trí để tự động phát thuyết minh...")
-                .SetSmallIcon(Resource.Drawable.logothaocamvien) // Đổi thành icon app của bạn
+                .SetSmallIcon(AppThaoCamVien.Resource.Drawable.logothaocamvien) // Đổi thành icon app của bạn
                 .SetOngoing(true)
                 .Build();
 

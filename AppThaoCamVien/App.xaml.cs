@@ -1,18 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AppThaoCamVien.Services;
 
-namespace AppThaoCamVien
+namespace AppThaoCamVien;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    public App(IServiceProvider sp)
     {
-        public App()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            // Load ngôn ngữ từ bộ nhớ ngay khi mở App
-            AppThaoCamVien.Services.LanguageManager.LoadCurrentLanguage();
+        // Load ngôn ngữ đã lưu từ lần trước
+        LanguageManager.Load();
 
-            // Bắt buộc phải có dòng này để gọi Giao diện chính lên
-            MainPage = new AppShell();
-        }
+        // Truyền ServiceProvider vào AppShell để nó tạo Pages đúng cách qua DI
+        MainPage = new AppShell(sp);
     }
 }

@@ -6,134 +6,120 @@ namespace AppThaoCamVien.Pages;
 
 public partial class QrPage : ContentPage
 {
-    private readonly DatabaseService _databaseService;
-    private bool _isProcessing = false;
-    private bool _isFlashOn = false;
-    private CancellationTokenSource? _scanAnimCts;
+    private readonly DatabaseService _db;
+    private readonly IServiceProvider _sp;
+    private bool _busy = false;
+    private bool _flashOn = false;
+    private CancellationTokenSource? _animCts;
 
-    public QrPage(DatabaseService databaseService)
+    public QrPage(DatabaseService db, IServiceProvider sp)
     {
         InitializeComponent();
-        _databaseService = databaseService;
+        _db = db;
+        _sp = sp;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         BarcodeReader.IsDetecting = true;
-        _isProcessing = false;
-        StatusLabel.Text = "Đang tìm kiếm mã QR...";
-        StartScanAnimation();
+        _busy = false;
+        StatusLabel.Text = GetString("TxtQrSearching", "Đang tìm kiếm mã QR...");
+        StartAnim();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         BarcodeReader.IsDetecting = false;
-        _scanAnimCts?.Cancel();
-        if (_isFlashOn)
-        {
-            _isFlashOn = false;
-            BarcodeReader.IsTorchOn = false;
-        }
+        _animCts?.Cancel();
+        if (_flashOn) { _flashOn = false; BarcodeReader.IsTorchOn = false; }
     }
 
-    private void StartScanAnimation()
+    private void StartAnim()
     {
-        _scanAnimCts = new CancellationTokenSource();
-        var token = _scanAnimCts.Token;
-
+        _animCts = new CancellationTokenSource();
+        var tok = _animCts.Token;
         _ = Task.Run(async () =>
         {
-            bool goingDown = true;
-            while (!token.IsCancellationRequested)
+            bool down = true;
+            while (!tok.IsCancellationRequested)
             {
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    double targetY = goingDown ? 220 : 10;
-                    await ScanLine.TranslateTo(0, targetY, 1200, Easing.SinInOut);
-                    goingDown = !goingDown;
+                    await ScanLine.TranslateTo(0, down ? 220 : 10, 1200, Easing.SinInOut);
+                    down = !down;
                 });
             }
-        }, token);
+        }, tok);
     }
 
-    /// <summary>
-    /// ZXing callback — QrCodeData khớp với QrCode.QrCodeData trong DB
-    /// </summary>
     private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
     {
-        if (_isProcessing) return;
+        if (_busy) return;
         var result = e.Results?.FirstOrDefault();
         if (result == null) return;
-
-        _isProcessing = true;
-        var qrData = result.Value;
-
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            await HandleScannedCodeAsync(qrData);
-        });
+        _busy = true;
+        MainThread.BeginInvokeOnMainThread(async () => await HandleAsync(result.Value));
     }
 
-    private async Task HandleScannedCodeAsync(string qrData)
+    private async Task HandleAsync(string qrData)
     {
-        StatusLabel.Text = $"Đang tải thông tin...";
-        var poi = await _databaseService.GetPoiByQrDataAsync(qrData);
+        StatusLabel.Text = "Đang tải thông tin...";
 
-        if (poi != null)
+        try
         {
-            // Kích hoạt Engine đọc/phát nhạc ngay lập tức
-            var narrationEngine = IPlatformApplication.Current.Services.GetService<NarrationEngine>();
-            await narrationEngine?.PlayNarrativeAsync(poi);
-
-            // Chuyển sang trang Audio để người dùng xem hình và điều khiển
-            var audioPage = IPlatformApplication.Current.Services.GetService<StoryAudioPage>();
-            if (audioPage != null)
+            var poi = await _db.GetPoiByQrDataAsync(qrData);
+            if (poi != null)
             {
-                audioPage.LoadPoi(poi);
-                await narrationEngine.PlayNarrativeAsync(poi, forcePlay: true);
+                // Phát narration ngay lập tức
+                var narration = _sp.GetService<NarrationEngine>();
+                _ = narration?.PlayAsync(poi, forcePlay: true);
+
+                var page = _sp.GetService<StoryAudioPage>();
+                if (page != null)
+                {
+                    page.LoadPoi(poi);
+                    await Navigation.PushAsync(page);
+                }
+            }
+            else
+            {
+                await DisplayAlert("Không nhận ra",
+                    "Mã QR này chưa được đăng ký trong hệ thống.\nVui lòng thử lại.", "OK");
             }
         }
-        else
+        catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", "Mã QR chưa được đăng ký hệ thống.", "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
-
-        _isProcessing = false;
-        StatusLabel.Text = "Đang tìm kiếm mã QR...";
-    }
-
-    private async Task NavigateToAudioAsync(Poi poi)
-    {
-        var audioPage = IPlatformApplication.Current.Services.GetService<StoryAudioPage>();
-        if (audioPage != null)
+        finally
         {
-            audioPage.LoadPoi(poi);
-            await Navigation.PushAsync(audioPage);
+            _busy = false;
+            StatusLabel.Text = GetString("TxtQrSearching", "Đang tìm kiếm mã QR...");
         }
-        _isProcessing = false;
-        StatusLabel.Text = "Đang tìm kiếm mã QR...";
     }
 
     private void OnToggleFlash(object sender, TappedEventArgs e)
     {
-        _isFlashOn = !_isFlashOn;
-        BarcodeReader.IsTorchOn = _isFlashOn;
-        FlashButton.BackgroundColor = _isFlashOn
-            ? Color.FromArgb("#4CAF50")
-            : Color.FromArgb("#2C2C2E");
+        _flashOn = !_flashOn;
+        BarcodeReader.IsTorchOn = _flashOn;
+        FlashButton.BackgroundColor = _flashOn
+            ? Color.FromArgb("#4CAF50") : Color.FromArgb("#2C2C2E");
     }
 
     private async void OnOpenNumpad(object sender, TappedEventArgs e)
     {
-        var numpadPage = IPlatformApplication.Current.Services.GetService<NumpadPage>();
-        if (numpadPage != null)
-            await Navigation.PushAsync(numpadPage);
+        var page = _sp.GetService<NumpadPage>();
+        if (page != null) await Navigation.PushAsync(page);
     }
 
-    private async void OnBackClicked(object sender, EventArgs e)
+    private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
+
+    private static string GetString(string key, string fallback)
     {
-        await Navigation.PopAsync();
+        if (Application.Current?.Resources.TryGetValue(key, out var v) == true && v is string s)
+            return s;
+        return fallback;
     }
 }

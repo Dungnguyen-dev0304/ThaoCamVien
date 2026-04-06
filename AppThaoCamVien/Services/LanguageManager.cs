@@ -1,137 +1,87 @@
-﻿using Microsoft.Maui.Storage;
-
-namespace AppThaoCamVien.Services
+﻿namespace AppThaoCamVien.Services
 {
-    /// <summary>
-    /// Quản lý ngôn ngữ toàn cục cho app.
-    /// Nguyên lý: Mỗi chuỗi text trong UI có một "key" duy nhất (ví dụ: "TxtZooName").
-    /// Khi đổi ngôn ngữ, hàm SetLanguage() cập nhật giá trị của tất cả các key đó
-    /// trong Application.Current.Resources. Vì XAML dùng {DynamicResource}, 
-    /// UI sẽ tự động cập nhật ngay lập tức mà không cần reload trang.
-    /// </summary>
     public static class LanguageManager
     {
-        // Danh sách ngôn ngữ hỗ trợ để hiển thị trên nút chuyển đổi
-        public static readonly List<(string Code, string Flag, string Label)> SupportedLanguages = new()
-        {
-            ("vi", "🇻🇳", "VI"),
-            ("en", "🇬🇧", "EN"),
-            ("th", "🇹🇭", "TH"),
-            ("id", "🇮🇩", "ID"),
-            ("ms", "🇲🇾", "MS"),
-            ("km", "🇰🇭", "KM"),
-        };
+        public static readonly List<(string Code, string Flag, string Label)> Languages =
+        [
+            ("vi", "🇻🇳", "VI"), ("en", "🇬🇧", "EN"), ("th", "🇹🇭", "TH"),
+            ("id", "🇮🇩", "ID"), ("ms", "🇲🇾", "MS"), ("km", "🇰🇭", "KM"),
+        ];
 
-        /// <summary>
-        /// Gọi khi app khởi động để load ngôn ngữ đã lưu từ lần trước.
-        /// </summary>
-        public static void LoadCurrentLanguage()
-        {
-            string lang = Preferences.Get("AppLang", "vi");
-            SetLanguage(lang);
-        }
+        public static void Load() => Apply(Preferences.Get("AppLang", "vi"));
+        public static string Current => Preferences.Get("AppLang", "vi");
 
-        /// <summary>
-        /// Đặt toàn bộ chuỗi text theo ngôn ngữ chỉ định.
-        /// Tất cả key phải tồn tại trong App.xaml Resources để DynamicResource hoạt động.
-        /// </summary>
-        public static void SetLanguage(string lang)
+        public static void Apply(string lang)
         {
-            // Lưu lại để các Service khác (NarrationEngine, AudioService) biết dùng ngôn ngữ nào
             Preferences.Set("AppLang", lang);
-
-            var res = Application.Current?.Resources;
-            if (res == null) return;
-
-            // Dùng một dictionary trung gian để code gọn hơn
-            var strings = GetStrings(lang);
-            foreach (var kv in strings)
-                res[kv.Key] = kv.Value;
+            var r = Application.Current?.Resources;
+            if (r == null) return;
+            foreach (var kv in Strings(lang)) r[kv.Key] = kv.Value;
         }
 
-        public static string GetCurrentLanguage()
-            => Preferences.Get("AppLang", "vi");
-
-        // =====================================================================
-        // TẤT CẢ CHUỖI TEXT THEO TỪNG NGÔN NGỮ
-        // Thêm key mới vào đây và vào App.xaml Resources (giá trị mặc định tiếng Việt)
-        // =====================================================================
-        private static Dictionary<string, string> GetStrings(string lang) => lang switch
+        private static Dictionary<string, string> Strings(string lang) => lang switch
         {
             "en" => new()
             {
-                // === Tab Bar ===
+                // Tabs
                 ["TabHome"] = "Home",
                 ["TabQR"] = "Scan QR",
                 ["TabNumpad"] = "Code",
                 ["TabStory"] = "Animals",
                 ["TabMap"] = "Map",
                 ["TabAbout"] = "About",
-
-                // === HomePage ===
+                // Home
                 ["TxtZooName"] = "SAIGON ZOO & BOTANICAL GARDENS",
                 ["TxtAudioGuide"] = "AUDIO GUIDE TOUR",
                 ["TxtHeroTitle"] = "The Sound Journey",
                 ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, District 1",
-                ["TxtStartTour"] = "START YOUR JOURNEY",
+                ["TxtStartTour"] = "START YOUR JOURNEY  ▶",
                 ["TxtOpenHours"] = "🕐 Opening Hours",
                 ["TxtHoursDetail"] = "7:00 - 18:30",
                 ["TxtHoursNote"] = "Open every day",
                 ["TxtTicketTitle"] = "🎟️ Entrance Fee",
                 ["TxtTicketFree"] = "Under 1m: Free",
-                ["TxtTicketChild"] = "1m - 1.3m: 40,000đ",
-                ["TxtTicketAdult"] = "Over 1.3m: 60,000đ",
+                ["TxtTicketChild"] = "1m - 1.3m: 40,000₫",
+                ["TxtTicketAdult"] = "Over 1.3m: 60,000₫",
                 ["TxtChooseTour"] = "CHOOSE YOUR TOUR",
                 ["TxtViewAll"] = "View all",
-
-                // === Tour Cards (HomePage) ===
                 ["TxtTour1Title"] = "Asian Elephant Kingdom",
                 ["TxtTour2Title"] = "King of the Jungle",
                 ["TxtTour3Title"] = "The African Giant",
-                ["TxtTourMin"] = "MIN",
-                ["TxtTourStops"] = "STOPS",
                 ["TxtListenNow"] = "🔊 LISTEN NOW",
-
-                // === AnimalListPage ===
+                // Animals
                 ["TxtAnimalKingdom"] = "🌿 Animal Kingdom",
                 ["TxtAnimalDesc"] = "Discover the amazing world of wildlife at Saigon Zoo",
                 ["TxtSearchPlaceholder"] = "Search animals...",
-
-                // === StoryAudioPage ===
+                // Story
                 ["TxtInfo"] = "Info",
                 ["TxtImages"] = "Gallery",
                 ["TxtMap"] = "Map",
                 ["TxtEnclosure"] = "Enclosure Location",
-
-                // === NumpadPage ===
+                // Numpad
                 ["TxtNumpadTitle"] = "Enter Code",
                 ["TxtNumpadInstruction"] = "Enter the code on the sign",
-
-                // === QrPage ===
+                // QR
                 ["TxtQrTitle"] = "Scan at enclosure",
                 ["TxtQrInstruction"] = "Point camera at QR code",
                 ["TxtQrSearching"] = "Searching for QR code...",
                 ["TxtFlash"] = "Flash",
                 ["TxtManualCode"] = "Enter code",
-
-                // === MapPage ===
+                // Map
                 ["TxtMapTitle"] = "🗺️ Zoo Map",
-                ["TxtNearPoi"] = "Nearby",
-                ["TxtInZone"] = "● In zone",
-                ["TxtApproaching"] = "○ Approaching",
-                ["TxtListenBtn"] = "🔊 Listen",
                 ["TxtAttractions"] = "Attractions",
                 ["TxtPoints"] = "points",
-
-                // === AboutPage ===
+                ["TxtListenBtn"] = "🔊 Listen",
+                ["TxtInZone"] = "● In zone",
+                ["TxtApproaching"] = "○ Approaching",
+                // About
                 ["TxtAboutApp"] = "About",
                 ["TxtAppVersion"] = "Version 1.0.0",
                 ["TxtAboutTitle"] = "About the app",
-                ["TxtAboutDesc"] = "Smart audio guide for Saigon Zoo & Botanical Gardens. Supports GPS, automatic enclosure detection, and vivid audio narration.",
+                ["TxtAboutDesc"] = "Smart audio guide for Saigon Zoo. GPS-based auto narration, QR scan, multilingual support.",
                 ["TxtDeveloper"] = "Developed by: Dũng Nguyễn",
                 ["TxtAppInfo"] = "App Information",
             },
-
             "th" => new()
             {
                 ["TabHome"] = "หน้าแรก",
@@ -143,22 +93,20 @@ namespace AppThaoCamVien.Services
                 ["TxtZooName"] = "สวนสัตว์ไซง่อน",
                 ["TxtAudioGuide"] = "นำเที่ยวด้วยเสียง",
                 ["TxtHeroTitle"] = "การเดินทางแห่งเสียง",
-                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, เขต 1",
-                ["TxtStartTour"] = "เริ่มการเดินทาง",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem เขต 1",
+                ["TxtStartTour"] = "เริ่มการเดินทาง  ▶",
                 ["TxtOpenHours"] = "🕐 เวลาเปิด",
                 ["TxtHoursDetail"] = "7:00 - 18:30",
                 ["TxtHoursNote"] = "เปิดทุกวัน",
                 ["TxtTicketTitle"] = "🎟️ ค่าเข้าชม",
-                ["TxtTicketFree"] = "ต่ำกว่า 1ม.: ฟรี",
-                ["TxtTicketChild"] = "1ม. - 1.3ม.: 40,000₫",
-                ["TxtTicketAdult"] = "สูงกว่า 1.3ม.: 60,000₫",
+                ["TxtTicketFree"] = "ต่ำกว่า 1ม: ฟรี",
+                ["TxtTicketChild"] = "1ม-1.3ม: 40,000₫",
+                ["TxtTicketAdult"] = "สูงกว่า 1.3ม: 60,000₫",
                 ["TxtChooseTour"] = "เลือกทัวร์ของคุณ",
                 ["TxtViewAll"] = "ดูทั้งหมด",
                 ["TxtTour1Title"] = "อาณาจักรช้างเอเชีย",
                 ["TxtTour2Title"] = "ราชาแห่งป่า",
                 ["TxtTour3Title"] = "ยักษ์แอฟริกา",
-                ["TxtTourMin"] = "นาที",
-                ["TxtTourStops"] = "จุดหยุด",
                 ["TxtListenNow"] = "🔊 ฟังเลย",
                 ["TxtAnimalKingdom"] = "🌿 อาณาจักรสัตว์",
                 ["TxtAnimalDesc"] = "ค้นพบโลกสัตว์ป่าที่น่าทึ่ง",
@@ -175,12 +123,11 @@ namespace AppThaoCamVien.Services
                 ["TxtFlash"] = "แฟลช",
                 ["TxtManualCode"] = "ใส่รหัส",
                 ["TxtMapTitle"] = "🗺️ แผนที่สวนสัตว์",
-                ["TxtNearPoi"] = "ใกล้เคียง",
+                ["TxtAttractions"] = "สถานที่",
+                ["TxtPoints"] = "จุด",
+                ["TxtListenBtn"] = "🔊 ฟัง",
                 ["TxtInZone"] = "● ในพื้นที่",
                 ["TxtApproaching"] = "○ กำลังเข้าใกล้",
-                ["TxtListenBtn"] = "🔊 ฟัง",
-                ["TxtAttractions"] = "สถานที่ท่องเที่ยว",
-                ["TxtPoints"] = "จุด",
                 ["TxtAboutApp"] = "เกี่ยวกับ",
                 ["TxtAppVersion"] = "เวอร์ชัน 1.0.0",
                 ["TxtAboutTitle"] = "เกี่ยวกับแอป",
@@ -188,7 +135,6 @@ namespace AppThaoCamVien.Services
                 ["TxtDeveloper"] = "พัฒนาโดย: Dũng Nguyễn",
                 ["TxtAppInfo"] = "ข้อมูลแอป",
             },
-
             "id" => new()
             {
                 ["TabHome"] = "Beranda",
@@ -198,27 +144,25 @@ namespace AppThaoCamVien.Services
                 ["TabMap"] = "Peta",
                 ["TabAbout"] = "Tentang",
                 ["TxtZooName"] = "KEBUN BINATANG SAIGON",
-                ["TxtAudioGuide"] = "PANDUAN AUDIO WISATA",
+                ["TxtAudioGuide"] = "PANDUAN AUDIO",
                 ["TxtHeroTitle"] = "Perjalanan Suara",
-                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, Distrik 1",
-                ["TxtStartTour"] = "MULAI PERJALANAN",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem",
+                ["TxtStartTour"] = "MULAI PERJALANAN  ▶",
                 ["TxtOpenHours"] = "🕐 Jam Buka",
                 ["TxtHoursDetail"] = "7:00 - 18:30",
                 ["TxtHoursNote"] = "Buka setiap hari",
                 ["TxtTicketTitle"] = "🎟️ Harga Tiket",
                 ["TxtTicketFree"] = "Di bawah 1m: Gratis",
-                ["TxtTicketChild"] = "1m - 1,3m: 40.000₫",
-                ["TxtTicketAdult"] = "Di atas 1,3m: 60.000₫",
+                ["TxtTicketChild"] = "1m-1.3m: 40.000₫",
+                ["TxtTicketAdult"] = "Di atas 1.3m: 60.000₫",
                 ["TxtChooseTour"] = "PILIH TUR ANDA",
                 ["TxtViewAll"] = "Lihat semua",
                 ["TxtTour1Title"] = "Kerajaan Gajah Asia",
                 ["TxtTour2Title"] = "Raja Hutan",
                 ["TxtTour3Title"] = "Raksasa Afrika",
-                ["TxtTourMin"] = "MENIT",
-                ["TxtTourStops"] = "TITIK",
                 ["TxtListenNow"] = "🔊 DENGARKAN",
                 ["TxtAnimalKingdom"] = "🌿 Kerajaan Hewan",
-                ["TxtAnimalDesc"] = "Jelajahi dunia satwa liar yang menakjubkan",
+                ["TxtAnimalDesc"] = "Jelajahi dunia satwa liar",
                 ["TxtSearchPlaceholder"] = "Cari hewan...",
                 ["TxtInfo"] = "Info",
                 ["TxtImages"] = "Galeri",
@@ -228,24 +172,22 @@ namespace AppThaoCamVien.Services
                 ["TxtNumpadInstruction"] = "Masukkan kode di papan",
                 ["TxtQrTitle"] = "Pindai di kandang",
                 ["TxtQrInstruction"] = "Arahkan kamera ke QR",
-                ["TxtQrSearching"] = "Mencari kode QR...",
+                ["TxtQrSearching"] = "Mencari QR...",
                 ["TxtFlash"] = "Flash",
                 ["TxtManualCode"] = "Masukkan kode",
-                ["TxtMapTitle"] = "🗺️ Peta Kebun Binatang",
-                ["TxtNearPoi"] = "Terdekat",
-                ["TxtInZone"] = "● Di zona",
-                ["TxtApproaching"] = "○ Mendekat",
-                ["TxtListenBtn"] = "🔊 Dengar",
+                ["TxtMapTitle"] = "🗺️ Peta Zoo",
                 ["TxtAttractions"] = "Atraksi",
                 ["TxtPoints"] = "titik",
+                ["TxtListenBtn"] = "🔊 Dengar",
+                ["TxtInZone"] = "● Di zona",
+                ["TxtApproaching"] = "○ Mendekat",
                 ["TxtAboutApp"] = "Tentang",
                 ["TxtAppVersion"] = "Versi 1.0.0",
                 ["TxtAboutTitle"] = "Tentang aplikasi",
                 ["TxtAboutDesc"] = "Panduan audio cerdas untuk Kebun Binatang Saigon.",
                 ["TxtDeveloper"] = "Dikembangkan oleh: Dũng Nguyễn",
-                ["TxtAppInfo"] = "Informasi Aplikasi",
+                ["TxtAppInfo"] = "Info Aplikasi",
             },
-
             "ms" => new()
             {
                 ["TabHome"] = "Utama",
@@ -257,25 +199,23 @@ namespace AppThaoCamVien.Services
                 ["TxtZooName"] = "ZOO SAIGON",
                 ["TxtAudioGuide"] = "PANDUAN AUDIO LAWATAN",
                 ["TxtHeroTitle"] = "Perjalanan Bunyi",
-                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, Daerah 1",
-                ["TxtStartTour"] = "MULAKAN PERJALANAN",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem",
+                ["TxtStartTour"] = "MULAKAN PERJALANAN  ▶",
                 ["TxtOpenHours"] = "🕐 Waktu Buka",
                 ["TxtHoursDetail"] = "7:00 - 18:30",
                 ["TxtHoursNote"] = "Buka setiap hari",
                 ["TxtTicketTitle"] = "🎟️ Harga Tiket",
                 ["TxtTicketFree"] = "Bawah 1m: Percuma",
-                ["TxtTicketChild"] = "1m - 1.3m: 40,000₫",
+                ["TxtTicketChild"] = "1m-1.3m: 40,000₫",
                 ["TxtTicketAdult"] = "Atas 1.3m: 60,000₫",
                 ["TxtChooseTour"] = "PILIH LAWATAN ANDA",
                 ["TxtViewAll"] = "Lihat semua",
                 ["TxtTour1Title"] = "Kerajaan Gajah Asia",
                 ["TxtTour2Title"] = "Raja Rimba",
                 ["TxtTour3Title"] = "Gergasi Afrika",
-                ["TxtTourMin"] = "MIN",
-                ["TxtTourStops"] = "HENTI",
-                ["TxtListenNow"] = "🔊 DENGAR SEKARANG",
+                ["TxtListenNow"] = "🔊 DENGAR",
                 ["TxtAnimalKingdom"] = "🌿 Kerajaan Haiwan",
-                ["TxtAnimalDesc"] = "Teroka dunia hidupan liar yang menakjubkan",
+                ["TxtAnimalDesc"] = "Teroka dunia hidupan liar",
                 ["TxtSearchPlaceholder"] = "Cari haiwan...",
                 ["TxtInfo"] = "Maklumat",
                 ["TxtImages"] = "Galeri",
@@ -285,16 +225,15 @@ namespace AppThaoCamVien.Services
                 ["TxtNumpadInstruction"] = "Masukkan kod pada papan tanda",
                 ["TxtQrTitle"] = "Imbas di kandang",
                 ["TxtQrInstruction"] = "Arahkan kamera ke QR",
-                ["TxtQrSearching"] = "Mencari kod QR...",
+                ["TxtQrSearching"] = "Mencari QR...",
                 ["TxtFlash"] = "Suluh",
                 ["TxtManualCode"] = "Masukkan kod",
                 ["TxtMapTitle"] = "🗺️ Peta Zoo",
-                ["TxtNearPoi"] = "Berdekatan",
-                ["TxtInZone"] = "● Dalam zon",
-                ["TxtApproaching"] = "○ Menghampiri",
-                ["TxtListenBtn"] = "🔊 Dengar",
                 ["TxtAttractions"] = "Tarikan",
                 ["TxtPoints"] = "titik",
+                ["TxtListenBtn"] = "🔊 Dengar",
+                ["TxtInZone"] = "● Dalam zon",
+                ["TxtApproaching"] = "○ Menghampiri",
                 ["TxtAboutApp"] = "Tentang",
                 ["TxtAppVersion"] = "Versi 1.0.0",
                 ["TxtAboutTitle"] = "Tentang aplikasi",
@@ -302,7 +241,6 @@ namespace AppThaoCamVien.Services
                 ["TxtDeveloper"] = "Dibangunkan oleh: Dũng Nguyễn",
                 ["TxtAppInfo"] = "Maklumat Aplikasi",
             },
-
             "km" => new()
             {
                 ["TabHome"] = "ទំព័រដើម",
@@ -312,56 +250,51 @@ namespace AppThaoCamVien.Services
                 ["TabMap"] = "ផែនទី",
                 ["TabAbout"] = "អំពី",
                 ["TxtZooName"] = "សួនសត្វសៃហ្គន",
-                ["TxtAudioGuide"] = "ការណែនាំអូឌីយ៉ូ",
+                ["TxtAudioGuide"] = "ណែនាំជាសំឡេង",
                 ["TxtHeroTitle"] = "ដំណើរសំឡេង",
-                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem, ស្រុកទី 1",
-                ["TxtStartTour"] = "ចាប់ផ្តើមដំណើរ",
+                ["TxtHeroAddress"] = "2 Nguyen Binh Khiem",
+                ["TxtStartTour"] = "ចាប់ផ្តើមដំណើរ  ▶",
                 ["TxtOpenHours"] = "🕐 ម៉ោងបើក",
                 ["TxtHoursDetail"] = "7:00 - 18:30",
-                ["TxtHoursNote"] = "បើកជារៀងរាល់ថ្ងៃ",
+                ["TxtHoursNote"] = "បើករៀងរាល់ថ្ងៃ",
                 ["TxtTicketTitle"] = "🎟️ តម្លៃសំបុត្រ",
                 ["TxtTicketFree"] = "ក្រោម 1ម: ឥតគិតថ្លៃ",
-                ["TxtTicketChild"] = "1ម - 1.3ម: 40,000₫",
+                ["TxtTicketChild"] = "1ម-1.3ម: 40,000₫",
                 ["TxtTicketAdult"] = "លើ 1.3ម: 60,000₫",
-                ["TxtChooseTour"] = "ជ្រើសរើសដំណើររបស់អ្នក",
+                ["TxtChooseTour"] = "ជ្រើសរើសដំណើរ",
                 ["TxtViewAll"] = "មើលទាំងអស់",
-                ["TxtTour1Title"] = "នគររាជដំរីអាស៊ី",
+                ["TxtTour1Title"] = "នគរដំរីអាស៊ី",
                 ["TxtTour2Title"] = "ស្ដេចព្រៃ",
                 ["TxtTour3Title"] = "យក្សអាហ្វ្រិក",
-                ["TxtTourMin"] = "នាទី",
-                ["TxtTourStops"] = "ចំណុច",
                 ["TxtListenNow"] = "🔊 ស្ដាប់ឥឡូវ",
                 ["TxtAnimalKingdom"] = "🌿 នគរសត្វ",
-                ["TxtAnimalDesc"] = "រុករកពិភពសត្វព្រៃដ៏អស្ចារ្យ",
+                ["TxtAnimalDesc"] = "រុករកពិភពសត្វព្រៃ",
                 ["TxtSearchPlaceholder"] = "ស្វែងរកសត្វ...",
                 ["TxtInfo"] = "ព័ត៌មាន",
                 ["TxtImages"] = "រូបភាព",
                 ["TxtMap"] = "ផែនទី",
                 ["TxtEnclosure"] = "ទីតាំងទ្រុង",
                 ["TxtNumpadTitle"] = "បញ្ចូលកូដ",
-                ["TxtNumpadInstruction"] = "បញ្ចូលកូដនៅលើស្លាក",
-                ["TxtQrTitle"] = "ស្កេននៅទ្រុងសត្វ",
-                ["TxtQrInstruction"] = "ចង្អុលកាមេរ៉ាទៅ QR",
+                ["TxtNumpadInstruction"] = "បញ្ចូលកូដបនប្រកាស",
+                ["TxtQrTitle"] = "ស្កេននៅទ្រុង",
+                ["TxtQrInstruction"] = "ចង្អុលកាមេរ៉ា QR",
                 ["TxtQrSearching"] = "កំពុងស្វែងរក QR...",
                 ["TxtFlash"] = "ភ្លើង",
                 ["TxtManualCode"] = "បញ្ចូលកូដ",
                 ["TxtMapTitle"] = "🗺️ ផែនទីសួនសត្វ",
-                ["TxtNearPoi"] = "ជិត",
-                ["TxtInZone"] = "● នៅក្នុងតំបន់",
-                ["TxtApproaching"] = "○ កំពុងជិតដល់",
-                ["TxtListenBtn"] = "🔊 ស្ដាប់",
-                ["TxtAttractions"] = "កន្លែងទស្សនា",
+                ["TxtAttractions"] = "ទីតាំង",
                 ["TxtPoints"] = "ចំណុច",
+                ["TxtListenBtn"] = "🔊 ស្ដាប់",
+                ["TxtInZone"] = "● នៅតំបន់",
+                ["TxtApproaching"] = "○ កំពុងជិតដល់",
                 ["TxtAboutApp"] = "អំពី",
                 ["TxtAppVersion"] = "កំណែ 1.0.0",
                 ["TxtAboutTitle"] = "អំពីកម្មវិធី",
-                ["TxtAboutDesc"] = "ការណែនាំអូឌីយ៉ូឆ្លាតសម្រាប់សួនសត្វសៃហ្គន",
+                ["TxtAboutDesc"] = "ណែនាំជាសំឡេងឆ្លាតសំរាប់សួនសត្វសៃហ្គន",
                 ["TxtDeveloper"] = "បង្កើតដោយ: Dũng Nguyễn",
                 ["TxtAppInfo"] = "ព័ត៌មានកម្មវិធី",
             },
-
-            // Mặc định: tiếng Việt
-            _ => new()
+            _ => new() // tiếng Việt
             {
                 ["TabHome"] = "Trang chủ",
                 ["TabQR"] = "Mã QR",
@@ -373,7 +306,7 @@ namespace AppThaoCamVien.Services
                 ["TxtAudioGuide"] = "AUDIO GUIDE TOUR",
                 ["TxtHeroTitle"] = "Hành Trình Âm Thanh",
                 ["TxtHeroAddress"] = "2 Nguyễn Bỉnh Khiêm, Quận 1",
-                ["TxtStartTour"] = "BẮT ĐẦU CHUYẾN ĐI",
+                ["TxtStartTour"] = "BẮT ĐẦU CHUYẾN ĐI  ▶",
                 ["TxtOpenHours"] = "🕐 Giờ mở cửa",
                 ["TxtHoursDetail"] = "7:00 - 18:30",
                 ["TxtHoursNote"] = "Mở cửa tất cả các ngày",
@@ -386,8 +319,6 @@ namespace AppThaoCamVien.Services
                 ["TxtTour1Title"] = "Vương Quốc Voi Châu Á",
                 ["TxtTour2Title"] = "Chúa Tể Sơn Lâm",
                 ["TxtTour3Title"] = "Gã Khổng Lồ Châu Phi",
-                ["TxtTourMin"] = "PHÚT",
-                ["TxtTourStops"] = "ĐIỂM",
                 ["TxtListenNow"] = "🔊 NGHE NGAY",
                 ["TxtAnimalKingdom"] = "🌿 Vương quốc động vật",
                 ["TxtAnimalDesc"] = "Khám phá thế giới muôn loài tuyệt đẹp tại Thảo Cầm Viên",
@@ -404,16 +335,15 @@ namespace AppThaoCamVien.Services
                 ["TxtFlash"] = "Bật đèn",
                 ["TxtManualCode"] = "Nhập mã tay",
                 ["TxtMapTitle"] = "🗺️ Bản đồ Thảo Cầm Viên",
-                ["TxtNearPoi"] = "Gần nhất",
-                ["TxtInZone"] = "● Trong vùng",
-                ["TxtApproaching"] = "○ Đang tiếp cận",
-                ["TxtListenBtn"] = "🔊 Nghe",
                 ["TxtAttractions"] = "Các điểm tham quan",
                 ["TxtPoints"] = "điểm",
+                ["TxtListenBtn"] = "🔊 Nghe",
+                ["TxtInZone"] = "● Trong vùng",
+                ["TxtApproaching"] = "○ Đang tiếp cận",
                 ["TxtAboutApp"] = "Giới thiệu",
                 ["TxtAppVersion"] = "Phiên bản 1.0.0",
                 ["TxtAboutTitle"] = "Về ứng dụng",
-                ["TxtAboutDesc"] = "Ứng dụng hướng dẫn tham quan Thảo Cầm Viên thông minh. Hỗ trợ định vị GPS, phát hiện khu vực chuồng thú tự động và cung cấp các câu chuyện thuyết minh sinh động.",
+                ["TxtAboutDesc"] = "Ứng dụng hướng dẫn tham quan Thảo Cầm Viên thông minh. GPS tự động, QR code, đa ngôn ngữ.",
                 ["TxtDeveloper"] = "Phát triển bởi: Dũng Nguyễn",
                 ["TxtAppInfo"] = "Thông tin ứng dụng",
             }

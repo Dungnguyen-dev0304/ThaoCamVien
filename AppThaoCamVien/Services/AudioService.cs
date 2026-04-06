@@ -3,147 +3,179 @@
 namespace AppThaoCamVien.Services
 {
     /// <summary>
-    /// Service phát audio thuyết minh.
-    /// URL audio được lấy từ bảng PoiMedium (MediaType = "audio").
+    /// AudioService — FIX crash stream bị dispose sớm.
+    ///
+    /// LỖI GỐC: GetStreamAsync() trả về NetworkStream. Khi HttpClient dispose,
+    /// stream bị đóng nhưng IAudioPlayer vẫn đọc → crash "Object disposed".
+    ///
+    /// FIX: GetByteArrayAsync() → MemoryStream(bytes).
+    /// MemoryStream không phụ thuộc HttpClient, tự quản lý lifetime.
     /// </summary>
     public class AudioService : IDisposable
     {
-        private readonly IAudioManager _audioManager;
-        private readonly DatabaseService _databaseService;
-        private IAudioPlayer? _currentPlayer;
+        private readonly IAudioManager _am;
+        private readonly DatabaseService _db;
 
-        private bool _isPlaying = false;
+        private IAudioPlayer? _player;
+        private MemoryStream? _stream; // Giữ stream sống trong suốt vòng đời player
+        private HttpClient? _http;
+
+        private bool _isPlaying;
         private int _currentPoiId = -1;
-        private long _currentVisitId = -1;
-        private DateTime _playStartTime;
+        private long _visitId = -1;
+        private DateTime _playStart;
 
-        private const string API_BASE_URL = "https://your-api.azurewebsites.net";
+        private const string API_BASE = "http://10.0.2.2:5281";
 
         public event EventHandler<bool>? PlaybackStateChanged;
         public event EventHandler<double>? ProgressChanged;
 
         public bool IsPlaying => _isPlaying;
-        public double CurrentPosition => _currentPlayer?.CurrentPosition ?? 0;
-        public double Duration => _currentPlayer?.Duration ?? 0;
+        public double CurrentPosition => _player?.CurrentPosition ?? 0;
+        public double Duration => _player?.Duration ?? 0;
 
-        public AudioService(IAudioManager audioManager, DatabaseService databaseService)
+        public AudioService(IAudioManager am, DatabaseService db)
         {
-            _audioManager = audioManager;
-            _databaseService = databaseService;
+            _am = am;
+            _db = db;
         }
 
-        /// <summary>
-        /// Phát thuyết minh cho POI. Tự động lấy URL từ PoiMedium.
-        /// </summary>
         public async Task PlayPoiAudioAsync(int poiId, int? userId = null)
         {
             try
             {
-                // Toggle nếu đang phát đúng bài này
-                if (_currentPoiId == poiId && _currentPlayer != null)
+                // Toggle nếu đang phát đúng bài
+                if (_currentPoiId == poiId && _player != null)
                 {
-                    if (_isPlaying) Pause();
-                    else Resume();
+                    if (_isPlaying) Pause(); else Resume();
                     return;
                 }
 
                 await StopAsync();
                 _currentPoiId = poiId;
 
-                // Lấy URL audio từ PoiMedium
-                var media = await _databaseService.GetAudioForPoiAsync(poiId);
+                var media = await _db.GetAudioForPoiAsync(poiId);
                 if (media == null)
-                    throw new Exception("Chưa có file audio cho khu vực này.");
+                    throw new InvalidOperationException($"Không có audio cho POI #{poiId}");
 
-                // Xử lý URL: nếu là relative path thì thêm base URL
-                var audioUrl = media.MediaUrl.StartsWith("http")
+                var url = media.MediaUrl.StartsWith("http")
                     ? media.MediaUrl
-                    : $"{API_BASE_URL}/{media.MediaUrl.TrimStart('/')}";
+                    : $"{API_BASE}/{media.MediaUrl.TrimStart('/')}";
 
-                // Log visit
-                _currentVisitId = await _databaseService.LogVisitAsync(poiId, userId);
-                _playStartTime = DateTime.Now;
+                System.Diagnostics.Debug.WriteLine($"[Audio] Download: {url}");
 
-                // Stream audio
-                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                var stream = await httpClient.GetStreamAsync(audioUrl);
+                // Download toàn bộ vào memory — KHÔNG dùng NetworkStream trực tiếp
+                _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                var bytes = await _http.GetByteArrayAsync(url);
+                _stream = new MemoryStream(bytes);
+                _stream.Position = 0;
 
-                _currentPlayer = _audioManager.CreatePlayer(stream);
-                _currentPlayer.PlaybackEnded += OnPlaybackEnded;
-                _currentPlayer.Play();
+                _player = _am.CreatePlayer(_stream);
+                _player.PlaybackEnded += OnPlaybackEnded;
+                _player.Play();
 
                 _isPlaying = true;
+                _visitId = await _db.LogVisitAsync(poiId, userId);
+                _playStart = DateTime.Now;
+
                 PlaybackStateChanged?.Invoke(this, true);
                 _ = TrackProgressAsync();
+
+                System.Diagnostics.Debug.WriteLine($"[Audio] Playing {bytes.Length / 1024}KB");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[AudioService] Error: {ex.Message}");
-                throw;
+                System.Diagnostics.Debug.WriteLine($"[Audio] PlayPoiAudio error: {ex.Message}");
+                _currentPoiId = -1;
+                throw; // Re-throw để NarrationEngine biết fallback sang TTS
             }
         }
 
         public void Pause()
         {
-            _currentPlayer?.Pause();
+            if (!_isPlaying) return;
+            try { _player?.Pause(); } catch { }
             _isPlaying = false;
             PlaybackStateChanged?.Invoke(this, false);
         }
 
         public void Resume()
         {
-            _currentPlayer?.Play();
+            if (_isPlaying) return;
+            try { _player?.Play(); } catch { }
             _isPlaying = true;
             PlaybackStateChanged?.Invoke(this, true);
         }
 
         public async Task StopAsync()
         {
-            if (_currentPlayer != null)
+            // Lưu thời gian nghe
+            if (_visitId > 0)
             {
-                // Lưu thời gian nghe
-                if (_currentVisitId > 0)
+                try
                 {
-                    var listenedSeconds = (int)(DateTime.Now - _playStartTime).TotalSeconds;
-                    await _databaseService.UpdateListenDurationAsync(_currentVisitId, listenedSeconds);
+                    var secs = (int)(DateTime.Now - _playStart).TotalSeconds;
+                    await _db.UpdateListenDurationAsync(_visitId, secs);
                 }
-
-                _currentPlayer.Stop();
-                _currentPlayer.PlaybackEnded -= OnPlaybackEnded;
-                _currentPlayer.Dispose();
-                _currentPlayer = null;
+                catch { }
+                _visitId = -1;
             }
+
+            // Dừng player
+            if (_player != null)
+            {
+                try
+                {
+                    _player.PlaybackEnded -= OnPlaybackEnded;
+                    _player.Stop();
+                    _player.Dispose();
+                }
+                catch { }
+                _player = null;
+            }
+
+            // Dispose stream sau player
+            try { _stream?.Dispose(); } catch { }
+            _stream = null;
+
+            try { _http?.Dispose(); } catch { }
+            _http = null;
 
             _isPlaying = false;
             _currentPoiId = -1;
-            _currentVisitId = -1;
+
+            try { PlaybackStateChanged?.Invoke(this, false); } catch { }
         }
 
         public void SeekTo(double position)
         {
-            if (_currentPlayer != null && _currentPlayer.CanSeek)
-                _currentPlayer.Seek(position);
+            try
+            {
+                if (_player?.CanSeek == true) _player.Seek(position);
+            }
+            catch { }
         }
 
         private void OnPlaybackEnded(object? sender, EventArgs e)
         {
             _isPlaying = false;
-            PlaybackStateChanged?.Invoke(this, false);
+            try { PlaybackStateChanged?.Invoke(this, false); } catch { }
         }
 
         private async Task TrackProgressAsync()
         {
-            while (_isPlaying && _currentPlayer != null)
+            while (_isPlaying && _player != null)
             {
                 await Task.Delay(500);
-                if (_currentPlayer != null && _isPlaying)
-                    ProgressChanged?.Invoke(this, _currentPlayer.CurrentPosition);
+                try
+                {
+                    if (_isPlaying && _player != null)
+                        ProgressChanged?.Invoke(this, _player.CurrentPosition);
+                }
+                catch { break; }
             }
         }
 
-        public void Dispose()
-        {
-            _ = StopAsync();
-        }
+        public void Dispose() => _ = StopAsync();
     }
 }
