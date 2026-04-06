@@ -67,12 +67,6 @@
                 <span>Tổng quan</span>
             </a>
 
-            @* Mục Thêm địa điểm *@
-            <a href="/Admin/AddPOI" class="nav-link @(ViewData["Active"] != null && ViewData["Active"].ToString() == "addpoi" ? "active" : "")">
-                <i class="bi bi-plus-square-fill"></i>
-                <span>Thêm địa điểm</span>
-            </a>
-
         @* 3. Quản lý địa điểm (Thay thế cho mục Edit và Delete cũ) *@
             <a href="/Admin/PoiList" class="nav-link @(ViewData["Active"]?.ToString() == "poilist" ? "active" : "")">
                 <i class="bi bi-geo-alt-fill"></i>

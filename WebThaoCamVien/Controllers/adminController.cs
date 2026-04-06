@@ -185,11 +185,9 @@ namespace WebThaoCamVien.Controllers
         // GET: /Admin/PoiList
         public async Task<IActionResult> PoiList()
         {
-            ViewData["Active"] = "poilist";
-            ViewData["Title"] = "Danh sách địa điểm";
-            ViewData["PageTitle"] = "Quản lý điểm tham quan";
-
+            SetViewData("poilist", "Danh sách địa điểm", "Quản lý điểm tham quan");
             var list = await _context.Pois.OrderByDescending(p => p.CreatedAt).ToListAsync();
+            ViewBag.NewPoi = new Poi();
             return View(list);
         }
 
@@ -274,7 +272,7 @@ namespace WebThaoCamVien.Controllers
             _context.Pois.Add(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddPOI");
+            return RedirectToAction("PoiList");
         }
 
         // ── EDIT POI ─────────────────────────────────────────────────────
