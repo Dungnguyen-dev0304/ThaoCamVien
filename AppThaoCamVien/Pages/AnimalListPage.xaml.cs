@@ -5,135 +5,120 @@ using AppThaoCamVien.Services;
 namespace AppThaoCamVien.Pages;
 
 /// <summary>
-/// Trang danh sách động vật — hiển thị dữ liệu thật từ API/SQLite.
-/// Hỗ trợ tìm kiếm và tự làm mới mỗi khi ngôn ngữ thay đổi.
+/// AnimalListPage — danh sách 15 POI thật từ DB/API.
+/// FIX: Constructor chỉ nhận DatabaseService và IServiceProvider (không có NarrationEngine
+/// hay các service nặng khác để tránh circular dependency khi Shell init).
 /// </summary>
 public partial class AnimalListPage : ContentPage
 {
-    private readonly DatabaseService _databaseService;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly DatabaseService _db;
+    private readonly IServiceProvider _sp;
 
-    // ObservableCollection tự động cập nhật UI khi thêm/xóa item
-    public ObservableCollection<Poi> AnimalsList { get; set; } = new();
+    public ObservableCollection<Poi> Animals { get; } = new();
+    private List<Poi> _all = [];
+    private string _loadedLang = "";
+    private bool _isFirstLoad = true;
 
-    // Giữ danh sách đầy đủ để filter không mất dữ liệu gốc
-    private List<Poi> _allPois = new();
-
-    // Theo dõi ngôn ngữ cũ để biết khi nào cần reload
-    private string _lastLoadedLanguage = "";
-
-    public AnimalListPage(DatabaseService databaseService, IServiceProvider serviceProvider)
+    public AnimalListPage(DatabaseService db, IServiceProvider sp)
     {
         InitializeComponent();
-        _databaseService = databaseService;
-        _serviceProvider = serviceProvider;
-
-        AnimalsCollectionView.ItemsSource = AnimalsList;
-
-        // Gắn sự kiện tìm kiếm — TextChanged là real-time, không cần nhấn Enter
-        SearchEntry.TextChanged += OnSearchTextChanged;
+        _db = db;
+        _sp = sp;
+        BindingContext = this;
+        AnimalsCollectionView.ItemsSource = Animals;
+        SearchEntry.TextChanged += OnSearch;
     }
 
-    // =====================================================================
-    // LIFECYCLE
-    // =====================================================================
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        // Chỉ reload khi ngôn ngữ thay đổi hoặc lần đầu mở trang
-        // Điều này tránh gọi API mỗi lần user chuyển tab
-        var currentLang = _databaseService.CurrentLanguage;
-        if (currentLang != _lastLoadedLanguage)
+        // Reload khi ngôn ngữ thay đổi hoặc lần đầu vào trang
+        var lang = _db.CurrentLanguage;
+        if (lang != _loadedLang || _isFirstLoad)
         {
-            _lastLoadedLanguage = currentLang;
-            await LoadDataAsync();
+            _isFirstLoad = false;
+            _loadedLang = lang;
+            await LoadAsync();
         }
     }
 
-    // =====================================================================
-    // LẤY DỮ LIỆU THẬT TỪ API → SQLITE → FALLBACK OFFLINE
-    // =====================================================================
-    private async Task LoadDataAsync()
+    private async Task LoadAsync()
     {
         try
         {
-            // 1. Sync từ API (có xử lý lỗi mạng bên trong, không crash app)
-            await _databaseService.SyncDataFromApiAsync();
+            // Hiện loading indicator
+            if (Animals.Count == 0)
+            {
+                Animals.Add(new Poi { Name = "Đang tải dữ liệu...", Description = "Vui lòng chờ" });
+            }
 
-            // 2. Lấy dữ liệu từ SQLite local (đã có bản dịch đúng ngôn ngữ từ API)
-            var pois = await _databaseService.GetAllPoisAsync();
-            _allPois = pois;
+            // Sync từ API (có fallback offline nếu mất mạng)
+            await _db.SyncDataFromApiAsync();
 
-            // 3. Cập nhật UI trên Main Thread (bắt buộc — tránh exception cross-thread)
+            // Lấy dữ liệu từ SQLite
+            _all = await _db.GetAllPoisAsync();
+
+            // Cập nhật UI trên Main Thread — BẮT BUỘC
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                AnimalsList.Clear();
-                foreach (var poi in pois)
-                    AnimalsList.Add(poi);
-
-                // Clear ô tìm kiếm khi reload dữ liệu mới
+                Animals.Clear();
+                foreach (var p in _all)
+                    Animals.Add(p);
                 SearchEntry.Text = "";
             });
 
-            System.Diagnostics.Debug.WriteLine(
-                $"[AnimalListPage] Loaded {pois.Count} POIs (lang: {_databaseService.CurrentLanguage})");
+            System.Diagnostics.Debug.WriteLine($"[AnimalList] Loaded {_all.Count} POIs");
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi tải dữ liệu", ex.Message, "OK");
+            System.Diagnostics.Debug.WriteLine($"[AnimalList] Load error: {ex.Message}");
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Animals.Clear();
+                // Hiển thị lỗi thay vì crash
+                DisplayAlert("Lỗi tải dữ liệu",
+                    $"Không thể tải danh sách. Vui lòng thử lại.\n{ex.Message}", "OK");
+            });
         }
     }
 
-    // =====================================================================
-    // TÌM KIẾM REAL-TIME
-    // =====================================================================
-    private void OnSearchTextChanged(object? sender, TextChangedEventArgs e)
+    private void OnSearch(object? sender, TextChangedEventArgs e)
     {
-        var query = e.NewTextValue?.Trim().ToLower() ?? "";
-
+        var q = (e.NewTextValue ?? "").Trim().ToLower();
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            AnimalsList.Clear();
-
-            // Nếu ô tìm kiếm trống → hiện tất cả
-            var filtered = string.IsNullOrWhiteSpace(query)
-                ? _allPois
-                : _allPois.Where(p =>
-                    (p.Name?.ToLower().Contains(query) ?? false) ||
-                    (p.Description?.ToLower().Contains(query) ?? false));
-
-            foreach (var poi in filtered)
-                AnimalsList.Add(poi);
+            Animals.Clear();
+            var src = string.IsNullOrEmpty(q)
+                ? _all
+                : _all.Where(p =>
+                    (p.Name?.ToLower().Contains(q) ?? false) ||
+                    (p.Description?.ToLower().Contains(q) ?? false));
+            foreach (var p in src) Animals.Add(p);
         });
     }
 
-    // =====================================================================
-    // NHẤN VÀO THẺ ĐỘNG VẬT → MỞ STORYAUDIOPAGE
-    // =====================================================================
     private async void OnAnimalTapped(object sender, TappedEventArgs e)
     {
-        if (e.Parameter is not Poi selectedAnimal) return;
+        if (e.Parameter is not Poi poi) return;
 
-        // Hiệu ứng nhấp nháy UX
-        if (sender is View view)
+        // Hiệu ứng nhấp nháy
+        if (sender is View v)
         {
-            await view.FadeTo(0.5, 80);
-            await view.FadeTo(1.0, 80);
+            await v.FadeTo(0.5, 80);
+            await v.FadeTo(1.0, 80);
         }
 
         try
         {
-            var storyPage = _serviceProvider.GetService<StoryAudioPage>();
-            if (storyPage != null)
-            {
-                storyPage.LoadPoi(selectedAnimal);
-                await Navigation.PushAsync(storyPage);
-            }
+            // Lấy StoryAudioPage qua ServiceProvider (DI đúng cách)
+            var page = _sp.GetRequiredService<StoryAudioPage>();
+            page.LoadPoi(poi);
+            await Navigation.PushAsync(page);
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", $"Không thể mở trang thuyết minh: {ex.Message}", "OK");
+            await DisplayAlert("Lỗi", $"Không thể mở trang thuyết minh:\n{ex.Message}", "OK");
         }
     }
 

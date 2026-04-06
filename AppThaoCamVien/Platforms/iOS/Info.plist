@@ -1,32 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+		  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Platforms/iOS/Info.plist -->
 <plist version="1.0">
-<dict>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UIDeviceFamily</key>
-	<array>
-		<integer>1</integer>
-		<integer>2</integer>
-	</array>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>arm64</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>XSAppIconAssets</key>
-	<string>Assets.xcassets/appicon.appiconset</string>
-</dict>
+	<dict>
+		<key>CFBundleName</key>
+		<string>Smart Audio Tour</string>
+		<key>CFBundleDisplayName</key>
+		<string>Thảo Cầm Viên</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleVersion</key>
+		<string>1</string>
+		<key>CFBundleShortVersionString</key>
+		<string>1.0.0</string>
+
+		<!-- GPS permissions -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Ứng dụng cần GPS để hiển thị vị trí của bạn trên bản đồ Thảo Cầm Viên.</string>
+
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Ứng dụng cần GPS chạy nền để tự động phát thuyết minh khi bạn tiến gần các khu chuồng thú, ngay cả khi màn hình tắt.</string>
+
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>Theo dõi vị trí liên tục để kích hoạt thuyết minh tự động trong suốt chuyến tham quan.</string>
+
+		<!-- Camera (QR scan) -->
+		<key>NSCameraUsageDescription</key>
+		<string>Ứng dụng cần camera để quét mã QR tại các biển báo chuồng thú.</string>
+
+		<!-- Microphone (dự phòng TTS recording) -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Dùng để ghi âm thuyết minh cá nhân (tùy chọn).</string>
+
+		<!-- Background modes: location + audio playback -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>location</string>
+			<string>audio</string>
+			<string>fetch</string>
+		</array>
+
+		<!-- Transport security (cho API HTTP local khi debug) -->
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<true />
+		</dict>
+
+		<!-- UI -->
+		<key>UILaunchStoryboardName</key>
+		<string>MauiSplash</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		</array>
+
+		<key>XSAppIconAssets</key>
+		<string>Assets.xcassets/appicon.appiconset</string>
+	</dict>
 </plist>

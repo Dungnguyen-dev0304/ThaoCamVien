@@ -3,148 +3,242 @@ using SharedThaoCamVien.Models;
 
 namespace AppThaoCamVien.Pages;
 
+/// <summary>
+/// StoryAudioPage — FIX toàn bộ crash:
+///
+/// 1. KHÔNG await trực tiếp narration trong OnAppearing (block UI thread)
+/// 2. TTS chạy trên background thread với Task.Run + delay
+/// 3. AudioService lỗi → bắt exception, fallback TTS thay vì crash
+/// 4. Tất cả UI update phải qua MainThread.BeginInvokeOnMainThread
+/// </summary>
 public partial class StoryAudioPage : ContentPage
 {
-    private readonly AudioService _audioService;
-    private readonly NarrationEngine _narrationEngine;
-    private readonly DatabaseService _databaseService;
+    private readonly AudioService _audio;
+    private readonly NarrationEngine _narration;
+    private readonly DatabaseService _db;
 
-    private Poi? _currentPoi;
-    private bool _isSliderDragging = false;
+    private Poi? _poi;
+    private bool _dragging;
+    private bool _isNarrating;
 
-    public StoryAudioPage(AudioService audioService, NarrationEngine narrationEngine, DatabaseService databaseService)
+    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db)
     {
         InitializeComponent();
-        _audioService = audioService;
-        _narrationEngine = narrationEngine;
-        _databaseService = databaseService;
+        _audio = audio;
+        _narration = narration;
+        _db = db;
 
-        _audioService.PlaybackStateChanged += OnPlaybackStateChanged;
-        _audioService.ProgressChanged += OnProgressChanged;
+        _audio.PlaybackStateChanged += OnStateChanged;
+        _audio.ProgressChanged += OnProgress;
     }
 
-    public void LoadPoi(Poi poi) => _currentPoi = poi;
+    public void LoadPoi(Poi poi)
+    {
+        _poi = poi;
+        // Render ngay nếu trang đã visible (tránh trường hợp LoadPoi gọi sau OnAppearing)
+        if (IsLoaded) RenderPoi(poi);
+    }
 
-    protected override async void OnAppearing()
+    // ── Lifecycle ────────────────────────────────────────────────────────
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-        if (_currentPoi == null) return;
-        UpdateUiWithPoi(_currentPoi);
-        await StartNarrationAsync();
+        if (_poi == null) return;
+
+        RenderPoi(_poi);
+
+        // QUAN TRỌNG: Phát audio/TTS hoàn toàn trên background thread
+        // Không await ở đây để không block UI thread → tránh ANR crash trên Android
+        _ = StartNarrationSafeAsync();
     }
 
-    protected override async void OnDisappearing()
+    protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        await _narrationEngine.StopCurrentNarrationAsync();
-        UpdatePlayPauseButton(false);
+        _isNarrating = false;
+
+        // Dừng audio ngầm, không await để không block
+        _ = Task.Run(async () =>
+        {
+            try { await _narration.StopAsync(); }
+            catch { /* ignore */ }
+        });
+
+        MainThread.BeginInvokeOnMainThread(() => UpdateBtn(false));
     }
 
-    // Cập nhật toàn bộ UI với dữ liệu động từ POI
-    private void UpdateUiWithPoi(Poi poi)
+    // ── Render dữ liệu động từ POI ───────────────────────────────────────
+    private void RenderPoi(Poi poi)
     {
-        var lang = _databaseService.CurrentLanguage;
+        // Phải chạy trên MainThread nếu được gọi từ background
+        if (!MainThread.IsMainThread)
+        {
+            MainThread.BeginInvokeOnMainThread(() => RenderPoi(poi));
+            return;
+        }
 
-        PoiNameLabel.Text = poi.Name;
-        PoiSubtitleLabel.Text = $"Thảo Cầm Viên Sài Gòn • Mã: TCVN-{poi.PoiId:D3}";
-        PoiDescTitleLabel.Text = GetStoryTitle(poi.Name, lang);
-        PoiDescLabel.Text = poi.Description ?? "Chưa có thông tin chi tiết.";
+        var lang = _db.CurrentLanguage;
 
-        // Intro ngắn: 120 ký tự đầu
-        ShortIntroLabel.Text = (poi.Description?.Length ?? 0) > 120
-            ? poi.Description![..120] + "..."
-            : poi.Description ?? "";
+        PoiNameLabel.Text = poi.Name ?? "---";
+        PoiSubtitleLabel.Text = $"Thảo Cầm Viên • TCVN-{poi.PoiId:D3}";
 
-        // Ảnh: URL từ server hoặc file local
-        PoiImage.Source = !string.IsNullOrEmpty(poi.ImageThumbnail)
-            ? (poi.ImageThumbnail.StartsWith("http")
-                ? ImageSource.FromUri(new Uri(poi.ImageThumbnail))
-                : ImageSource.FromFile(poi.ImageThumbnail))
-            : "placeholder_animal.png";
+        PoiDescTitleLabel.Text = lang switch
+        {
+            "en" => $"{poi.Name} Story",
+            "th" => $"เรื่องของ{poi.Name}",
+            "id" => $"Kisah {poi.Name}",
+            "ms" => $"Kisah {poi.Name}",
+            "km" => $"រឿង{poi.Name}",
+            _ => $"Câu chuyện {poi.Name}",
+        };
 
-        // Reset tiến trình
+        var desc = poi.Description ?? "Chưa có thông tin chi tiết.";
+        PoiDescLabel.Text = desc;
+        ShortIntroLabel.Text = desc.Length > 120 ? desc[..120] + "..." : desc;
+
+        // Ảnh: an toàn với try-catch
+        try
+        {
+            if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+                PoiImage.Source = poi.ImageThumbnail.StartsWith("http")
+                    ? ImageSource.FromUri(new Uri(poi.ImageThumbnail))
+                    : ImageSource.FromFile(poi.ImageThumbnail);
+            else
+                PoiImage.Source = "placeholder_animal.png";
+        }
+        catch
+        {
+            PoiImage.Source = "placeholder_animal.png";
+        }
+
         ProgressSlider.Value = 0;
         CurrentTimeLabel.Text = "00:00";
         TotalTimeLabel.Text = "00:00";
     }
 
-    private static string GetStoryTitle(string name, string lang) => lang switch
+    // ── Phát thuyết minh AN TOÀN ─────────────────────────────────────────
+    private async Task StartNarrationSafeAsync()
     {
-        "en" => $"{name} Story",
-        "th" => $"เรื่องราวของ{name}",
-        "id" => $"Kisah {name}",
-        "ms" => $"Kisah {name}",
-        "km" => $"រឿងរ៉ាវ{name}",
-        _ => $"Câu chuyện {name}",
-    };
+        if (_poi == null || _isNarrating) return;
+        _isNarrating = true;
 
-    private async Task StartNarrationAsync()
-    {
-        if (_currentPoi == null) return;
         try
         {
-            LoadingIndicator.IsVisible = true;
-            LoadingIndicator.IsRunning = true;
-            // NarrationEngine tự quyết: MP3 hay TTS, đúng ngôn ngữ
-            await _narrationEngine.PlayNarrativeAsync(_currentPoi, forcePlay: true);
+            // Hiện loading
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                LoadingIndicator.IsVisible = true;
+                LoadingIndicator.IsRunning = true;
+            });
+
+            // Delay nhỏ để UI render xong và TTS engine sẵn sàng
+            await Task.Delay(300);
+
+            if (!_isNarrating) return; // Đã navigate đi
+
+            // NarrationEngine tự quyết: MP3 có → phát MP3, không có → TTS
+            // forcePlay=true: bỏ qua cooldown khi user chủ động vào trang
+            await _narration.PlayAsync(_poi, forcePlay: true);
+        }
+        catch (Exception ex)
+        {
+            // KHÔNG crash app, chỉ log lỗi
+            System.Diagnostics.Debug.WriteLine($"[StoryPage] Narration error: {ex.Message}");
         }
         finally
         {
-            LoadingIndicator.IsVisible = false;
-            LoadingIndicator.IsRunning = false;
+            _isNarrating = false;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                LoadingIndicator.IsVisible = false;
+                LoadingIndicator.IsRunning = false;
+            });
         }
     }
 
+    // ── Player Controls ──────────────────────────────────────────────────
     private async void OnPlayPauseClicked(object sender, TappedEventArgs e)
     {
-        if (_currentPoi == null) return;
-        if (_audioService.IsPlaying) _audioService.Pause();
-        else if (_audioService.Duration == 0) await StartNarrationAsync();
-        else _audioService.Resume();
+        if (_poi == null) return;
+
+        try
+        {
+            if (_audio.IsPlaying)
+            {
+                _audio.Pause();
+            }
+            else if (_audio.Duration == 0)
+            {
+                // Chưa load audio → phát lại
+                await StartNarrationSafeAsync();
+            }
+            else
+            {
+                _audio.Resume();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[StoryPage] PlayPause error: {ex.Message}");
+        }
     }
 
     private void OnRewindClicked(object sender, EventArgs e)
-        => _audioService.SeekTo(Math.Max(0, _audioService.CurrentPosition - 10));
+    {
+        try { _audio.SeekTo(Math.Max(0, _audio.CurrentPosition - 10)); } catch { }
+    }
 
     private void OnForwardClicked(object sender, EventArgs e)
-        => _audioService.SeekTo(Math.Min(_audioService.Duration, _audioService.CurrentPosition + 10));
+    {
+        try { _audio.SeekTo(Math.Min(_audio.Duration, _audio.CurrentPosition + 10)); } catch { }
+    }
+
+    private void OnSliderDragStarted(object sender, EventArgs e) => _dragging = true;
 
     private void OnSliderDragCompleted(object sender, EventArgs e)
     {
-        _isSliderDragging = false;
-        _audioService.SeekTo((ProgressSlider.Value / 100.0) * _audioService.Duration);
+        _dragging = false;
+        try { _audio.SeekTo((ProgressSlider.Value / 100.0) * _audio.Duration); } catch { }
     }
 
-    private void OnPlaybackStateChanged(object? sender, bool isPlaying)
-        => MainThread.BeginInvokeOnMainThread(() => UpdatePlayPauseButton(isPlaying));
+    // ── AudioService Events ──────────────────────────────────────────────
+    private void OnStateChanged(object? s, bool playing)
+        => MainThread.BeginInvokeOnMainThread(() => UpdateBtn(playing));
 
-    private void OnProgressChanged(object? sender, double currentPos)
+    private void OnProgress(object? s, double pos)
     {
-        if (_isSliderDragging) return;
+        if (_dragging) return;
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            var duration = _audioService.Duration;
-            if (duration > 0) ProgressSlider.Value = (currentPos / duration) * 100;
-            CurrentTimeLabel.Text = FormatTime(currentPos);
-            TotalTimeLabel.Text = FormatTime(duration);
+            try
+            {
+                var dur = _audio.Duration;
+                if (dur > 0) ProgressSlider.Value = (pos / dur) * 100;
+                CurrentTimeLabel.Text = Fmt(pos);
+                TotalTimeLabel.Text = Fmt(dur);
+            }
+            catch { /* ignore UI update errors */ }
         });
     }
 
-    private void UpdatePlayPauseButton(bool isPlaying)
-        => PlayPauseIcon.Source = isPlaying ? "icon_pause_dark.png" : "icon_play_dark.png";
+    private void UpdateBtn(bool playing)
+        => PlayPauseIcon.Source = playing ? "icon_pause_dark.png" : "icon_play_dark.png";
 
-    private static string FormatTime(double s)
+    private static string Fmt(double s)
     {
-        var ts = TimeSpan.FromSeconds(s);
-        return $"{(int)ts.TotalMinutes:D2}:{ts.Seconds:D2}";
+        var t = TimeSpan.FromSeconds(s < 0 ? 0 : s);
+        return $"{(int)t.TotalMinutes:D2}:{t.Seconds:D2}";
     }
 
-    private async void OnBackClicked(object sender, EventArgs e)
-        => await Navigation.PopAsync();
+    private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
 
     ~StoryAudioPage()
     {
-        _audioService.PlaybackStateChanged -= OnPlaybackStateChanged;
-        _audioService.ProgressChanged -= OnProgressChanged;
+        try
+        {
+            _audio.PlaybackStateChanged -= OnStateChanged;
+            _audio.ProgressChanged -= OnProgress;
+        }
+        catch { }
     }
 }

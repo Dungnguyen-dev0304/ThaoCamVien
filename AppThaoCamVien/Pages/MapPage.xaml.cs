@@ -6,167 +6,363 @@ using Microsoft.Maui.Devices.Sensors;
 
 namespace AppThaoCamVien.Pages;
 
+/// <summary>
+/// MapPage — FIX: GPS crash khi vào vùng POI, tất cả exception được catch.
+/// </summary>
 public partial class MapPage : ContentPage
 {
-    private readonly DatabaseService _databaseService;
-    private readonly LocationService _locationService;
-    private readonly GeofencingEngine _geofencingEngine;
-    private readonly AudioService _audioService;
+    private readonly DatabaseService _db;
+    private readonly LocationService _gps;
+    private readonly GeofencingEngine _geo;
+    private readonly NarrationEngine _narration;
+    private readonly IServiceProvider _sp;
 
-    private List<Poi> _allPois = new();
-    private Poi? _currentActivePoi = null;
+    private List<Poi> _pois = [];
+    private Poi? _nearPoi;
+    private CancellationTokenSource? _dotCts;
+    private bool _mapReady = false;
 
-    public MapPage(
-        DatabaseService databaseService,
-        LocationService locationService,
-        GeofencingEngine geofencingEngine,
-        AudioService audioService)
+    public MapPage(DatabaseService db, LocationService gps,
+                   GeofencingEngine geo, NarrationEngine narration,
+                   IServiceProvider sp)
     {
         InitializeComponent();
-        _databaseService = databaseService;
-        _locationService = locationService;
-        _geofencingEngine = geofencingEngine;
-        _audioService = audioService;
-
-        SetupMap();
+        _db = db; _gps = gps; _geo = geo; _narration = narration; _sp = sp;
     }
 
+    // ── Setup Map ────────────────────────────────────────────────────────
     private void SetupMap()
     {
-        ZooMap.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
-        ZooMap.Map?.Widgets.Clear();
-        ZooMap.MyLocationEnabled = true;
-
-        var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(106.7055, 10.7870);
-        ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 2);
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
         try
         {
-            await LoadPoisAsync();
-            await StartGpsAsync();
+            ZooMap.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
+            ZooMap.Map?.Widgets.Clear();
+            ZooMap.MyLocationEnabled = true;
+            CenterZoo();
+            _mapReady = true;
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", $"Không thể tải dữ liệu: {ex.Message}", "OK");
+            System.Diagnostics.Debug.WriteLine($"[Map] SetupMap error: {ex.Message}");
         }
     }
 
-    private async Task LoadPoisAsync()
+    private void CenterZoo()
     {
-        // Cập nhật dữ liệu từ API hoặc Offline
-        await _databaseService.SyncDataFromApiAsync();
-
-        // Lấy danh sách POI
-        _allPois = await _databaseService.GetAllPoisAsync();
-
-        ZooMap.Pins.Clear();
-        if (_allPois != null)
+        try
         {
-            foreach (var poi in _allPois)
-            {
-                ZooMap.Pins.Add(new Mapsui.UI.Maui.Pin(ZooMap)
-                {
-                    Label = poi.Name,
-                    Position = new Mapsui.UI.Maui.Position((double)poi.Latitude, (double)poi.Longitude),
-                    Type = Mapsui.UI.Maui.PinType.Pin,
-                    Color = Colors.Red
-                });
-            }
+            var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(106.7055, 10.7870);
+            ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 3);
         }
+        catch { }
     }
 
-    private async Task StartGpsAsync()
+    // ── Lifecycle ────────────────────────────────────────────────────────
+    protected override async void OnAppearing()
     {
-        bool hasPermission = await _locationService.CheckAndRequestLocationPermission();
-        if (hasPermission)
-        {
-            _locationService.LocationUpdated += OnLocationUpdated;
-            _locationService.StartTracking();
-        }
-        else
-        {
-            await DisplayAlert("Quyền truy cập",
-                "Ứng dụng cần GPS để hướng dẫn bạn tham quan.", "OK");
-        }
+        base.OnAppearing();
+
+        // Setup map lần đầu
+        if (!_mapReady) SetupMap();
+
+        // Subscribe events
+        _gps.LocationUpdated += OnLocation;
+        _gps.StatusChanged += OnGpsStatus;
+
+        // Load POIs và GPS song song
+        _ = LoadPoisAsync();
+        _ = StartGpsAsync();
+
+        StartDotBlink();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _locationService.LocationUpdated -= OnLocationUpdated;
-        _locationService.StopTracking();
-        _ = _audioService.StopAsync();
+        _gps.LocationUpdated -= OnLocation;
+        _gps.StatusChanged -= OnGpsStatus;
+        _gps.Stop();
+        _dotCts?.Cancel();
+        _ = _narration.StopAsync();
     }
 
-    // Chỉnh sửa hàm OnLocationUpdated trong MapPage.xaml.cs
-    private void OnLocationUpdated(object? sender, Location userLocation)
+    // ── Load POIs ─────────────────────────────────────────────────────────
+    private async Task LoadPoisAsync()
     {
-        MainThread.BeginInvokeOnMainThread(async () =>
+        try
+        {
+            await _db.SyncDataFromApiAsync();
+            _pois = await _db.GetAllPoisAsync();
+            _geo.SetPois(_pois);
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                try
+                {
+                    ZooMap.Pins.Clear();
+                    foreach (var p in _pois)
+                    {
+                        ZooMap.Pins.Add(new Pin(ZooMap)
+                        {
+                            Label = p.Name ?? "---",
+                            Position = new Position((double)p.Latitude, (double)p.Longitude),
+                            Type = PinType.Pin,
+                            Color = Colors.OrangeRed
+                        });
+                    }
+                    BuildChips();
+                    PoiCountLbl.Text = $"{_pois.Count} {GetRes("TxtPoints", "điểm")}";
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Map] UI update error: {ex.Message}");
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Map] LoadPois error: {ex.Message}");
+        }
+    }
+
+    private void BuildChips()
+    {
+        try
+        {
+            ChipsContainer.Children.Clear();
+            foreach (var poi in _pois)
+            {
+                var b = new Border
+                {
+                    BackgroundColor = Color.FromArgb("#0A2A1B"),
+                    Padding = new Thickness(12, 7),
+                    Stroke = Color.FromArgb("#15402A"),
+                    StrokeThickness = 1
+                };
+                b.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 };
+                b.Content = new Label
+                {
+                    Text = poi.Name ?? "---",
+                    TextColor = Colors.White,
+                    FontSize = 11
+                };
+                var tap = new TapGestureRecognizer();
+                tap.Tapped += (_, _) => CenterPoi(poi);
+                b.GestureRecognizers.Add(tap);
+                ChipsContainer.Children.Add(b);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Map] BuildChips error: {ex.Message}");
+        }
+    }
+
+    // ── GPS ──────────────────────────────────────────────────────────────
+    private async Task StartGpsAsync()
+    {
+        try
+        {
+            var ok = await _gps.CheckAndRequestPermissionAsync();
+            if (!ok)
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                    GpsLabel.Text = "GPS bị từ chối — bản đồ chỉ hiển thị");
+                return;
+            }
+            await _gps.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Map] StartGps error: {ex.Message}");
+        }
+    }
+
+    private void OnGpsStatus(object? sender, string status)
+        => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            try { GpsLabel.Text = status; } catch { }
+        });
+
+    private void OnLocation(object? sender, Location loc)
+    {
+        // KHÔNG dùng async void với heavy work — dễ crash
+        // Dùng Task.Run để xử lý geofencing trên background thread
+        _ = Task.Run(async () =>
         {
             try
             {
-                // 1. Cập nhật chấm xanh trên bản đồ
-                ZooMap.MyLocationLayer.UpdateMyLocation(new Position(userLocation.Latitude, userLocation.Longitude));
-
-                // 2. Geofencing: Quét xem có đang đứng gần chuồng thú nào không
-                bool isNearAnyPoi = false;
-                foreach (var poi in _allPois)
+                // Cập nhật chấm vị trí trên bản đồ (phải trên MainThread)
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    if (_geofencingEngine.IsWithinRadius(userLocation, poi))
+                    try
                     {
-                        isNearAnyPoi = true;
-
-                        // Nếu là POI mới (chưa phát) -> Kích hoạt Narration Engine
-                        if (_currentActivePoi?.PoiId != poi.PoiId)
-                        {
-                            _currentActivePoi = poi;
-
-                            // Lấy NarrationEngine từ DI và phát âm thanh
-                            var narrationEngine = IPlatformApplication.Current.Services.GetService<NarrationEngine>();
-                            if (narrationEngine != null)
-                            {
-                                await narrationEngine.PlayNarrativeAsync(poi);
-                            }
-                        }
-                        break;
+                        ZooMap.MyLocationLayer.UpdateMyLocation(
+                            new Position(loc.Latitude, loc.Longitude));
                     }
-                }
+                    catch { }
+                });
 
-                // Nếu đi ra khỏi vùng bán kính của tất cả POI, reset lại trạng thái
-                if (!isNearAnyPoi)
+                // Geofencing (có thể chạy trên background)
+                var result = _geo.Process(loc);
+
+                // Cập nhật UI (phải trên MainThread)
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    _currentActivePoi = null;
+                    try
+                    {
+                        if (result.ActivePoi != null)
+                        {
+                            ShowNearPoiPanel(result.ActivePoi, result.ActiveDist, true);
+                            HighlightPin(result.ActivePoi);
+                        }
+                        else if (result.ApproachingPois.Count > 0)
+                        {
+                            var n = result.ApproachingPois.OrderBy(x => x.dist).First();
+                            ShowNearPoiPanel(n.poi, n.dist, false);
+                        }
+                        else
+                        {
+                            ShowDefaultPanel();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Map] UI update error: {ex.Message}");
+                    }
+                });
+
+                // Auto-narration (background, không block UI)
+                if (result.ActivePoi != null && result.CanTrigger)
+                {
+                    _geo.MarkTriggered(result.ActivePoi.PoiId);
+                    try
+                    {
+                        await _narration.PlayAsync(result.ActivePoi, forcePlay: false);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Map] Narration error: {ex.Message}");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[MapPage] Lỗi GPS: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[Map] OnLocation error: {ex.Message}");
             }
         });
     }
 
-    private async Task OnEnterPoiZoneAsync(Poi poi)
+    // ── UI Panels ────────────────────────────────────────────────────────
+    private void ShowNearPoiPanel(Poi poi, double dist, bool inside)
     {
-        bool wantToListen = await DisplayAlert(
-            "🦁 Phát hiện khu vực!",
-            $"Bạn đã đến: {poi.Name}\nMuốn nghe thuyết minh không?",
-            "Nghe ngay", "Bỏ qua");
+        _nearPoi = poi;
+        NearPoiPanel.IsVisible = true;
+        DefaultPanel.IsVisible = false;
+        NearPoiName.Text = poi.Name ?? "---";
+        NearPoiDist.Text = $"📍 {dist:F0}m";
+        NearPoiStatus.Text = inside
+            ? GetRes("TxtInZone", "● Trong vùng")
+            : GetRes("TxtApproaching", "○ Đang tiếp cận");
+        NearPoiStatus.TextColor = inside
+            ? Color.FromArgb("#4CAF50") : Color.FromArgb("#FFCA28");
 
-        if (wantToListen)
+        try
         {
-            var audioPage = IPlatformApplication.Current.Services.GetService<StoryAudioPage>();
-            if (audioPage != null)
-            {
-                audioPage.LoadPoi(poi);
-                await Navigation.PushAsync(audioPage);
-            }
+            NearPoiImg.Source = !string.IsNullOrEmpty(poi.ImageThumbnail)
+                ? ImageSource.FromFile(poi.ImageThumbnail)
+                : "placeholder_animal.png";
+        }
+        catch { NearPoiImg.Source = "placeholder_animal.png"; }
+    }
+
+    private void ShowDefaultPanel()
+    {
+        _nearPoi = null;
+        NearPoiPanel.IsVisible = false;
+        DefaultPanel.IsVisible = true;
+    }
+
+    private void HighlightPin(Poi? active)
+    {
+        try
+        {
+            foreach (var pin in ZooMap.Pins)
+                pin.Color = (active != null && pin.Label == active.Name)
+                    ? Color.FromArgb("#FFCA28") : Colors.OrangeRed;
+        }
+        catch { }
+    }
+
+    // ── Actions ──────────────────────────────────────────────────────────
+    private async void OnListenNowTapped(object sender, TappedEventArgs e)
+    {
+        if (_nearPoi == null) return;
+        try
+        {
+            _geo.ResetCooldown(_nearPoi.PoiId);
+            var page = _sp.GetRequiredService<StoryAudioPage>();
+            page.LoadPoi(_nearPoi);
+            await Navigation.PushAsync(page);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 
-    private async void OnBackClicked(object sender, EventArgs e)
-        => await Navigation.PopAsync();
+    private void CenterPoi(Poi poi)
+    {
+        try
+        {
+            var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(
+                (double)poi.Longitude, (double)poi.Latitude);
+            ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 4);
+        }
+        catch { }
+    }
+
+    private void OnMyLocationTapped(object sender, TappedEventArgs e)
+    {
+        try
+        {
+            if (_gps.LastLocation == null) return;
+            var (x, y) = Mapsui.Projections.SphericalMercator.FromLonLat(
+                _gps.LastLocation.Longitude, _gps.LastLocation.Latitude);
+            ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 4);
+        }
+        catch { }
+    }
+
+    private void OnCenterClicked(object sender, EventArgs e) => CenterZoo();
+    private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
+
+    // ── GPS dot animation ────────────────────────────────────────────────
+    private void StartDotBlink()
+    {
+        _dotCts?.Cancel();
+        _dotCts = new CancellationTokenSource();
+        var tok = _dotCts.Token;
+        _ = Task.Run(async () =>
+        {
+            while (!tok.IsCancellationRequested)
+            {
+                try
+                {
+                    await MainThread.InvokeOnMainThreadAsync(
+                        () => GpsDot.Opacity = GpsDot.Opacity > 0.5 ? 0.15 : 1.0);
+                    await Task.Delay(900, tok);
+                }
+                catch { break; }
+            }
+        }, tok);
+    }
+
+    // ── Helper ───────────────────────────────────────────────────────────
+    private static string GetRes(string key, string fallback)
+    {
+        if (Application.Current?.Resources.TryGetValue(key, out var v) == true && v is string s)
+            return s;
+        return fallback;
+    }
 }

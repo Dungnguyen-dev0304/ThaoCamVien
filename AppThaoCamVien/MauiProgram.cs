@@ -1,13 +1,10 @@
-﻿#if ANDROID
-using Android.Speech.Tts;
-#endif
-using AppThaoCamVien.Pages;
-using AppThaoCamVien.Services;
-using CommunityToolkit.Maui;
-using Microsoft.Extensions.Logging;
-using Plugin.Maui.Audio;
+﻿using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using AppThaoCamVien.Services;
+using AppThaoCamVien.Pages;
 using ZXing.Net.Maui.Controls;
+using CommunityToolkit.Maui;
+using Plugin.Maui.Audio;
 
 namespace AppThaoCamVien
 {
@@ -28,19 +25,21 @@ namespace AppThaoCamVien
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // === Plugin Audio ===
+            // Audio plugin
             builder.Services.AddSingleton(AudioManager.Current);
 
-            // === SERVICES ===
+            // ── Services (Singleton) ──────────────────────────────────────
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<LocationService>();
             builder.Services.AddSingleton<GeofencingEngine>();
             builder.Services.AddSingleton<AudioService>();
-            builder.Services.AddSingleton<TtsEngine>();          // ← MỚI: engine TTS đa ngôn ngữ
-            builder.Services.AddSingleton<NarrationEngine>();    // ← đã cập nhật nhận TtsEngine
+            builder.Services.AddSingleton<TtsEngine>();
+            builder.Services.AddSingleton<NarrationEngine>();
             builder.Services.AddSingleton<AutoTranslateService>();
 
-            // === PAGES ===
+            // ── Pages ─────────────────────────────────────────────────────
+            // QUAN TRỌNG: Dùng Transient cho tất cả Pages.
+            // Shell sẽ lấy Page từ ServiceProvider, KHÔNG tạo qua DataTemplate.
             builder.Services.AddTransient<HomePage>();
             builder.Services.AddTransient<MapPage>();
             builder.Services.AddTransient<QrPage>();
@@ -48,6 +47,9 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<StoryAudioPage>();
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
+
+            // IServiceProvider được tự động inject bởi MAUI DI container
+            // Không cần đăng ký thủ công
 
 #if DEBUG
             builder.Logging.AddDebug();

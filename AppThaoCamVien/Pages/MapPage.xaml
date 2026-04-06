@@ -3,25 +3,146 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
-    x:Class="AppThaoCamVien.Pages.MapPage">
+    x:Class="AppThaoCamVien.Pages.MapPage"
+    NavigationPage.HasNavigationBar="False"
+    BackgroundColor="#061F14">
 
-    <Grid>
+    <Grid RowDefinitions="*, Auto">
 
-        <mapsui:MapView x:Name="ZooMap" />
+        <!-- Bản đồ full screen -->
+        <Grid Grid.Row="0">
+            <mapsui:MapView x:Name="ZooMap" />
 
-        <Button Text="Trở về"
-                Clicked="OnBackClicked"
-                BackgroundColor="#8E2424"
-                TextColor="White"
-                CornerRadius="20"
-                WidthRequest="100"
-                HeightRequest="40"
-                HorizontalOptions="Start"
-                VerticalOptions="Start"
-                Margin="15,15,0,0"/>
+            <!-- Header overlay -->
+            <Grid VerticalOptions="Start" Padding="16,46,16,0"
+                  ColumnDefinitions="Auto,*,Auto">
 
+                <Border Grid.Column="0" BackgroundColor="#CC000000"
+                        Padding="8" Stroke="Transparent">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20"/>
+                    </Border.StrokeShape>
+                    <ImageButton Source="icon_back_white.png" WidthRequest="24" HeightRequest="24"
+                                 BackgroundColor="Transparent" Clicked="OnBackClicked"/>
+                </Border>
+
+                <Border Grid.Column="1" BackgroundColor="#CC000000"
+                        Padding="12,8" HorizontalOptions="Center" Stroke="Transparent">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20"/>
+                    </Border.StrokeShape>
+                    <Label Text="{DynamicResource TxtMapTitle}" TextColor="White"
+                           FontSize="14" FontAttributes="Bold" HorizontalOptions="Center"/>
+                </Border>
+
+                <Border Grid.Column="2" BackgroundColor="#CC000000"
+                        Padding="8" Stroke="Transparent">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20"/>
+                    </Border.StrokeShape>
+                    <ImageButton x:Name="CenterBtn" Source="icon_menu_dots_white.png"
+                                 WidthRequest="24" HeightRequest="24"
+                                 BackgroundColor="Transparent" Clicked="OnCenterClicked"/>
+                </Border>
+            </Grid>
+
+            <!-- GPS Status badge -->
+            <Border x:Name="GpsBadge"
+                    BackgroundColor="#CC1B5E20" Padding="10,5"
+                    Stroke="#4CAF50" StrokeThickness="1"
+                    HorizontalOptions="Center" VerticalOptions="Start"
+                    Margin="0,95,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14"/>
+                </Border.StrokeShape>
+                <HorizontalStackLayout Spacing="6">
+                    <Ellipse x:Name="GpsDot" Fill="#4CAF50"
+                             WidthRequest="7" HeightRequest="7" VerticalOptions="Center"/>
+                    <Label x:Name="GpsLabel" Text="Đang kết nối GPS..."
+                           TextColor="White" FontSize="11" VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- FAB: Về vị trí của tôi -->
+            <Border BackgroundColor="#FFCA28" WidthRequest="52" HeightRequest="52"
+                    HorizontalOptions="End" VerticalOptions="End"
+                    Margin="0,0,16,16" Stroke="Transparent">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="26"/>
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="#FFCA28" Offset="0,4" Radius="10" Opacity="0.5"/>
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMyLocationTapped"/>
+                </Border.GestureRecognizers>
+                <Label Text="📍" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+        </Grid>
+
+        <!-- Panel dưới: POI gần nhất HOẶC danh sách chip -->
+        <Grid Grid.Row="1">
+
+            <!-- Panel POI gần nhất (hiện khi đang gần) -->
+            <Border x:Name="NearPoiPanel"
+                    BackgroundColor="#F0061F14" Padding="16,12"
+                    Stroke="#15402A" StrokeThickness="1" IsVisible="False">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0"/>
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="56,*,Auto" ColumnSpacing="12">
+
+                    <Border Grid.Column="0" WidthRequest="56" HeightRequest="56" Stroke="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="10"/>
+                        </Border.StrokeShape>
+                        <Image x:Name="NearPoiImg" Source="placeholder_animal.png" Aspect="AspectFill"/>
+                    </Border>
+
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                        <Label x:Name="NearPoiName" Text="..." FontSize="15"
+                               FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation"/>
+                        <HorizontalStackLayout Spacing="10">
+                            <Label x:Name="NearPoiDist" Text="📍 --m"
+                                   FontSize="12" TextColor="#FFCA28"/>
+                            <Label x:Name="NearPoiStatus" Text="● Trong vùng"
+                                   FontSize="12" TextColor="#4CAF50"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Border Grid.Column="2" BackgroundColor="#FFCA28"
+                            Padding="14,8" Stroke="Transparent" VerticalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="18"/>
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnListenNowTapped"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="{DynamicResource TxtListenBtn}" TextColor="#061F14"
+                               FontSize="12" FontAttributes="Bold"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Panel mặc định: chips danh sách POI -->
+            <Border x:Name="DefaultPanel"
+                    BackgroundColor="#F0061F14" Padding="16,12"
+                    Stroke="#15402A" StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="{DynamicResource TxtAttractions}"
+                               FontSize="13" FontAttributes="Bold" TextColor="White" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" x:Name="PoiCountLbl"
+                               Text="0 điểm" FontSize="12" TextColor="#A0C8B4" VerticalOptions="Center"/>
+                    </Grid>
+                    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout x:Name="ChipsContainer" Spacing="8"/>
+                    </ScrollView>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </Grid>
-
 </ContentPage>
-    
-    
