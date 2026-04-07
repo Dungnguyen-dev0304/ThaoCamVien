@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ApiThaoCamVien.Models;
-using SharedThaoCamVien.Models;
+﻿using ApiThaoCamVien.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SharedThaoCamVien.Models;
 using WebThaoCamVien.ViewModels;
 
 namespace WebThaoCamVien.Controllers
 {
+    [Authorize]
     public class AdminController : Controller
     {
         private readonly WebContext _context;
