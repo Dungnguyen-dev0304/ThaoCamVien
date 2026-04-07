@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
+    xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
     x:Class="AppThaoCamVien.Pages.MapPage"
     NavigationPage.HasNavigationBar="False"
     BackgroundColor="#061F14">
@@ -81,12 +82,18 @@
         </Grid>
 
         <!-- Panel dưới: POI gần nhất HOẶC danh sách chip -->
-        <Grid Grid.Row="1">
+        <controls:StateContainer Grid.Row="1"
+                                  State="{Binding State}"
+                                  EmptyMessage="{Binding EmptyMessage}"
+                                  ErrorMessage="{Binding ErrorMessage}"
+                                  RetryCommand="{Binding RetryCommand}">
+            <controls:StateContainer.SuccessContent>
+                <Grid>
 
-            <!-- Panel POI gần nhất (hiện khi đang gần) -->
-            <Border x:Name="NearPoiPanel"
-                    BackgroundColor="#F0061F14" Padding="16,12"
-                    Stroke="#15402A" StrokeThickness="1" IsVisible="False">
+                    <!-- Panel POI gần nhất (hiện khi đang gần) -->
+                    <Border x:Name="NearPoiPanel"
+                            BackgroundColor="#F0061F14" Padding="16,12"
+                            Stroke="#15402A" StrokeThickness="1" IsVisible="False">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="0"/>
                 </Border.StrokeShape>
@@ -122,12 +129,12 @@
                                FontSize="12" FontAttributes="Bold"/>
                     </Border>
                 </Grid>
-            </Border>
+                    </Border>
 
-            <!-- Panel mặc định: chips danh sách POI -->
-            <Border x:Name="DefaultPanel"
-                    BackgroundColor="#F0061F14" Padding="16,12"
-                    Stroke="#15402A" StrokeThickness="1">
+                    <!-- Panel mặc định: chips danh sách POI -->
+                    <Border x:Name="DefaultPanel"
+                            BackgroundColor="#F0061F14" Padding="16,12"
+                            Stroke="#15402A" StrokeThickness="1">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="0"/>
                 </Border.StrokeShape>
@@ -142,7 +149,9 @@
                         <HorizontalStackLayout x:Name="ChipsContainer" Spacing="8"/>
                     </ScrollView>
                 </VerticalStackLayout>
-            </Border>
-        </Grid>
+                    </Border>
+                </Grid>
+            </controls:StateContainer.SuccessContent>
+        </controls:StateContainer>
     </Grid>
 </ContentPage>

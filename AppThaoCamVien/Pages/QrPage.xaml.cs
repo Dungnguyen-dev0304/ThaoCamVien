@@ -1,22 +1,24 @@
 ﻿using ZXing.Net.Maui;
 using AppThaoCamVien.Services;
+using AppThaoCamVien.ViewModels;
 using SharedThaoCamVien.Models;
 
 namespace AppThaoCamVien.Pages;
 
 public partial class QrPage : ContentPage
 {
-    private readonly DatabaseService _db;
     private readonly IServiceProvider _sp;
+    private readonly QrPageViewModel _vm;
     private bool _busy = false;
     private bool _flashOn = false;
     private CancellationTokenSource? _animCts;
 
-    public QrPage(DatabaseService db, IServiceProvider sp)
+    public QrPage(QrPageViewModel vm, IServiceProvider sp)
     {
         InitializeComponent();
-        _db = db;
         _sp = sp;
+        _vm = vm;
+        BindingContext = _vm;
     }
 
     protected override void OnAppearing()
@@ -24,7 +26,7 @@ public partial class QrPage : ContentPage
         base.OnAppearing();
         BarcodeReader.IsDetecting = true;
         _busy = false;
-        StatusLabel.Text = GetString("TxtQrSearching", "Đang tìm kiếm mã QR...");
+        _ = _vm.SafeReloadAsync();
         StartAnim();
     }
 
@@ -45,11 +47,18 @@ public partial class QrPage : ContentPage
             bool down = true;
             while (!tok.IsCancellationRequested)
             {
-                await MainThread.InvokeOnMainThreadAsync(async () =>
+                try
                 {
-                    await ScanLine.TranslateTo(0, down ? 220 : 10, 1200, Easing.SinInOut);
-                    down = !down;
-                });
+                    await MainThread.InvokeOnMainThreadAsync(async () =>
+                    {
+                        await ScanLine.TranslateToAsync(0, down ? 220 : 10, 1200, Easing.SinInOut);
+                        down = !down;
+                    });
+                }
+                catch
+                {
+                    break;
+                }
             }
         }, tok);
     }
@@ -65,11 +74,11 @@ public partial class QrPage : ContentPage
 
     private async Task HandleAsync(string qrData)
     {
-        StatusLabel.Text = "Đang tải thông tin...";
-
         try
         {
-            var poi = await _db.GetPoiByQrDataAsync(qrData);
+            await _vm.ResolveQrAsync(qrData);
+
+            var poi = _vm.ResolvedPoiModel;
             if (poi != null)
             {
                 // Phát narration ngay lập tức
@@ -83,20 +92,16 @@ public partial class QrPage : ContentPage
                     await Navigation.PushAsync(page);
                 }
             }
-            else
-            {
-                await DisplayAlert("Không nhận ra",
-                    "Mã QR này chưa được đăng ký trong hệ thống.\nVui lòng thử lại.", "OK");
-            }
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", ex.Message, "OK");
+            // VM sẽ tự set state Error nếu ResolveQrAsync bắt lỗi.
+            System.Diagnostics.Debug.WriteLine($"[QrPage] HandleAsync error: {ex.Message}");
         }
         finally
         {
             _busy = false;
-            StatusLabel.Text = GetString("TxtQrSearching", "Đang tìm kiếm mã QR...");
+            // Giữ UI scanning ổn định; state container sẽ phản ánh Empty/Error.
         }
     }
 
@@ -116,10 +121,5 @@ public partial class QrPage : ContentPage
 
     private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
 
-    private static string GetString(string key, string fallback)
-    {
-        if (Application.Current?.Resources.TryGetValue(key, out var v) == true && v is string s)
-            return s;
-        return fallback;
-    }
+    
 }

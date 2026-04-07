@@ -77,7 +77,7 @@ public partial class AnimalListPage : ContentPage
             {
                 Animals.Clear();
                 // Hiển thị lỗi thay vì crash
-                DisplayAlert("Lỗi tải dữ liệu",
+                DisplayAlertAsync("Lỗi tải dữ liệu",
                     $"Không thể tải danh sách. Vui lòng thử lại.\n{ex.Message}", "OK");
             });
         }
@@ -105,8 +105,8 @@ public partial class AnimalListPage : ContentPage
         // Hiệu ứng nhấp nháy
         if (sender is View v)
         {
-            await v.FadeTo(0.5, 80);
-            await v.FadeTo(1.0, 80);
+            await v.FadeToAsync(0.5, 80);
+            await v.FadeToAsync(1.0, 80);
         }
 
         try
@@ -118,7 +118,7 @@ public partial class AnimalListPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", $"Không thể mở trang thuyết minh:\n{ex.Message}", "OK");
+            await DisplayAlertAsync("Lỗi", $"Không thể mở trang thuyết minh:\n{ex.Message}", "OK");
         }
     }
 

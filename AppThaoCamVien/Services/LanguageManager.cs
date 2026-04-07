@@ -4,8 +4,8 @@
     {
         public static readonly List<(string Code, string Flag, string Label)> Languages =
         [
-            ("vi", "🇻🇳", "VI"), ("en", "🇬🇧", "EN"), ("th", "🇹🇭", "TH"),
-            ("id", "🇮🇩", "ID"), ("ms", "🇲🇾", "MS"), ("km", "🇰🇭", "KM"),
+            ("vi", "🇻🇳", "VI"), ("en", "🇬🇧", "EN"), ("ja", "🇯🇵", "JA"),
+            ("th", "🇹🇭", "TH"), ("id", "🇮🇩", "ID"), ("ms", "🇲🇾", "MS"), ("km", "🇰🇭", "KM"),
         ];
 
         public static void Load() => Apply(Preferences.Get("AppLang", "vi"));
@@ -16,7 +16,10 @@
             Preferences.Set("AppLang", lang);
             var r = Application.Current?.Resources;
             if (r == null) return;
-            foreach (var kv in Strings(lang)) r[kv.Key] = kv.Value;
+            // Giao diện chính: ja dùng bản en làm nền (có thể bổ sung bản dịch đầy đủ sau)
+            var mainLang = lang == "ja" ? "en" : lang;
+            foreach (var kv in Strings(mainLang)) r[kv.Key] = kv.Value;
+            foreach (var kv in OnboardingStringCatalog.ForLang(lang)) r[kv.Key] = kv.Value;
         }
 
         private static Dictionary<string, string> Strings(string lang) => lang switch
@@ -49,6 +52,11 @@
                 ["TxtTour2Title"] = "King of the Jungle",
                 ["TxtTour3Title"] = "The African Giant",
                 ["TxtListenNow"] = "🔊 LISTEN NOW",
+                ["TxtVoice"] = "Voice",
+                ["TxtLyrics"] = "Lyrics",
+                ["TxtHappeningNow"] = "Happening now",
+                ["TxtRecommendedForYou"] = "Recommended for you",
+                ["TxtWeatherAtZoo"] = "Weather at the zoo",
                 // Animals
                 ["TxtAnimalKingdom"] = "🌿 Animal Kingdom",
                 ["TxtAnimalDesc"] = "Discover the amazing world of wildlife at Saigon Zoo",
@@ -320,6 +328,11 @@
                 ["TxtTour2Title"] = "Chúa Tể Sơn Lâm",
                 ["TxtTour3Title"] = "Gã Khổng Lồ Châu Phi",
                 ["TxtListenNow"] = "🔊 NGHE NGAY",
+                ["TxtVoice"] = "Giọng đọc",
+                ["TxtLyrics"] = "Lời thoại",
+                ["TxtHappeningNow"] = "Đang diễn ra ngay lúc này",
+                ["TxtRecommendedForYou"] = "Gợi ý cho bạn",
+                ["TxtWeatherAtZoo"] = "Thời tiết tại Thảo Cầm Viên",
                 ["TxtAnimalKingdom"] = "🌿 Vương quốc động vật",
                 ["TxtAnimalDesc"] = "Khám phá thế giới muôn loài tuyệt đẹp tại Thảo Cầm Viên",
                 ["TxtSearchPlaceholder"] = "Tìm kiếm động vật...",

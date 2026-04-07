@@ -1,74 +1,35 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
              x:Class="AppThaoCamVien.Pages.AboutPage"
-             BackgroundColor="#F4F7F4"
+             BackgroundColor="{StaticResource TcvBackgroundPage}"
              Title="{DynamicResource TxtAboutApp}">
-    <ScrollView>
-        <VerticalStackLayout Padding="20,40,20,20" Spacing="24" HorizontalOptions="Center">
-
-            <VerticalStackLayout HorizontalOptions="Center" Spacing="12">
-                <Frame HeightRequest="120" WidthRequest="120" CornerRadius="60"
-                       IsClippedToBounds="True" Padding="0" HasShadow="True" BorderColor="Transparent">
-                    <Frame.Shadow>
-                        <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.2"/>
-                    </Frame.Shadow>
-                    <Image Source="logothaocamvien.png" Aspect="AspectFill"/>
-                </Frame>
-                <Label Text="Smart Audio Tour" FontSize="22" FontAttributes="Bold"
-                       TextColor="#2E7D32" HorizontalOptions="Center"/>
-                <Label Text="{DynamicResource TxtAppVersion}" FontSize="14"
-                       TextColor="#757575" HorizontalOptions="Center"/>
-            </VerticalStackLayout>
-
-            <Frame CornerRadius="20" BackgroundColor="White" Padding="20"
-                   HasShadow="True" BorderColor="Transparent">
-                <Frame.Shadow>
-                    <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.08"/>
-                </Frame.Shadow>
-                <VerticalStackLayout Spacing="14">
+    <controls:StateContainer State="{Binding State}"
+                             EmptyMessage="{Binding EmptyMessage}"
+                             ErrorMessage="{Binding ErrorMessage}"
+                             RetryCommand="{Binding RetryCommand}">
+        <controls:StateContainer.SuccessContent>
+            <ScrollView>
+                <VerticalStackLayout Padding="20,24,20,20" Spacing="14">
                     <Label Text="{DynamicResource TxtAboutTitle}"
-                           FontSize="18" FontAttributes="Bold" TextColor="#1C1C1E"/>
-                    <Label Text="{DynamicResource TxtAboutDesc}"
-                           FontSize="14" TextColor="#424242" LineHeight="1.5"/>
-                    <BoxView HeightRequest="1" Color="#E0E0E0" Margin="0,8"/>
-                    <Label Text="{DynamicResource TxtDeveloper}"
-                           FontSize="14" FontAttributes="Bold"
-                           TextColor="#4CAF50" HorizontalOptions="Center"/>
-                </VerticalStackLayout>
-            </Frame>
+                           Style="{StaticResource TcvLabelH1}" />
 
-            <!-- Feature highlights -->
-            <Frame CornerRadius="20" BackgroundColor="White" Padding="20"
-                   HasShadow="True" BorderColor="Transparent">
-                <Frame.Shadow>
-                    <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.08"/>
-                </Frame.Shadow>
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Tính năng" FontSize="16" FontAttributes="Bold" TextColor="#1C1C1E"/>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="📍" FontSize="18"/>
-                        <Label Text="GPS tự động kích hoạt thuyết minh" FontSize="13" TextColor="#424242" VerticalOptions="Center"/>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="📷" FontSize="18"/>
-                        <Label Text="Quét mã QR tại biển báo chuồng thú" FontSize="13" TextColor="#424242" VerticalOptions="Center"/>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="🔊" FontSize="18"/>
-                        <Label Text="Thuyết minh audio + TTS đa ngôn ngữ" FontSize="13" TextColor="#424242" VerticalOptions="Center"/>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="🌐" FontSize="18"/>
-                        <Label Text="Hỗ trợ 6 ngôn ngữ: VI, EN, TH, ID, MS, KM" FontSize="13" TextColor="#424242" VerticalOptions="Center"/>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="📶" FontSize="18"/>
-                        <Label Text="Hoạt động offline (không cần mạng)" FontSize="13" TextColor="#424242" VerticalOptions="Center"/>
-                    </HorizontalStackLayout>
+                    <CollectionView ItemsSource="{Binding Sections}"
+                                    SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource TcvCardBorder}">
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="{Binding Title}" Style="{StaticResource TcvLabelH2}" />
+                                        <Label Text="{Binding Body}" Style="{StaticResource TcvLabelBody}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
-            </Frame>
-
-        </VerticalStackLayout>
-    </ScrollView>
+            </ScrollView>
+        </controls:StateContainer.SuccessContent>
+    </controls:StateContainer>
 </ContentPage>

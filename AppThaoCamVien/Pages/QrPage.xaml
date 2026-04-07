@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
              x:Class="AppThaoCamVien.Pages.QrPage"
              BackgroundColor="#1C1C1E"
              Title="{DynamicResource TxtQrTitle}">
@@ -43,9 +44,16 @@
                          VerticalOptions="Start" HorizontalOptions="Center" Margin="0,10"/>
             </Border>
 
-            <!-- Trạng thái đổi theo ngôn ngữ -->
-            <Label x:Name="StatusLabel" Text="{DynamicResource TxtQrSearching}"
-                   TextColor="#B0BEC5" FontSize="13" HorizontalOptions="Center"/>
+            <!-- State: searching / loading / empty / error (API-first) -->
+            <controls:StateContainer State="{Binding State}"
+                                      EmptyMessage="{Binding EmptyMessage}"
+                                      ErrorMessage="{Binding ErrorMessage}"
+                                      RetryCommand="{Binding RetryCommand}">
+                <controls:StateContainer.SuccessContent>
+                    <Label Text="{DynamicResource TxtQrSearching}"
+                           TextColor="#B0BEC5" FontSize="13" HorizontalOptions="Center" />
+                </controls:StateContainer.SuccessContent>
+            </controls:StateContainer>
         </VerticalStackLayout>
 
         <!-- Bottom controls -->

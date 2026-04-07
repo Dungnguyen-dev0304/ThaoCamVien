@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Pages.OnboardingOfflineDownloadPage"
+             Title=""
+             BackgroundColor="{StaticResource TcvBackgroundPage}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="{StaticResource TcvSpaceL}" Spacing="{StaticResource TcvSpaceM}">
+
+            <Label Style="{StaticResource TcvLabelH1}"
+                   Text="{DynamicResource OnboardingOfflineTitle}" />
+            <Label Style="{StaticResource TcvLabelBody}"
+                   Text="{DynamicResource OnboardingOfflineSubtitle}" />
+
+            <Label Style="{StaticResource TcvLabelCaption}"
+                   Text="{DynamicResource OnboardingLangLabel}" />
+            <Picker x:Name="LangPicker"
+                    SelectedIndexChanged="OnLangPickerChanged" />
+
+            <Border Style="{StaticResource TcvCardBorder}">
+                <VerticalStackLayout Spacing="{StaticResource TcvSpaceS}">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                        <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource TcvLabelBody}" Text="{DynamicResource OnboardingPkgMap}" />
+                        <Label Grid.Row="0" Grid.Column="1" Style="{StaticResource TcvLabelCaption}" Text="42 MB" />
+                        <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource TcvLabelBody}" Text="{DynamicResource OnboardingPkgAudio}" />
+                        <Label Grid.Row="1" Grid.Column="1" Style="{StaticResource TcvLabelCaption}" Text="78 MB" />
+                        <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource TcvLabelBody}" Text="{DynamicResource OnboardingPkgTts}" />
+                        <Label Grid.Row="2" Grid.Column="1" Style="{StaticResource TcvLabelCaption}" Text="8 MB" />
+                        <Label Grid.Row="3" Grid.Column="0" Style="{StaticResource TcvLabelH2}" Text="{DynamicResource OnboardingTotalSize}" />
+                        <Label Grid.Row="3" Grid.Column="1" Style="{StaticResource TcvLabelH2}" Text="~128 MB" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <ProgressBar x:Name="DownloadProgress"
+                         Style="{StaticResource TcvProgressOutdoor}"
+                         HeightRequest="14"
+                         Progress="0" />
+
+            <Label x:Name="PercentLabel"
+                   Style="{StaticResource TcvLabelH2}"
+                   HorizontalOptions="Center"
+                   Text="0%" />
+
+            <Label x:Name="StatusLabel"
+                   Style="{StaticResource TcvLabelBody}"
+                   LineBreakMode="WordWrap"
+                   HorizontalTextAlignment="Center"
+                   Text="{DynamicResource OnboardingProgressHint}" />
+
+            <Button x:Name="DownloadBtn"
+                    Style="{StaticResource TcvPrimaryButton}"
+                    Text="{DynamicResource OnboardingDownloadBtn}"
+                    Clicked="OnDownloadClicked" />
+
+            <Button x:Name="ResumeBtn"
+                    Style="{StaticResource TcvSecondaryButton}"
+                    IsVisible="False"
+                    Text="{DynamicResource OnboardingResumeDownload}"
+                    Clicked="OnResumeClicked" />
+
+            <Button Style="{StaticResource TcvTextButton}"
+                    Text="{DynamicResource OnboardingSkipLater}"
+                    Clicked="OnSkipClicked" />
+
+            <Button x:Name="EnterAppBtn"
+                    Style="{StaticResource TcvPrimaryButton}"
+                    IsVisible="False"
+                    Text="{DynamicResource OnboardingEnterApp}"
+                    Clicked="OnEnterAppClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

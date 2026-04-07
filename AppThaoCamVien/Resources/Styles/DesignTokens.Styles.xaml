@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Semantic styles built from DesignTokens — use x:Key on controls -->
+
+    <Style x:Key="TcvLabelDisplay" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TcvTextPrimary}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontDisplay}" />
+        <Setter Property="LineHeight" Value="1.2" />
+    </Style>
+
+    <Style x:Key="TcvLabelH1" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TcvTextPrimary}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontH1}" />
+        <Setter Property="LineHeight" Value="1.25" />
+    </Style>
+
+    <Style x:Key="TcvLabelH2" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TcvTextPrimary}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontH2}" />
+    </Style>
+
+    <Style x:Key="TcvLabelBody" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TcvTextSecondary}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontBody}" />
+        <Setter Property="LineHeight" Value="1.5" />
+    </Style>
+
+    <Style x:Key="TcvLabelCaption" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TcvTextMuted}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontCaption}" />
+    </Style>
+
+    <Style x:Key="TcvPrimaryButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource TcvBrandForest}" />
+        <Setter Property="TextColor" Value="{StaticResource TcvTextOnBrand}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontBody}" />
+        <Setter Property="CornerRadius" Value="{StaticResource TcvRadiusButton}" />
+        <Setter Property="Padding" Value="{StaticResource TcvPaddingButton}" />
+        <Setter Property="MinimumHeightRequest" Value="{StaticResource TcvMinTouch}" />
+        <Setter Property="MinimumWidthRequest" Value="{StaticResource TcvMinTouch}" />
+    </Style>
+
+    <Style x:Key="TcvSecondaryButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource TcvSurfaceMuted}" />
+        <Setter Property="TextColor" Value="{StaticResource TcvBrandForest}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontBody}" />
+        <Setter Property="CornerRadius" Value="{StaticResource TcvRadiusButton}" />
+        <Setter Property="Padding" Value="{StaticResource TcvPaddingButton}" />
+        <Setter Property="MinimumHeightRequest" Value="{StaticResource TcvMinTouch}" />
+        <Setter Property="MinimumWidthRequest" Value="{StaticResource TcvMinTouch}" />
+    </Style>
+
+    <Style x:Key="TcvTextButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{StaticResource TcvBrandForest}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="{StaticResource TcvFontCaption}" />
+        <Setter Property="MinimumHeightRequest" Value="{StaticResource TcvMinTouch}" />
+    </Style>
+
+    <Style x:Key="TcvCardBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource TcvSurfaceCard}" />
+        <Setter Property="Stroke" Value="{StaticResource TcvBorderSubtle}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="{StaticResource TcvSpaceM}" />
+        <Setter Property="Shadow" Value="{StaticResource TcvShadowCard}" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="16" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TcvProgressOutdoor" TargetType="ProgressBar">
+        <Setter Property="ProgressColor" Value="{StaticResource TcvBrandForest}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource TcvBorderSubtle}" />
+    </Style>
+
+</ResourceDictionary>

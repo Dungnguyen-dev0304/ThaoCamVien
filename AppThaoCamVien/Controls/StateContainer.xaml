@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
+             xmlns:vm="clr-namespace:AppThaoCamVien.ViewModels.Core"
+             x:Class="AppThaoCamVien.Controls.StateContainer"
+             x:Name="Root">
+    <Grid>
+        <ContentPresenter x:Name="SuccessPresenter" />
+
+        <Grid x:Name="LoadingPanel" IsVisible="False" BackgroundColor="#00FFFFFF" Padding="16">
+            <VerticalStackLayout Spacing="12">
+                <controls:SkeletonBlock SkeletonHeight="22" />
+                <controls:SkeletonBlock SkeletonHeight="180" />
+                <controls:SkeletonBlock SkeletonHeight="16" />
+                <controls:SkeletonBlock SkeletonHeight="16" SkeletonWidth="220" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Grid x:Name="EmptyPanel" IsVisible="False" Padding="20">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                <Label Text="🐵" FontSize="48" HorizontalOptions="Center" />
+                <Label x:Name="EmptyTextLabel" Text="Không có dữ liệu" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Grid x:Name="ErrorPanel" IsVisible="False" Padding="20">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                <Label Text="⚠️" FontSize="42" HorizontalOptions="Center" />
+                <Label x:Name="ErrorTextLabel" Text="Không tải được dữ liệu" HorizontalTextAlignment="Center" />
+                <Button Text="Thử lại" Clicked="OnRetryClicked" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentView>

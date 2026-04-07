@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Pages.OnboardingWelcomePage"
+             BackgroundColor="{StaticResource TcvBackgroundPage}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="{StaticResource TcvSpaceL}" Spacing="{StaticResource TcvSpaceL}">
+
+            <Border BackgroundColor="{StaticResource TcvBrandForest}"
+                    StrokeThickness="0"
+                    Padding="{StaticResource TcvSpaceL}"
+                    Margin="0,{StaticResource TcvSpaceM},0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="#40000000" Offset="0,6" Radius="20" Opacity="1" />
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="{StaticResource TcvSpaceM}">
+                    <Label Text="🌿" FontSize="48" HorizontalOptions="Center" />
+                    <Label Style="{StaticResource TcvLabelH1}"
+                           TextColor="{StaticResource TcvTextOnBrand}"
+                           Text="{DynamicResource OnboardingWelcomeTitle}"
+                           HorizontalTextAlignment="Center" />
+                    <Label Style="{StaticResource TcvLabelBody}"
+                           TextColor="{StaticResource TcvMintLight}"
+                           Text="{DynamicResource OnboardingWelcomeBody}"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Style="{StaticResource TcvPrimaryButton}"
+                    Text="{DynamicResource OnboardingCtaStart}"
+                    Clicked="OnStartClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,6 +1,7 @@
 ﻿using Mapsui.Tiling;
 using Mapsui.UI.Maui;
 using AppThaoCamVien.Services;
+using AppThaoCamVien.ViewModels;
 using SharedThaoCamVien.Models;
 using Microsoft.Maui.Devices.Sensors;
 
@@ -16,6 +17,7 @@ public partial class MapPage : ContentPage
     private readonly GeofencingEngine _geo;
     private readonly NarrationEngine _narration;
     private readonly IServiceProvider _sp;
+    private readonly MapPageViewModel _vm;
 
     private List<Poi> _pois = [];
     private Poi? _nearPoi;
@@ -24,10 +26,13 @@ public partial class MapPage : ContentPage
 
     public MapPage(DatabaseService db, LocationService gps,
                    GeofencingEngine geo, NarrationEngine narration,
-                   IServiceProvider sp)
+                   IServiceProvider sp,
+                   MapPageViewModel vm)
     {
         InitializeComponent();
         _db = db; _gps = gps; _geo = geo; _narration = narration; _sp = sp;
+        _vm = vm;
+        BindingContext = _vm;
     }
 
     // ── Setup Map ────────────────────────────────────────────────────────
@@ -69,11 +74,11 @@ public partial class MapPage : ContentPage
         _gps.LocationUpdated += OnLocation;
         _gps.StatusChanged += OnGpsStatus;
 
-        // Load POIs và GPS song song
-        _ = LoadPoisAsync();
-        _ = StartGpsAsync();
-
         StartDotBlink();
+
+        // API-first + StateContainer: load POIs trước để tránh UI/engine race
+        await LoadPoisAsync();
+        await StartGpsAsync();
     }
 
     protected override void OnDisappearing()
@@ -91,8 +96,8 @@ public partial class MapPage : ContentPage
     {
         try
         {
-            await _db.SyncDataFromApiAsync();
-            _pois = await _db.GetAllPoisAsync();
+            await _vm.SafeReloadAsync();
+            _pois = _vm.Pois ?? [];
             _geo.SetPois(_pois);
 
             MainThread.BeginInvokeOnMainThread(() =>
@@ -307,7 +312,7 @@ public partial class MapPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", ex.Message, "OK");
+            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
         }
     }
 

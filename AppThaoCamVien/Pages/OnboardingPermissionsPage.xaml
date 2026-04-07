@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Pages.OnboardingPermissionsPage"
+             Title=""
+             BackgroundColor="{StaticResource TcvBackgroundPage}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="{StaticResource TcvSpaceL}" Spacing="{StaticResource TcvSpaceM}">
+
+            <Label Style="{StaticResource TcvLabelH1}"
+                   Text="{DynamicResource OnboardingPermTitle}" />
+            <Label Style="{StaticResource TcvLabelBody}"
+                   Text="{DynamicResource OnboardingPermSubtitle}" />
+
+            <Border Style="{StaticResource TcvCardBorder}">
+                <VerticalStackLayout Spacing="{StaticResource TcvSpaceS}">
+                    <Label Style="{StaticResource TcvLabelH2}"
+                           Text="{DynamicResource OnboardingPermLocationTitle}" />
+                    <Label Style="{StaticResource TcvLabelBody}"
+                           Text="{DynamicResource OnboardingPermLocationBody}" />
+                    <Button Style="{StaticResource TcvSecondaryButton}"
+                            Text="{DynamicResource OnboardingPermLocationBtn}"
+                            Clicked="OnRequestLocationClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource TcvCardBorder}">
+                <VerticalStackLayout Spacing="{StaticResource TcvSpaceS}">
+                    <Label Style="{StaticResource TcvLabelH2}"
+                           Text="{DynamicResource OnboardingPermNotifTitle}" />
+                    <Label Style="{StaticResource TcvLabelBody}"
+                           Text="{DynamicResource OnboardingPermNotifBody}" />
+                    <Button Style="{StaticResource TcvSecondaryButton}"
+                            Text="{DynamicResource OnboardingPermNotifBtn}"
+                            Clicked="OnRequestNotificationsClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label x:Name="HintLabel"
+                   Style="{StaticResource TcvLabelCaption}"
+                   IsVisible="False"
+                   TextColor="{StaticResource TcvWarning}" />
+
+            <Button Style="{StaticResource TcvPrimaryButton}"
+                    Text="{DynamicResource OnboardingPermContinue}"
+                    Clicked="OnContinueClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

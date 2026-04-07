@@ -5,6 +5,7 @@ using AppThaoCamVien.Pages;
 using ZXing.Net.Maui.Controls;
 using CommunityToolkit.Maui;
 using Plugin.Maui.Audio;
+using AppThaoCamVien.ViewModels;
 
 namespace AppThaoCamVien
 {
@@ -36,6 +37,7 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<TtsEngine>();
             builder.Services.AddSingleton<NarrationEngine>();
             builder.Services.AddSingleton<AutoTranslateService>();
+            builder.Services.AddSingleton<ApiService>();
 
             // ── Pages ─────────────────────────────────────────────────────
             // QUAN TRỌNG: Dùng Transient cho tất cả Pages.
@@ -47,6 +49,16 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<StoryAudioPage>();
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
+
+            builder.Services.AddSingleton<OfflineBundleDownloadService>();
+            builder.Services.AddTransient<HomePageViewModel>();
+            builder.Services.AddTransient<AboutPageViewModel>();
+            builder.Services.AddTransient<MapPageViewModel>();
+            builder.Services.AddTransient<QrPageViewModel>();
+            builder.Services.AddTransient<StoryAudioViewModel>();
+            builder.Services.AddTransient<OnboardingWelcomePage>();
+            builder.Services.AddTransient<OnboardingPermissionsPage>();
+            builder.Services.AddTransient<OnboardingOfflineDownloadPage>();
 
             // IServiceProvider được tự động inject bởi MAUI DI container
             // Không cần đăng ký thủ công

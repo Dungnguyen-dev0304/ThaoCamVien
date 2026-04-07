@@ -1,4 +1,5 @@
 ﻿using AppThaoCamVien.Services;
+using AppThaoCamVien.ViewModels;
 using SharedThaoCamVien.Models;
 
 namespace AppThaoCamVien.Pages;
@@ -16,17 +17,20 @@ public partial class StoryAudioPage : ContentPage
     private readonly AudioService _audio;
     private readonly NarrationEngine _narration;
     private readonly DatabaseService _db;
+    private readonly StoryAudioViewModel _vm;
 
     private Poi? _poi;
     private bool _dragging;
     private bool _isNarrating;
 
-    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db)
+    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db, StoryAudioViewModel vm)
     {
         InitializeComponent();
         _audio = audio;
         _narration = narration;
         _db = db;
+        _vm = vm;
+        BindingContext = _vm;
 
         _audio.PlaybackStateChanged += OnStateChanged;
         _audio.ProgressChanged += OnProgress;
@@ -46,6 +50,12 @@ public partial class StoryAudioPage : ContentPage
         if (_poi == null) return;
 
         RenderPoi(_poi);
+        try
+        {
+            _vm.SetPoiContext(_poi.PoiId);
+            _ = _vm.SafeReloadAsync();
+        }
+        catch { /* ignore UI analytics load errors */ }
 
         // QUAN TRỌNG: Phát audio/TTS hoàn toàn trên background thread
         // Không await ở đây để không block UI thread → tránh ANR crash trên Android

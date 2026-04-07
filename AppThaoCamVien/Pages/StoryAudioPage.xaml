@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
              x:Class="AppThaoCamVien.Pages.StoryAudioPage"
              BackgroundColor="#061F14" 
              NavigationPage.HasNavigationBar="False">
@@ -129,6 +130,55 @@
                     </Grid>
                 </VerticalStackLayout>
             </Border>
+
+            <!-- Voice + Lyrics (API-first) -->
+            <controls:StateContainer State="{Binding State}"
+                                      EmptyMessage="{Binding EmptyMessage}"
+                                      ErrorMessage="{Binding ErrorMessage}"
+                                      RetryCommand="{Binding RetryCommand}">
+                <controls:StateContainer.SuccessContent>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{DynamicResource TxtVoice}" TextColor="White" FontSize="14" FontAttributes="Bold" />
+
+                        <CollectionView ItemsSource="{Binding Voices}"
+                                        SelectionMode="None"
+                                        HeightRequest="96"
+                                        HorizontalScrollBarVisibility="Never">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BackgroundColor="#0A2A1B" Padding="10,8" Stroke="#15402A" StrokeThickness="1">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="12" />
+                                        </Border.StrokeShape>
+                                        <Label Text="{Binding DisplayName}" TextColor="#A0C8B4" FontSize="12" LineBreakMode="TailTruncation" />
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                        <BoxView HeightRequest="1" BackgroundColor="#15402A" Margin="0,8,0,8" />
+
+                        <Label Text="{DynamicResource TxtLyrics}" TextColor="White" FontSize="14" FontAttributes="Bold" />
+
+                        <CollectionView ItemsSource="{Binding Lyrics}"
+                                        SelectionMode="None"
+                                        HeightRequest="140">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding Text}"
+                                           TextColor="#D0E8DB"
+                                           FontSize="13"
+                                           LineBreakMode="TailTruncation"
+                                           Margin="0,6,0,0" />
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </controls:StateContainer.SuccessContent>
+            </controls:StateContainer>
 
             <!-- Tabs -->
             <Grid ColumnDefinitions="*, *, *" Margin="0,10,0,0">
