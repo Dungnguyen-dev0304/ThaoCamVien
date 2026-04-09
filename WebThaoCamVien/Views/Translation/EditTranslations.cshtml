@@ -1,0 +1,474 @@
+﻿@model IEnumerable<SharedThaoCamVien.Models.PoiTranslation>
+@{
+    Layout = "_adminlayout";
+    var poi = ViewBag.Poi as SharedThaoCamVien.Models.Poi;
+}
+
+<style>
+    .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
+    .bg-custom-primary  { background-color: #89d957; }
+
+    .modal-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(4px);
+        z-index: 40;
+        display: none;
+    }
+    .modal-backdrop.open { display: flex; align-items: center; justify-content: center; }
+    .modal-card {
+        background: white;
+        border-radius: 24px;
+        padding: 32px;
+        width: 100%;
+        max-width: 580px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+
+    /* ── TTS ── */
+    .tts-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        margin-top: 8px;
+    }
+    .tts-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all .18s;
+        flex-shrink: 0;
+    }
+    .tts-btn.play  { background:#e8f5e9; color:#2e7d32; }
+    .tts-btn.play:hover  { background:#2e7d32; color:#fff; }
+    .tts-btn.stop  { background:#fce4ec; color:#c62828; }
+    .tts-btn.stop:hover  { background:#c62828; color:#fff; }
+    .tts-btn.speaking { background:#2e7d32; color:#fff; animation: tts-pulse 1.2s infinite; }
+    @@keyframes tts-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+    .tts-label {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #94a3b8;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tts-label.active { color: #2e7d32; }
+
+    .tts-speed {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 700; color: #64748b;
+    }
+    .tts-speed input[type=range] {
+        width: 72px; accent-color: #89d957; cursor: pointer;
+    }
+</style>
+
+<div class="p-6">
+    <div class="max-w-4xl mx-auto">
+
+        @* BREADCRUMB + HEADER *@
+        <div class="mb-8">
+            <a href="/Translation/Index"
+               class="inline-flex items-center gap-2 text-slate-400 hover:text-slate-700 text-xs font-black uppercase tracking-widest mb-4 transition-colors">
+                <i class="bi bi-arrow-left"></i>
+                Quay lại danh sách
+            </a>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">
+                        Bản dịch: @poi?.Name
+                    </h2>
+                    <p class="text-slate-500 mt-1">
+                        ID: #@poi?.PoiId &nbsp;·&nbsp;
+                        <span class="@(poi?.CategoryId == 1 ? "text-orange-500" : poi?.CategoryId == 2 ? "text-green-500" : "text-purple-500") font-bold">
+                            @(poi?.CategoryId == 1 ? "Động vật" : poi?.CategoryId == 2 ? "Thực vật" : "Di tích")
+                        </span>
+                    </p>
+                </div>
+                <button onclick="openAddModal()"
+                        class="flex items-center gap-2 px-5 py-3 bg-gradient-custom text-white font-black rounded-xl shadow-lg shadow-[#89d957]/25 text-sm uppercase tracking-widest hover:opacity-90 transition-opacity">
+                    <i class="bi bi-plus-lg"></i>
+                    Thêm bản dịch mới
+                </button>
+            </div>
+        </div>
+
+        @* THÔNG BÁO *@
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-6 flex items-center gap-3 px-5 py-4 bg-green-50 border border-green-100 rounded-2xl text-green-700 text-sm font-semibold">
+                <i class="bi bi-check-circle-fill text-green-500"></i>
+                @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-6 flex items-center gap-3 px-5 py-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm font-semibold">
+                <i class="bi bi-exclamation-circle-fill text-red-500"></i>
+                @TempData["Error"]
+            </div>
+        }
+
+        @* DANH SÁCH BẢN DỊCH *@
+        @if (!Model.Any())
+        {
+            <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm px-8 py-20 text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-full mb-4">
+                    <span class="text-4xl">🌐</span>
+                </div>
+                <p class="text-slate-400 font-bold uppercase text-xs tracking-widest mb-3">
+                    Chưa có bản dịch nào cho địa điểm này
+                </p>
+                <button onclick="openAddModal()"
+                        class="text-custom-primary font-black text-xs uppercase hover:underline">
+                    Thêm bản dịch đầu tiên
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="grid gap-4">
+                @foreach (var t in Model)
+                {
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                        <div class="flex items-start justify-between gap-4">
+
+                            @* NỘI DUNG *@
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[11px] font-black uppercase tracking-wider">
+                                        <i class="bi bi-translate me-1"></i>@t.LanguageCode
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-mono">ID: #@t.TranslationId</span>
+                                </div>
+                                <p class="font-black text-slate-700 text-sm mb-1">@t.Name</p>
+                                <p class="text-slate-400 text-sm line-clamp-2 mb-3">@t.Description</p>
+
+                                @* TTS BAR cho card *@
+                                <div class="tts-bar">
+                                    @* Nút nghe TÊN *@
+                                    <button type="button"
+                                            class="tts-btn play"
+                                            title="Nghe tên"
+                                            onclick="ttsSpeak(this,'name-@t.TranslationId',@Json.Serialize(t.Name),'@t.LanguageCode')">
+                                        <i class="bi bi-person-lines-fill" style="font-size:15px"></i>
+                                    </button>
+
+                                  
+                                    @* Tốc độ *@
+                                    <div class="tts-speed">
+                                        <i class="bi bi-speedometer2"></i>
+                                        <input type="range" min="0.5" max="2" step="0.1" value="1"
+                                               id="tts-rate-@t.TranslationId"
+                                               oninput="document.getElementById('tts-rv-@t.TranslationId').textContent=this.value+'x'" />
+                                        <span id="tts-rv-@t.TranslationId">1x</span>
+                                    </div>
+
+                                    @* Dừng *@
+                                    <button type="button"
+                                            class="tts-btn stop"
+                                            title="Dừng"
+                                            onclick="ttsStopCard('@t.TranslationId','@t.LanguageCode')">
+                                        <i class="bi bi-stop-fill" style="font-size:15px"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            @* ACTIONS *@
+                            <div class="flex gap-2 flex-shrink-0">
+                                <button onclick='openEditModal(@t.TranslationId,@poi!.PoiId,"@t.LanguageCode",@Json.Serialize(t.Name),@Json.Serialize(t.Description))'
+                                        class="inline-flex items-center justify-center w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                        title="Chỉnh sửa">
+                                    <i class="bi bi-pencil-square text-lg"></i>
+                                </button>
+                                <form method="post" action="/Translation/Delete"
+                                      onsubmit="return confirm('Xóa bản dịch ngôn ngữ @t.LanguageCode?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="TranslationId" value="@t.TranslationId" />
+                                    <input type="hidden" name="PoiId" value="@poi!.PoiId" />
+                                    <button type="submit"
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                            title="Xóa">
+                                        <i class="bi bi-trash3 text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@* ── MODAL THÊM / CHỈNH SỬA ── *@
+<div id="translationModal" class="modal-backdrop">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-6">
+            <h3 id="modalTitle" class="text-lg font-black text-slate-800 uppercase tracking-tight"></h3>
+            <button onclick="closeModal()"
+                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form id="translationForm" method="post" action="/Translation/Save">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="modalTranslationId" name="TranslationId" value="0" />
+            <input type="hidden" id="modalPoiId"         name="PoiId"          value="@poi?.PoiId" />
+            {{-- Hidden input lưu langCode hiện tại để TTS đọc chính xác --}}
+            <input type="hidden" id="modalCurrentLang"   value="en" />
+
+            @* Mã ngôn ngữ *@
+            <div class="mb-4">
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Mã ngôn ngữ</label>
+                <div id="langCodeDisplay"
+                     class="hidden px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono text-slate-600 font-bold"></div>
+                <select id="modalLanguageCode" name="LanguageCode"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#89d957]/50 focus:border-[#89d957]">
+                    <option value="en">🇬🇧 English (en)</option>
+                    <option value="zh">🇨🇳 中文 (zh)</option>
+                    <option value="ja">🇯🇵 日本語 (ja)</option>
+                    <option value="ko">🇰🇷 한국어 (ko)</option>
+                    <option value="fr">🇫🇷 Français (fr)</option>
+                    <option value="de">🇩🇪 Deutsch (de)</option>
+                    <option value="es">🇪🇸 Español (es)</option>
+                    <option value="th">🇹🇭 ภาษาไทย (th)</option>
+                </select>
+            </div>
+
+            @* Tên *@
+            <div class="mb-1">
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Tên địa điểm</label>
+                <input type="text" id="modalName" name="Name" required
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#89d957]/50 focus:border-[#89d957]"
+                       placeholder="Nhập tên địa điểm..." />
+            </div>
+            @* TTS – Tên *@
+            <div class="tts-bar mb-4">
+                <button type="button" class="tts-btn play" title="Nghe tên"
+                        onclick="ttsModalSpeak(this,'modalName','modal-name')">
+                    <i class="bi bi-volume-up-fill" style="font-size:15px"></i>
+                </button>
+                <span id="tts-lbl-modal-name" class="tts-label">Nghe tên</span>
+                <div class="tts-speed">
+                    <i class="bi bi-speedometer2"></i>
+                    <input type="range" min="0.5" max="2" step="0.1" value="1" id="tts-rate-modal-name"
+                           oninput="document.getElementById('tts-rv-modal-name').textContent=this.value+'x'" />
+                    <span id="tts-rv-modal-name">1x</span>
+                </div>
+                <button type="button" class="tts-btn stop" title="Dừng"
+                        onclick="ttsStopModal('modal-name','Nghe tên')">
+                    <i class="bi bi-stop-fill" style="font-size:15px"></i>
+                </button>
+            </div>
+
+            @* Mô tả *@
+            <div class="mb-1">
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Mô tả</label>
+                <textarea id="modalDescription" name="Description" rows="4" required
+                          class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#89d957]/50 focus:border-[#89d957] resize-none"
+                          placeholder="Nhập mô tả..."></textarea>
+            </div>
+            @* TTS – Mô tả *@
+            <div class="tts-bar mb-6">
+                <button type="button" class="tts-btn play" title="Nghe mô tả"
+                        onclick="ttsModalSpeak(this,'modalDescription','modal-desc')">
+                    <i class="bi bi-volume-up-fill" style="font-size:15px"></i>
+                </button>
+                <span id="tts-lbl-modal-desc" class="tts-label">Nghe mô tả</span>
+                <div class="tts-speed">
+                    <i class="bi bi-speedometer2"></i>
+                    <input type="range" min="0.5" max="2" step="0.1" value="1" id="tts-rate-modal-desc"
+                           oninput="document.getElementById('tts-rv-modal-desc').textContent=this.value+'x'" />
+                    <span id="tts-rv-modal-desc">1x</span>
+                </div>
+                <button type="button" class="tts-btn stop" title="Dừng"
+                        onclick="ttsStopModal('modal-desc','Nghe mô tả')">
+                    <i class="bi bi-stop-fill" style="font-size:15px"></i>
+                </button>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 py-3 bg-gradient-custom text-white font-black rounded-xl text-sm uppercase tracking-widest hover:opacity-90 transition-opacity shadow-lg shadow-[#89d957]/25">
+                    <i class="bi bi-floppy-fill me-2"></i>Lưu bản dịch
+                </button>
+                <button type="button" onclick="closeModal()"
+                        class="px-6 py-3 bg-slate-100 text-slate-600 font-black rounded-xl text-sm uppercase tracking-widest hover:bg-slate-200 transition-colors">
+                    Hủy
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ── BCP-47 map ──
+const LANG_MAP = {
+    en:'en-US', zh:'zh-CN', ja:'ja-JP', ko:'ko-KR',
+    fr:'fr-FR', de:'de-DE', es:'es-ES', th:'th-TH', vi:'vi-VN'
+};
+
+// ── Trạng thái hiện tại ──
+let _currentKey    = null;   // key đang phát
+let _currentBtn    = null;   // nút đang phát
+let _currentLblId  = null;   // id label đang phát
+let _currentDef    = null;   // label mặc định
+let _resumeTimer   = null;   // timer workaround Chrome
+
+// ── Dừng tất cả, reset UI ──
+function ttsStopAll() {
+    if (_resumeTimer) { clearInterval(_resumeTimer); _resumeTimer = null; }
+    window.speechSynthesis.cancel();
+    if (_currentBtn)   { _currentBtn.classList.remove('speaking'); _currentBtn.classList.add('play'); }
+    if (_currentLblId) {
+        const lbl = document.getElementById(_currentLblId);
+        if (lbl) { lbl.textContent = _currentDef || ''; lbl.classList.remove('active'); }
+    }
+    _currentKey = _currentBtn = _currentLblId = _currentDef = null;
+}
+
+// ── Phát TTS ──
+function _speak(key, text, langCode, rateId, labelId, btn, defaultLabel) {
+    if (!window.speechSynthesis) { alert('Trình duyệt không hỗ trợ Text-to-Speech.'); return; }
+
+    // Bấm lại key đang phát → dừng
+    if (_currentKey === key) { ttsStopAll(); return; }
+
+    // Dừng bất kỳ thứ gì đang chạy
+    ttsStopAll();
+
+    const text_ = typeof text === 'function' ? text() : (text || '');
+    if (!text_.trim()) { alert('Chưa có nội dung để nghe.'); return; }
+
+    const rate = parseFloat(document.getElementById(rateId)?.value || '1');
+    const lang = LANG_MAP[langCode] || langCode || 'en-US';
+
+    // Cập nhật UI
+    btn.classList.remove('play'); btn.classList.add('speaking');
+    const lbl = document.getElementById(labelId);
+    if (lbl) { lbl.textContent = '🔊 Đang phát...'; lbl.classList.add('active'); }
+
+    _currentKey   = key;
+    _currentBtn   = btn;
+    _currentLblId = labelId;
+    _currentDef   = defaultLabel;
+
+    const utter  = new SpeechSynthesisUtterance(text_.trim());
+    utter.lang   = lang;
+    utter.rate   = rate;
+    utter.volume = 1;
+
+    utter.onend = () => {
+        if (_currentKey === key) ttsStopAll();
+    };
+    utter.onerror = (e) => {
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+            console.warn('TTS error:', e.error);
+        }
+        if (_currentKey === key) ttsStopAll();
+    };
+
+    // Chrome workaround: speechSynthesis tự pause sau ~15s
+    // resume() định kỳ giữ cho nó chạy
+    window.speechSynthesis.speak(utter);
+    _resumeTimer = setInterval(() => {
+        if (!window.speechSynthesis.speaking) {
+            clearInterval(_resumeTimer);
+            _resumeTimer = null;
+            return;
+        }
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+    }, 10000);
+}
+
+// ── API dùng cho CARD ──
+function ttsSpeak(btn, key, text, langCode) {
+    const tid = key.replace(/^(name|desc)-/, '');
+    _speak(key, text, langCode,
+           'tts-rate-' + tid,
+           'tts-lbl-' + tid,
+           btn,
+           'Nghe TTS · ' + langCode.toUpperCase());
+}
+
+function ttsStopCard(tid) { ttsStopAll(); }
+
+// ── API dùng cho MODAL ──
+function ttsModalSpeak(btn, inputId, key) {
+    const isName = key === 'modal-name';
+    const lang   = document.getElementById('modalCurrentLang').value || 'en';
+    _speak(
+        key,
+        () => document.getElementById(inputId).value.trim(),
+        lang,
+        'tts-rate-' + key,
+        'tts-lbl-' + key,
+        btn,
+        isName ? 'Nghe tên' : 'Nghe mô tả'
+    );
+}
+
+function ttsStopModal(key, def) { ttsStopAll(); }
+
+// ══════════════════════════════════════════════
+//  MODAL OPEN / CLOSE
+// ══════════════════════════════════════════════
+function openAddModal() {
+    ttsStopAll();
+    document.getElementById('modalTitle').textContent = 'Thêm bản dịch mới';
+    document.getElementById('modalTranslationId').value = '0';
+    document.getElementById('modalName').value = '';
+    document.getElementById('modalDescription').value = '';
+    document.getElementById('modalLanguageCode').classList.remove('hidden');
+    document.getElementById('langCodeDisplay').classList.add('hidden');
+    const sel = document.getElementById('modalLanguageCode');
+    document.getElementById('modalCurrentLang').value = sel.value;
+    sel.onchange = () => { document.getElementById('modalCurrentLang').value = sel.value; };
+    document.getElementById('translationModal').classList.add('open');
+}
+
+function openEditModal(id, poiId, lang, name, description) {
+    ttsStopAll();
+    document.getElementById('modalTitle').textContent = 'Chỉnh sửa bản dịch';
+    document.getElementById('modalTranslationId').value = id;
+    document.getElementById('modalPoiId').value = poiId;
+    document.getElementById('modalName').value = name;
+    document.getElementById('modalDescription').value = description;
+    document.getElementById('modalLanguageCode').value = lang;
+    document.getElementById('modalLanguageCode').classList.add('hidden');
+    const display = document.getElementById('langCodeDisplay');
+    display.textContent = lang.toUpperCase();
+    display.classList.remove('hidden');
+    document.getElementById('modalCurrentLang').value = lang;
+    document.getElementById('translationModal').classList.add('open');
+}
+
+function closeModal() {
+    ttsStopAll();
+    document.getElementById('translationModal').classList.remove('open');
+}
+
+document.getElementById('translationModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+}

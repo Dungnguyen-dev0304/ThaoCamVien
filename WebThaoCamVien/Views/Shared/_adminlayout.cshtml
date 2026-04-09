@@ -15,7 +15,7 @@
 
         .sidebar {
             width: 280px;
-            background-color: #1b4332; /* Màu xanh rừng đậm */
+            background-color: #1b4332;
             color: white;
             height: 100vh;
             position: fixed;
@@ -43,6 +43,12 @@
         .nav-link.active { background-color: #89d957; color: white; box-shadow: 0 4px 15px rgba(137, 217, 87, 0.3); }
         .nav-link i { margin-right: 12px; font-size: 18px; }
         .logo-container { padding: 40px 32px; margin-bottom: 20px; }
+
+        .nav-section-label {
+            padding: 0 32px;
+            margin-top: 32px;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
@@ -61,27 +67,34 @@
         </div>
 
         <nav>
-            @* Mục Tổng quan *@
-            <a href="/Admin/Index" class="nav-link @(ViewData["Active"] != null && ViewData["Active"].ToString() == "index" ? "active" : "")">
+            @* Tổng quan *@
+            <a href="/Admin/Index" class="nav-link @(ViewData["Active"]?.ToString() == "index" ? "active" : "")">
                 <i class="bi bi-grid-fill"></i>
                 <span>Tổng quan</span>
             </a>
 
-        @* 3. Quản lý địa điểm (Thay thế cho mục Edit và Delete cũ) *@
+            @* Quản lý địa điểm *@
             <a href="/Admin/PoiList" class="nav-link @(ViewData["Active"]?.ToString() == "poilist" ? "active" : "")">
                 <i class="bi bi-geo-alt-fill"></i>
                 <span>Quản lý địa điểm</span>
             </a>
 
+            @* Quản lý bản dịch *@
+            <a href="/Translation/Index" class="nav-link @(ViewData["Active"]?.ToString() == "translation" ? "active" : "")">
+                <i class="bi bi-translate"></i>
+                <span>Quản lý bản dịch</span>
+            </a>
+
+            @* Quản lý tour *@
             <a href="/Tour/TourList" class="nav-link @(ViewData["Active"]?.ToString() == "tourlist" ? "active" : "")">
                 <i class="bi bi-signpost-split-fill"></i>
                 <span>Quản lý tour</span>
             </a>
-            
-            <div class="px-8 mt-10 mb-4">
+
+            <div class="nav-section-label">
                 <p class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Cá nhân</p>
             </div>
-            
+
             <a asp-controller="Account" asp-action="Logout" class="nav-link text-red-400 hover:bg-red-500/10 hover:text-red-400">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>Đăng xuất</span>
@@ -95,7 +108,7 @@
                <h2 class="text-2xl font-bold text-slate-800">@(ViewData["PageTitle"] ?? "Hệ thống quản trị")</h2>
                 <p class="text-sm text-slate-400 font-medium">Chào mừng trở lại, Admin Dương</p>
             </div>
-            
+
             <div class="flex items-center gap-4">
                 <button class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 shadow-sm">
                     <i class="bi bi-bell-fill"></i>
