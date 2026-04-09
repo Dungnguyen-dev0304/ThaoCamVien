@@ -11,5 +11,6 @@ public partial class PoiCategory
 
     public string? Description { get; set; }
 
+    [SQLite.Ignore]
     public virtual ICollection<Poi> Pois { get; set; } = new List<Poi>();
 }

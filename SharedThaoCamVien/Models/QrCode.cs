@@ -12,6 +12,6 @@ public partial class QrCode
     public string QrCodeData { get; set; } = null!;
 
     public DateTime? CreatedAt { get; set; }
-
+    //[SQLite.Ignore]
     public virtual Poi Poi { get; set; } = null!;
 }

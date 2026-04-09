@@ -15,7 +15,9 @@ public partial class PoiVisitHistory
 
     public int? ListenDuration { get; set; }
 
+    [SQLite.Ignore] // <--- Thêm dòng này
     public virtual Poi? Poi { get; set; }
 
+    [SQLite.Ignore] // <--- Thêm dòng này
     public virtual User? User { get; set; }
 }

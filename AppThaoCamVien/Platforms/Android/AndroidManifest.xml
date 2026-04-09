@@ -25,6 +25,7 @@
 		android:theme="@style/Maui.SplashTheme"
 		android:icon="@mipmap/appicon"
 		android:allowBackup="true"
+		android:usesCleartextTraffic="true"
 		android:supportsRtl="true">
 
 		<meta-data android:name="com.google.android.geo.API_KEY" android:value="" />

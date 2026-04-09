@@ -14,6 +14,6 @@ public partial class PoiMedium
     public string MediaUrl { get; set; } = null!;
 
     public string? Language { get; set; }
-
+    //[SQLite.Ignore]
     public virtual Poi Poi { get; set; } = null!;
 }

@@ -3,192 +3,270 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
              x:Class="AppThaoCamVien.Pages.HomePage"
-             NavigationPage.HasNavigationBar="False">
-
-    <ContentPage.Background>
-        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#0a2e1f" Offset="0.0" />
-            <GradientStop Color="#1a5c40" Offset="1.0" />
-        </LinearGradientBrush>
-    </ContentPage.Background>
+             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+    <ContentPage.Resources>
+        <Color x:Key="BrandGreen">#198754</Color>
+        <Color x:Key="TextMain">#1A1A1A</Color>
+        <Color x:Key="TextGray">#6C757D</Color>
+        <Color x:Key="BorderLight">#E9ECEF</Color>
+        <Color x:Key="BgLight">#F8F9FA</Color>
+    </ContentPage.Resources>
 
     <controls:StateContainer State="{Binding State}"
                              EmptyMessage="{Binding EmptyMessage}"
                              ErrorMessage="{Binding ErrorMessage}"
                              RetryCommand="{Binding RetryCommand}">
         <controls:StateContainer.SuccessContent>
-            <ScrollView VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Spacing="0">
-                    <!-- Header -->
-                    <Grid ColumnDefinitions="*,Auto" Padding="16,46,16,8">
-                        <HorizontalStackLayout Grid.Column="0" Spacing="12" VerticalOptions="Center">
-                            <Image Source="splash.png" WidthRequest="34" HeightRequest="34" VerticalOptions="Center" />
-                            <VerticalStackLayout VerticalOptions="Center" Spacing="2">
-                                <Label Text="{Binding Feed.Greeting}"
-                                       TextColor="White"
-                                       FontSize="15"
-                                       FontAttributes="Bold" />
-                                <Label Text="{DynamicResource TxtAudioGuide}"
-                                       TextColor="#a5d6a7"
-                                       FontSize="10"
-                                       CharacterSpacing="1.5" />
-                            </VerticalStackLayout>
-                        </HorizontalStackLayout>
 
-                        <!-- Language toggle -->
-                        <Border Grid.Column="1"
-                                BackgroundColor="#1a5c40"
-                                Stroke="#ffca28"
-                                StrokeThickness="1"
-                                Padding="10,6"
-                                VerticalOptions="Center">
+            <Grid RowDefinitions="*,Auto">
+                <ScrollView Grid.Row="0" VerticalScrollBarVisibility="Never" >
+                    <VerticalStackLayout Padding="20,50,20,20" Spacing="25">
+
+                        <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="10" VerticalOptions="Start">
+                            <VerticalStackLayout Spacing="5" VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="5">
+                                    <Label Text="🌧" FontSize="12" TextColor="{StaticResource TextGray}"/>
+                                    <Label Text="{Binding HeaderSubtitle, FallbackValue='28°C • Trời có mây'}" FontSize="12" TextColor="{StaticResource TextGray}" />
+                                </HorizontalStackLayout>
+                                <Label Text="{Binding HeaderTitle, FallbackValue='Dũng Seto 👋'}" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource TextMain}" />
+                            </VerticalStackLayout>
+
+                            <Border Grid.Column="1" WidthRequest="44" HeightRequest="44" BackgroundColor="White" Stroke="{StaticResource BorderLight}" StrokeThickness="1" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="22" />
+                                </Border.StrokeShape>
+                                <Grid>
+                                    <Label Text="🔔" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    <Ellipse Fill="#DC3545" WidthRequest="8" HeightRequest="8" HorizontalOptions="End" VerticalOptions="Start" Margin="8,8,8,0"/>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Column="2" BackgroundColor="White" Stroke="{StaticResource BorderLight}" StrokeThickness="1" Padding="4" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="22" />
+                                </Border.StrokeShape>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnLangTapped" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                    <Border WidthRequest="26" HeightRequest="26" BackgroundColor="{StaticResource BorderLight}" StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="13"/>
+                                        </Border.StrokeShape>
+                                        <Image Source="placeholder_animal.png" Aspect="AspectFill" />
+                                    </Border>
+
+                                    <Label x:Name="LangLbl" 
+                                           Text="VN" 
+                                           TextColor="{StaticResource BrandGreen}" 
+                                           FontAttributes="Bold" 
+                                           FontSize="13"
+                                           VerticalOptions="Center" />
+
+                                    <Label Text="EN" 
+                                           TextColor="{StaticResource TextGray}" 
+                                           FontAttributes="Bold" 
+                                           FontSize="13"
+                                           VerticalOptions="Center"
+                                           Margin="0,0,8,0"/>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <Border BackgroundColor="#FFF3CD" StrokeThickness="0" Padding="15" IsVisible="{Binding IsOffline}">
                             <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10" />
+                                <RoundRectangle CornerRadius="15" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Label Text="⚡" FontSize="16" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" Text="{Binding OfflineMessage}" FontSize="13" TextColor="#856404" LineBreakMode="TailTruncation" />
+                            </Grid>
+                        </Border>
+
+                        <Border BackgroundColor="White" Stroke="{StaticResource BorderLight}" StrokeThickness="1" Padding="15">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="20" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <Border WidthRequest="50" HeightRequest="50" BackgroundColor="#F0F4F8" StrokeThickness="0" VerticalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="25" />
+                                    </Border.StrokeShape>
+                                    <Label Text="🕒" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" TextColor="#4285F4"/>
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="15,0,0,0" Spacing="2">
+                                    <Label Text="GIỜ MỞ CỬA" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource TextGray}"/>
+                                    <Label Text="07:00 - 18:30" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextMain}"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <Border BackgroundColor="White" Stroke="{StaticResource BorderLight}" StrokeThickness="1" Padding="15,5">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="15" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <Label Text="🔍" FontSize="18" TextColor="{StaticResource TextGray}" VerticalOptions="Center" Margin="0,0,10,0"/>
+                                <Entry Grid.Column="1" Placeholder="Tìm kiếm động vật, di tích..." TextColor="{StaticResource TextMain}" BackgroundColor="Transparent"/>
+                            </Grid>
+                        </Border>
+
+                        <Border BackgroundColor="{StaticResource BrandGreen}" StrokeThickness="0" Padding="25">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="24" />
+                            </Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="{StaticResource BrandGreen}" Opacity="0.3" Radius="15" Offset="0,8" />
+                            </Border.Shadow>
+
+                            <Grid ColumnDefinitions="*, Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                    <Border BackgroundColor="#33FFFFFF" HorizontalOptions="Start" Padding="10,4" StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="12"/>
+                                        </Border.StrokeShape>
+                                        <Label Text="TÍNH NĂNG MỚI" FontSize="10" FontAttributes="Bold" TextColor="White"/>
+                                    </Border>
+
+                                    <Label Text="Thuyết minh AI" TextColor="White" FontSize="22" FontAttributes="Bold" />
+                                    <Label Text="Quét mã tại các trạm để nghe câu chuyện thú vị" TextColor="#E8F5E9" FontSize="13" LineBreakMode="WordWrap" Margin="0,0,10,0"/>
+
+                                    <ProgressBar Progress="{Binding ContinueListening.Progress01}" ProgressColor="#FFF" BackgroundColor="#FFFFFF44" HeightRequest="3" Margin="0,10,20,0" IsVisible="{Binding ContinueListening.IsPlaying}"/>
+                                </VerticalStackLayout>
+
+                                <Border Grid.Column="1" WidthRequest="70" HeightRequest="70" BackgroundColor="White" StrokeThickness="0" VerticalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="20" />
+                                    </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnContinueListeningTapped" />
+                                    </Border.GestureRecognizers>
+                                    <Label Text="QR" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource BrandGreen}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="15">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Label Text="{Binding NearbyPlacesTitle, FallbackValue='Khám phá nổi bật'}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextMain}"/>
+                                <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                                    <Label Text="Xem tất cả" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold" FontSize="14" />
+                                    <Label Text=">" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold" FontSize="14" />
+                                </HorizontalStackLayout>
+                            </Grid>
+
+                            <CollectionView x:Name="NearbyPlacesView"
+                                            ItemsSource="{Binding NearbyPlaces}"
+                                            SelectionMode="Single"
+                                            SelectionChanged="OnNearbySelectionChanged"
+                                            HorizontalScrollBarVisibility="Never">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border WidthRequest="220" StrokeThickness="1" Stroke="{StaticResource BorderLight}" BackgroundColor="White" Padding="0">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="24" />
+                                            </Border.StrokeShape>
+
+                                            <Grid RowDefinitions="180, Auto">
+                                                <Image Grid.Row="0" Source="{Binding ImageUrl}" Aspect="AspectFill" />
+
+                                                <Border Grid.Row="0" BackgroundColor="#99000000" Padding="10,5" Margin="15" HorizontalOptions="Start" VerticalOptions="Start" StrokeThickness="0">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="12" />
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding DistanceLabel, FallbackValue='Thú'}" FontSize="11" TextColor="White" FontAttributes="Bold" />
+                                                </Border>
+
+                                                <Border Grid.Row="0" BackgroundColor="White" Padding="8,4" Margin="15" HorizontalOptions="End" VerticalOptions="End" StrokeThickness="0">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="10" />
+                                                    </Border.StrokeShape>
+                                                    <Label Text="⭐ 4.9" FontSize="11" TextColor="{StaticResource TextMain}" FontAttributes="Bold" />
+                                                </Border>
+
+                                                <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15">
+                                                    <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextMain}" LineBreakMode="TailTruncation" />
+                                                    <Label Text="{Binding LocationHint}" FontSize="12" TextColor="{StaticResource TextGray}" LineBreakMode="TailTruncation" Margin="0,4,0,0"/>
+                                                </VerticalStackLayout>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="15" Margin="0,0,0,30">
+                            <Label Text="{Binding StartTourTitle}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextMain}" />
+                            <Border StrokeThickness="0" BackgroundColor="Transparent" Padding="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="24" />
+                                </Border.StrokeShape>
+                                <Grid HeightRequest="120">
+                                    <Image Source="{Binding StartTourBackgroundImageUrl}" Aspect="AspectFill" />
+                                    <BoxView>
+                                        <BoxView.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#00000000" Offset="0.0" />
+                                                <GradientStop Color="#AA000000" Offset="1.0" />
+                                            </LinearGradientBrush>
+                                        </BoxView.Background>
+                                    </BoxView>
+                                    <Button Text="{Binding StartTourButtonText}" Clicked="OnStartClicked" BackgroundColor="{StaticResource BrandGreen}" TextColor="White" CornerRadius="15" HeightRequest="45" FontAttributes="Bold" Margin="15" HorizontalOptions="Fill" VerticalOptions="End" />
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <Border Grid.Row="1"
+                        Margin="20,0,20,20"
+                        Padding="12"
+                        BackgroundColor="White"
+                        Stroke="{StaticResource BorderLight}"
+                        StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="25" />
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.10" Radius="15" Offset="0,5" />
+                    </Border.Shadow>
+
+                    <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12" VerticalOptions="Center">
+                        <Border Grid.Column="0" WidthRequest="48" HeightRequest="48" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16" />
+                            </Border.StrokeShape>
+                            <Image Source="{Binding MiniPlayer.ImageUrl}" Aspect="AspectFill" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="5">
+                            <Label Text="{Binding MiniPlayer.Title}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource TextMain}" LineBreakMode="TailTruncation" />
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                <ProgressBar Grid.Column="0" Progress="{Binding MiniPlayer.Progress01}" ProgressColor="{StaticResource BrandGreen}" BackgroundColor="{StaticResource BorderLight}" HeightRequest="4" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" Text="{Binding MiniPlayer.ElapsedLabel}" FontSize="11" TextColor="{StaticResource TextGray}" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+
+                        <Border Grid.Column="2" BackgroundColor="{StaticResource BrandGreen}" WidthRequest="44" HeightRequest="44" StrokeThickness="0" VerticalOptions="Center">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="22" />
                             </Border.StrokeShape>
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnLangTapped" />
+                                <TapGestureRecognizer Tapped="OnMiniPlayerTapped" />
                             </Border.GestureRecognizers>
-                            <Label x:Name="LangLbl"
-                                   Text="VI"
-                                   TextColor="White"
-                                   FontAttributes="Bold"
-                                   FontSize="13"
-                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding MiniPlayer.PlayGlyph}" FontSize="16" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
                     </Grid>
+                </Border>
 
-                    <!-- Weather -->
-                    <Border Margin="16,0,16,0"
-                            BackgroundColor="#000000"
-                            Opacity="0.12"
-                            Stroke="#2DBE7A"
-                            StrokeThickness="1"
-                            Padding="14,12">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="16" />
-                        </Border.StrokeShape>
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="{DynamicResource TxtWeatherAtZoo}" TextColor="White" FontAttributes="Bold" />
-                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Label Grid.Column="0" Text="{Binding Weather.Condition}" TextColor="#A0C8B4" FontSize="12" />
-                                <Label Grid.Column="1" Text="{Binding Weather.TemperatureC, StringFormat='{0:0}°C'}" TextColor="#FFCA28" FontSize="14" FontAttributes="Bold" />
-                                <Label Grid.Column="2" Text="•" TextColor="#A0C8B4" FontSize="12" VerticalTextAlignment="Center" />
-                            </Grid>
-                            <Label Text="{Binding Weather.Advice}" TextColor="#E8F5E9" FontSize="12" LineBreakMode="TailTruncation" />
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <!-- CTA -->
-                    <Button Text="{DynamicResource TxtStartTour}"
-                            Margin="16,14,16,0"
-                            Clicked="OnStartClicked"
-                            BackgroundColor="#FFCA28"
-                            TextColor="#061F14"
-                            CornerRadius="18"
-                            HeightRequest="52" />
-
-                    <!-- Now & Recommended -->
-                    <VerticalStackLayout Padding="16,18,16,22" Spacing="18">
-                        <VerticalStackLayout Spacing="10">
-                            <Label Text="{DynamicResource TxtHappeningNow}" TextColor="White" FontAttributes="Bold" FontSize="16" />
-                            <CollectionView x:Name="NowCarousel"
-                                            ItemsSource="{Binding Feed.HappenNow}"
-                                            SelectionMode="Single"
-                                            SelectionChanged="OnNowSelectionChanged">
-                                <CollectionView.ItemsLayout>
-                                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
-                                </CollectionView.ItemsLayout>
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border WidthRequest="210"
-                                                BackgroundColor="#0f3322"
-                                                Stroke="#ffca28"
-                                                StrokeThickness="1"
-                                                Padding="0"
-                                                >
-                                            <Border.StrokeShape>
-                                                <RoundRectangle CornerRadius="16" />
-                                            </Border.StrokeShape>
-                                            <Grid RowDefinitions="120,*">
-                                                <Image Grid.Row="0"
-                                                       Source="{Binding ThumbnailUrl}"
-                                                       Aspect="AspectFill"
-                                                       HeightRequest="120" />
-                                                <VerticalStackLayout Grid.Row="1"
-                                                                     Padding="12,10"
-                                                                     Spacing="6">
-                                                    <Label Text="{Binding Title}"
-                                                           TextColor="White"
-                                                           FontAttributes="Bold"
-                                                           FontSize="14"
-                                                           LineBreakMode="TailTruncation" />
-                                                    <Label Text="{Binding Subtitle}"
-                                                           TextColor="#A0C8B4"
-                                                           FontSize="12"
-                                                           LineBreakMode="TailTruncation" />
-                                                    <Label Text="{DynamicResource TxtListenBtn}"
-                                                           TextColor="#FFCA28"
-                                                           FontAttributes="Bold"
-                                                           FontSize="12" />
-                                                </VerticalStackLayout>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="10">
-                            <Label Text="{DynamicResource TxtRecommendedForYou}" TextColor="White" FontAttributes="Bold" FontSize="16" />
-                            <CollectionView x:Name="RecommendedCarousel"
-                                            ItemsSource="{Binding Feed.Recommended}"
-                                            SelectionMode="Single"
-                                            SelectionChanged="OnRecommendedSelectionChanged">
-                                <CollectionView.ItemsLayout>
-                                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
-                                </CollectionView.ItemsLayout>
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border WidthRequest="210"
-                                                BackgroundColor="#0f3322"
-                                                Stroke="#ffca28"
-                                                StrokeThickness="1"
-                                                Padding="0">
-                                            <Border.StrokeShape>
-                                                <RoundRectangle CornerRadius="16" />
-                                            </Border.StrokeShape>
-                                            <Grid RowDefinitions="120,*">
-                                                <Image Grid.Row="0"
-                                                       Source="{Binding ThumbnailUrl}"
-                                                       Aspect="AspectFill"
-                                                       HeightRequest="120" />
-                                                <VerticalStackLayout Grid.Row="1"
-                                                                     Padding="12,10"
-                                                                     Spacing="6">
-                                                    <Label Text="{Binding Title}"
-                                                           TextColor="White"
-                                                           FontAttributes="Bold"
-                                                           FontSize="14"
-                                                           LineBreakMode="TailTruncation" />
-                                                    <Label Text="{Binding Subtitle}"
-                                                           TextColor="#A0C8B4"
-                                                           FontSize="12"
-                                                           LineBreakMode="TailTruncation" />
-                                                    <Label Text="{DynamicResource TxtListenBtn}"
-                                                           TextColor="#FFCA28"
-                                                           FontAttributes="Bold"
-                                                           FontSize="12" />
-                                                </VerticalStackLayout>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-                </VerticalStackLayout>
-            </ScrollView>
+            </Grid>
         </controls:StateContainer.SuccessContent>
     </controls:StateContainer>
 </ContentPage>
-

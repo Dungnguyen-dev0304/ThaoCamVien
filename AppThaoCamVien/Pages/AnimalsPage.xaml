@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Pages.AnimalsPage"
+             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="White">
+
+    <ContentPage.Resources>
+        <Color x:Key="Forest900">#071B12</Color>
+        <Color x:Key="Forest800">#0A2A1B</Color>
+        <Color x:Key="Forest700">#0F3A26</Color>
+        <Color x:Key="Forest600">#145534</Color>
+        <Color x:Key="Forest500">#1C6B43</Color>
+        <Color x:Key="TextPrimary">#1A1A1A</Color>
+        <Color x:Key="TextMuted">#6C757D</Color>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="300, *">
+
+        <Grid Grid.Row="0">
+            <Image Source="https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&amp;fit=crop&amp;w=800&amp;q=80"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill" />
+
+            <BoxView VerticalOptions="Fill">
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#55000000" Offset="0.0" />
+                        <GradientStop Color="#AA000000" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
+
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                <Label Text="Động vật"
+                       FontSize="36"
+                       FontAttributes="Bold"
+                       TextColor="White" 
+                       HorizontalTextAlignment="Center"/>
+                <Label Text="Tìm nhanh theo tên hoặc nhóm loài"
+                       FontSize="14"
+                       TextColor="#E9ECEF" 
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Margin="0,-40,0,0"
+                BackgroundColor="White"
+                StrokeThickness="0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30,30,0,0" />
+            </Border.StrokeShape>
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,-5" Radius="15" Opacity="0.1" />
+            </Border.Shadow>
+
+            <Grid RowDefinitions="Auto, Auto, *" Padding="20,25,20,0">
+
+                <Border Grid.Row="0" 
+                        BackgroundColor="#F8F9FA" 
+                        Stroke="#E9ECEF" 
+                        StrokeThickness="1" 
+                        Padding="0" 
+                        Margin="0,0,0,20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" Padding="15,5" ColumnSpacing="10">
+                        <Label Text="🔎" FontSize="18" VerticalTextAlignment="Center" />
+                        <Entry Grid.Column="1"
+                               Placeholder="Tìm kiếm (ví dụ: hổ, voi, chim...)"
+                               Text="{Binding SearchText}"
+                               ClearButtonVisibility="WhileEditing"
+                               BackgroundColor="Transparent"
+                               TextColor="{StaticResource TextPrimary}"
+                               PlaceholderColor="#ADB5BD" />
+                    </Grid>
+                </Border>
+
+                <CollectionView Grid.Row="1"
+                                ItemsSource="{Binding Filters}"
+                                SelectionMode="Single"
+                                SelectedItem="{Binding SelectedFilter}"
+                                HorizontalScrollBarVisibility="Never"
+                                Margin="0,0,0,20"
+                                HeightRequest="45">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="15,8" 
+                                    BackgroundColor="#F0F9F4" 
+                                    Stroke="#D1E7DD" 
+                                    StrokeThickness="1">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="20" />
+                                </Border.StrokeShape>
+                                <Label Text="{Binding Title}" FontSize="13" FontAttributes="Bold" TextColor="#198754" VerticalOptions="Center"/>
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border"
+                                                 Binding="{Binding IsSelected}"
+                                                 Value="True">
+                                        <Setter Property="BackgroundColor" Value="#198754" />
+                                        <Setter Property="Stroke" Value="#198754" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <CollectionView Grid.Row="2"
+                x:Name="AnimalsCollectionView"
+                ItemsSource="{Binding VisibleAnimals}"
+                SelectionMode="Single"
+                SelectionChanged="OnAnimalsSelectionChanged"
+                VerticalScrollBarVisibility="Never">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical"
+                                         Span="2"
+                                         HorizontalItemSpacing="15"
+                                         VerticalItemSpacing="15" />
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeThickness="0" BackgroundColor="White" Padding="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="20" />
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.08" />
+                                </Border.Shadow>
+
+                                <Grid RowDefinitions="140,Auto">
+                                    <Grid Grid.Row="0">
+                                        <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
+                                    </Grid>
+
+                                    <VerticalStackLayout Grid.Row="1" Padding="15" Spacing="5">
+                                        <Label Text="{Binding Name}"
+                                               TextColor="#1A1A1A"
+                                               FontAttributes="Bold"
+                                               FontSize="15"
+                                               LineBreakMode="TailTruncation" />
+
+                                        <Label Text="{Binding Category}"
+                                               TextColor="#6C757D"
+                                               FontSize="12"
+                                               LineBreakMode="TailTruncation" />
+
+                                        <Border HorizontalOptions="Start"
+                                                Padding="8,4"
+                                                Margin="0,5,0,0"
+                                                StrokeThickness="0"
+                                                BackgroundColor="{Binding StatusColor}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8" />
+                                            </Border.StrokeShape>
+                                            <Label Text="{Binding ConservationStatus}"
+                                                   TextColor="White"
+                                                   FontSize="10"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="0"
+              Grid.RowSpan="2"
+              IsVisible="{Binding IsBusy}"
+              BackgroundColor="#80000000"
+              ZIndex="10">
+            <ActivityIndicator IsRunning="True"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Color="#198754" />
+        </Grid>
+
+        <Border Grid.Row="0"
+                Grid.RowSpan="2"
+                IsVisible="{Binding HasError}"
+                BackgroundColor="White"
+                Padding="25"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                ZIndex="11"
+                WidthRequest="320"
+                StrokeThickness="0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="25" />
+            </Border.StrokeShape>
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,10" Radius="20" Opacity="0.15" />
+            </Border.Shadow>
+            <VerticalStackLayout Spacing="15">
+                <Label Text="⚠️"
+                       HorizontalOptions="Center"
+                       FontSize="40" />
+                <Label Text="{Binding ErrorMessage}"
+                       HorizontalTextAlignment="Center"
+                       TextColor="#1A1A1A"
+                       FontSize="15" />
+                <Button Text="{Binding RetryText}"
+                        Command="{Binding LoadCommand}"
+                        BackgroundColor="#1A1A1A"
+                        TextColor="White"
+                        CornerRadius="15"
+                        HeightRequest="50"
+                        FontAttributes="Bold"
+                        Margin="0,10,0,0"/>
+            </VerticalStackLayout>
+        </Border>
+
+    </Grid>
+</ContentPage>

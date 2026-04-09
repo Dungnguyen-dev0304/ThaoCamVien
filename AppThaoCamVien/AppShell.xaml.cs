@@ -29,6 +29,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(QrPage), typeof(QrPage));
         Routing.RegisterRoute(nameof(NumpadPage), typeof(NumpadPage));
         Routing.RegisterRoute(nameof(AnimalListPage), typeof(AnimalListPage));
+        Routing.RegisterRoute(nameof(AnimalsPage), typeof(AnimalsPage));
         Routing.RegisterRoute(nameof(AboutPage), typeof(AboutPage));
 
         // Gán Pages vào Tabs ngay khi Shell được tạo
@@ -49,8 +50,8 @@ public partial class AppShell : Shell
             // Tab 3: Numpad
             NumpadContent.Content = _sp.GetRequiredService<NumpadPage>();
 
-            // Tab 4: Animal List (đây là tab hay crash nhất)
-            StoryContent.Content = _sp.GetRequiredService<AnimalListPage>();
+            // Tab 4: Explore/Animals (ưu tiên UX: page nhẹ, không phụ thuộc DB/network)
+            StoryContent.Content = _sp.GetRequiredService<AnimalsPage>();
 
             // Tab 5: Map
             MapContent.Content = _sp.GetRequiredService<MapPage>();

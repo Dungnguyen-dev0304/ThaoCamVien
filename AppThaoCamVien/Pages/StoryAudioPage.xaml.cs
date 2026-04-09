@@ -18,18 +18,20 @@ public partial class StoryAudioPage : ContentPage
     private readonly NarrationEngine _narration;
     private readonly DatabaseService _db;
     private readonly StoryAudioViewModel _vm;
+    private readonly IServiceProvider _sp;
 
     private Poi? _poi;
     private bool _dragging;
     private bool _isNarrating;
 
-    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db, StoryAudioViewModel vm)
+    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db, StoryAudioViewModel vm, IServiceProvider sp)
     {
         InitializeComponent();
         _audio = audio;
         _narration = narration;
         _db = db;
         _vm = vm;
+        _sp = sp;
         BindingContext = _vm;
 
         _audio.PlaybackStateChanged += OnStateChanged;
@@ -241,6 +243,21 @@ public partial class StoryAudioPage : ContentPage
     }
 
     private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
+
+    private async void OnNavigateToPoiClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (_poi == null) return;
+            var map = _sp.GetRequiredService<MapPage>();
+            map.FocusPoi(_poi);
+            await Navigation.PushAsync(map);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
+        }
+    }
 
     ~StoryAudioPage()
     {

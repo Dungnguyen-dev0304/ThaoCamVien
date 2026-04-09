@@ -34,6 +34,7 @@ namespace AppThaoCamVien.Services
 
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[Narration] request start poiId={poi.PoiId} name='{poi.Name}' force={forcePlay}");
                 // Đồng bộ ngôn ngữ
                 var lang = _db.CurrentLanguage;
 
@@ -110,6 +111,7 @@ namespace AppThaoCamVien.Services
             {
                 try
                 {
+                    System.Diagnostics.Debug.WriteLine($"[Narration] source=audio-file url={media.MediaUrl}");
                     await _audio.PlayPoiAudioAsync(poi.PoiId);
                     System.Diagnostics.Debug.WriteLine("[Narration] 🎵 MP3 playing");
 
@@ -140,7 +142,7 @@ namespace AppThaoCamVien.Services
             }
 
             // Bước 2: TTS fallback
-            System.Diagnostics.Debug.WriteLine($"[Narration] 📝 TTS [{lang}]");
+            System.Diagnostics.Debug.WriteLine($"[Narration] source=tts lang={lang}");
             await _tts.SpeakPoiAsync(poi, lang);
         }
 

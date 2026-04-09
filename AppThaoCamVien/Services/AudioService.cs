@@ -25,7 +25,7 @@ namespace AppThaoCamVien.Services
         private long _visitId = -1;
         private DateTime _playStart;
 
-        private const string API_BASE = "http://10.0.2.2:5281";
+        private const string API_BASE = "http://10.0.2.2:5281/api";
 
         public event EventHandler<bool>? PlaybackStateChanged;
         public event EventHandler<double>? ProgressChanged;

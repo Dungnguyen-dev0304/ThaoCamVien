@@ -49,6 +49,7 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<StoryAudioPage>();
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
+            builder.Services.AddTransient<AnimalsPage>();
 
             builder.Services.AddSingleton<OfflineBundleDownloadService>();
             builder.Services.AddTransient<HomePageViewModel>();
@@ -56,6 +57,7 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<MapPageViewModel>();
             builder.Services.AddTransient<QrPageViewModel>();
             builder.Services.AddTransient<StoryAudioViewModel>();
+            builder.Services.AddTransient<AnimalsViewModel>();
             builder.Services.AddTransient<OnboardingWelcomePage>();
             builder.Services.AddTransient<OnboardingPermissionsPage>();
             builder.Services.AddTransient<OnboardingOfflineDownloadPage>();

@@ -21,6 +21,7 @@ public partial class MapPage : ContentPage
 
     private List<Poi> _pois = [];
     private Poi? _nearPoi;
+    private Poi? _focusPoi;
     private CancellationTokenSource? _dotCts;
     private bool _mapReady = false;
 
@@ -78,6 +79,13 @@ public partial class MapPage : ContentPage
 
         // API-first + StateContainer: load POIs trước để tránh UI/engine race
         await LoadPoisAsync();
+        if (_focusPoi != null)
+        {
+            CenterPoi(_focusPoi);
+            ShowNearPoiPanel(_focusPoi, 0, true);
+            HighlightPin(_focusPoi);
+            _focusPoi = null;
+        }
         await StartGpsAsync();
     }
 
@@ -325,6 +333,12 @@ public partial class MapPage : ContentPage
             ZooMap.Map?.Navigator?.CenterOnAndZoomTo(new Mapsui.MPoint(x, y), 4);
         }
         catch { }
+    }
+
+    public void FocusPoi(Poi poi)
+    {
+        _focusPoi = poi;
+        System.Diagnostics.Debug.WriteLine($"[MapPage] focus request poiId={poi.PoiId} name='{poi.Name}'");
     }
 
     private void OnMyLocationTapped(object sender, TappedEventArgs e)

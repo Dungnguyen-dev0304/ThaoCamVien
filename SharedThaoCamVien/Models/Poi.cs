@@ -1,5 +1,6 @@
 ﻿using System;
 // Bỏ dòng "using SQLite;" đi để tránh nhầm lẫn
+using SQLite;
 
 namespace SharedThaoCamVien.Models
 {

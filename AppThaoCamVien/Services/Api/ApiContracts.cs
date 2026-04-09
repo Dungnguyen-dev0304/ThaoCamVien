@@ -3,6 +3,13 @@ namespace AppThaoCamVien.Services.Api;
 public sealed class HomeFeedDto
 {
     public string Greeting { get; set; } = string.Empty;
+    public string HeaderTitle { get; set; } = string.Empty;
+    public string HeaderSubtitle { get; set; } = string.Empty;
+    public string ContinueListeningKicker { get; set; } = string.Empty;
+    public string NearbyPlacesTitle { get; set; } = string.Empty;
+    public string StartTourTitle { get; set; } = string.Empty;
+    public string StartTourButtonText { get; set; } = string.Empty;
+    public string StartTourBackgroundImageUrl { get; set; } = string.Empty;
     public List<HomeCardDto> HappenNow { get; set; } = [];
     public List<HomeCardDto> Recommended { get; set; } = [];
 }
@@ -35,6 +42,30 @@ public sealed class NearbyPoiDto
     public string Name { get; set; } = string.Empty;
     public string ThumbnailUrl { get; set; } = string.Empty;
     public double DistanceMeters { get; set; }
+    public string DistanceLabel { get; set; } = string.Empty;
+    public string LocationHint { get; set; } = string.Empty;
+}
+
+public sealed class AnimalsResponseDto
+{
+    public List<AnimalCardDto> Animals { get; set; } = [];
+    public List<AnimalFilterDto> Filters { get; set; } = [];
+}
+
+public sealed class AnimalCardDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string ConservationStatus { get; set; } = string.Empty;
+    public string StatusColorHex { get; set; } = string.Empty;
+}
+
+public sealed class AnimalFilterDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
 }
 
 public sealed class VoiceDto

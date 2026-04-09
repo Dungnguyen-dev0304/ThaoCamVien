@@ -26,7 +26,7 @@ public partial class AnimalListPage : ContentPage
         _sp = sp;
         BindingContext = this;
         AnimalsCollectionView.ItemsSource = Animals;
-        SearchEntry.TextChanged += OnSearch;
+        //SearchEntry.TextChanged += OnSearch;
     }
 
     protected override async void OnAppearing()
@@ -65,7 +65,7 @@ public partial class AnimalListPage : ContentPage
                 Animals.Clear();
                 foreach (var p in _all)
                     Animals.Add(p);
-                SearchEntry.Text = "";
+                //SearchEntry.Text = "";
             });
 
             System.Diagnostics.Debug.WriteLine($"[AnimalList] Loaded {_all.Count} POIs");

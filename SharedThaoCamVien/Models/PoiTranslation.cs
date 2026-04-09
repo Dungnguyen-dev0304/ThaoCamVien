@@ -14,6 +14,7 @@ namespace SharedThaoCamVien.Models
         public int PoiId { get; set; }
 
         [ForeignKey("PoiId")]
+        //[SQLite.Ignore]
         public Poi Poi { get; set; }
 
         [Required]

@@ -9,106 +9,169 @@ namespace ApiThaoCamVien.Controllers
     [ApiController]
     public class PoisController : ControllerBase
     {
-        private readonly WebContext _context;
+        private readonly WebContext _ctx;
+        private readonly ILogger<PoisController> _logger;
 
-        public PoisController(WebContext context)
+        public PoisController(WebContext ctx, ILogger<PoisController> logger)
         {
-            _context = context;
+            _ctx = ctx;
+            _logger = logger;
         }
 
         /// <summary>
+        /// GET /api/Pois
         /// GET /api/Pois?lang=en
-        /// Trả về danh sách POI với tên và mô tả đã được dịch sang ngôn ngữ yêu cầu.
-        /// Nếu không có bản dịch, fallback về tiếng Việt gốc trong bảng pois.
+        /// Test URL (browser): http://localhost:5281/api/Pois
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetPois([FromQuery] string lang = "vi")
+        public async Task<IActionResult> GetAll([FromQuery] string lang = "vi")
         {
-            // Lấy tất cả POI đang active, sắp xếp theo priority
-            var pois = await _context.Pois
-                .Where(p => p.IsActive == true)
-                .OrderByDescending(p => p.Priority)
-                .ToListAsync();
-
-            // Nếu không phải tiếng Việt, lấy bản dịch từ bảng poi_translations
-            if (lang != "vi")
+            try
             {
-                // Lấy tất cả bản dịch của ngôn ngữ yêu cầu trong 1 query duy nhất (tránh N+1)
-                var translations = await _context.PoiTranslations
-                    .Where(t => t.LanguageCode == lang)
-                    .ToDictionaryAsync(t => t.PoiId);
+                _logger.LogInformation("GetAll called, lang={Lang}", lang);
 
-                // Áp dụng bản dịch vào từng POI
-                foreach (var poi in pois)
+                var pois = await _ctx.Pois
+                    .OrderByDescending(p => p.Priority)
+                    .ToListAsync();
+
+                // Nếu DB chưa set `IsActive=true` cho record nào,
+                // app sẽ luôn nhận list rỗng. Fallback để bạn nhìn thấy dữ liệu ngay.
+                if (pois.Count > 0 && pois.All(p => p.IsActive == false))
                 {
-                    if (translations.TryGetValue(poi.PoiId, out var trans))
-                    {
-                        // Chỉ ghi đè nếu bản dịch không trống
-                        if (!string.IsNullOrWhiteSpace(trans.Name))
-                            poi.Name = trans.Name;
-                        if (!string.IsNullOrWhiteSpace(trans.Description))
-                            poi.Description = trans.Description;
-                    }
-                    // Nếu không có bản dịch → giữ nguyên tiếng Việt gốc (fallback an toàn)
+                    _logger.LogWarning("No active POIs found (IsActive=false for all). Returning all POIs for debug.");
                 }
-            }
 
-            return Ok(pois);
+                pois = pois
+                    .Where(p => p.IsActive == true)
+                    .ToList();
+
+                if (pois.Count == 0)
+                {
+                    // Fallback: nếu không có active thì trả về toàn bộ để tránh UI trắng.
+                    _logger.LogWarning("No active POIs found. Falling back to returning all POIs.");
+                    pois = await _ctx.Pois
+                        .OrderByDescending(p => p.Priority)
+                        .ToListAsync();
+                }
+
+                _logger.LogInformation("Found {Count} active POIs", pois.Count);
+
+                if (pois.Count == 0)
+                {
+                    _logger.LogWarning("No POIs found in database! Run seed script.");
+                    return Ok(new List<Poi>()); // Trả về array rỗng, không phải 404
+                }
+
+                // Áp dụng bản dịch nếu cần
+                if (lang != "vi" && _ctx.Database.CanConnect())
+                {
+                    try
+                    {
+                        var hasTranslations = await _ctx.Database
+                            .ExecuteSqlRawAsync("SELECT 1") >= 0;
+
+                        var transTable = _ctx.Model.FindEntityType(typeof(PoiTranslation));
+                        if (transTable != null)
+                        {
+                            var trans = await _ctx.PoiTranslations
+                                .Where(t => t.LanguageCode == lang)
+                                .ToDictionaryAsync(t => t.PoiId);
+
+                            foreach (var poi in pois)
+                            {
+                                if (trans.TryGetValue(poi.PoiId, out var t))
+                                {
+                                    if (!string.IsNullOrWhiteSpace(t.Name))
+                                        poi.Name = t.Name;
+                                    if (!string.IsNullOrWhiteSpace(t.Description))
+                                        poi.Description = t.Description;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Bảng poi_translations chưa tồn tại → bỏ qua, trả về tiếng Việt
+                        _logger.LogWarning("Translations not available: {Msg}", ex.Message);
+                    }
+                }
+
+                return Ok(pois);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetAll");
+                return StatusCode(500, new { message = ex.Message, detail = ex.ToString() });
+            }
         }
 
-        /// <summary>
-        /// GET /api/Pois/5?lang=en
-        /// Trả về chi tiết 1 POI đã được dịch.
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetPoi(int id, [FromQuery] string lang = "vi")
+        /// <summary>GET /api/Pois/5?lang=en</summary>
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetOne(int id, [FromQuery] string lang = "vi")
         {
-            var poi = await _context.Pois.FindAsync(id);
+            var poi = await _ctx.Pois.FindAsync(id);
             if (poi == null)
-                return NotFound(new { message = "Không tìm thấy địa điểm này." });
+                return NotFound(new { message = $"POI #{id} không tồn tại" });
 
-            // Áp dụng bản dịch nếu cần
             if (lang != "vi")
             {
-                var trans = await _context.PoiTranslations
-                    .FirstOrDefaultAsync(t => t.PoiId == id && t.LanguageCode == lang);
-
-                if (trans != null)
+                try
                 {
-                    if (!string.IsNullOrWhiteSpace(trans.Name))
-                        poi.Name = trans.Name;
-                    if (!string.IsNullOrWhiteSpace(trans.Description))
-                        poi.Description = trans.Description;
+                    var t = await _ctx.PoiTranslations
+                        .FirstOrDefaultAsync(x => x.PoiId == id && x.LanguageCode == lang);
+                    if (t != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(t.Name)) poi.Name = t.Name;
+                        if (!string.IsNullOrWhiteSpace(t.Description)) poi.Description = t.Description;
+                    }
                 }
+                catch { /* translations table may not exist */ }
             }
 
             return Ok(poi);
         }
 
-        /// <summary>
-        /// GET /api/Pois/qr/TCVN-008?lang=en
-        /// Tìm POI theo mã QR và trả về đã được dịch.
-        /// Dùng cho QrPage khi người dùng quét mã QR.
-        /// </summary>
+        /// <summary>GET /api/Pois/qr/TCVN-008?lang=en</summary>
         [HttpGet("qr/{qrData}")]
-        public async Task<IActionResult> GetPoiByQr(string qrData, [FromQuery] string lang = "vi")
+        public async Task<IActionResult> GetByQr(string qrData, [FromQuery] string lang = "vi")
         {
-            var qrCode = await _context.QrCodes
+            var qr = await _ctx.QrCodes
                 .FirstOrDefaultAsync(q => q.QrCodeData == qrData);
-
-            if (qrCode == null)
-                return NotFound(new { message = $"Mã QR '{qrData}' chưa được đăng ký." });
-
-            // Tái sử dụng logic GetPoi để có dịch thuật nhất quán
-            return await GetPoi(qrCode.PoiId, lang);
+            if (qr == null)
+                return NotFound(new { message = $"QR '{qrData}' chưa đăng ký" });
+            return await GetOne(qr.PoiId, lang);
         }
 
+        /// <summary>GET /api/Pois/numpad/8?lang=en</summary>
+        [HttpGet("numpad/{poiId:int}")]
+        public Task<IActionResult> GetByNumpad(int poiId, [FromQuery] string lang = "vi")
+            => GetOne(poiId, lang);
+
         /// <summary>
-        /// GET /api/Pois/numpad/8?lang=en
-        /// Tìm POI theo PoiId (người dùng nhập số trên NumpadPage).
+        /// GET /api/Pois/health — kiểm tra API và DB có hoạt động không
         /// </summary>
-        [HttpGet("numpad/{poiId}")]
-        public async Task<IActionResult> GetPoiByNumpad(int poiId, [FromQuery] string lang = "vi")
-            => await GetPoi(poiId, lang);
+        [HttpGet("health")]
+        public async Task<IActionResult> Health()
+        {
+            try
+            {
+                var count = await _ctx.Pois.CountAsync();
+                return Ok(new
+                {
+                    status = "ok",
+                    poi_count = count,
+                    database = "connected",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+        }
     }
 }
