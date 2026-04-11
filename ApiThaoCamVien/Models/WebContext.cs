@@ -28,6 +28,7 @@ public partial class WebContext : DbContext
     public virtual DbSet<UserLocationLog> UserLocationLogs { get; set; }
 
     public virtual DbSet<PoiTranslation> PoiTranslations { get; set; }
+    public DbSet<PoiAudio> PoiAudios { get; set; }
 
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //    => optionsBuilder.UseSqlServer("Server=.;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
