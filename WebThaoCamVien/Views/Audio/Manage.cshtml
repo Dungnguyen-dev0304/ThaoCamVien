@@ -1,0 +1,513 @@
+﻿@model IEnumerable<SharedThaoCamVien.Models.PoiAudio>
+@{
+    Layout = "_adminlayout";
+    var poi     = ViewBag.Poi     as SharedThaoCamVien.Models.Poi;
+    var audioMap = ViewBag.AudioMap as Dictionary<string, SharedThaoCamVien.Models.PoiAudio>;
+    var langs   = ViewBag.SupportedLangs as string[];
+
+    var langMeta = new Dictionary<string, string[]>
+    {
+        ["vi"] = new[] { "🇻🇳", "Tiếng Việt" },
+        ["en"] = new[] { "🇬🇧", "English" },
+        ["fr"] = new[] { "🇫🇷", "Français" },
+        ["zh"] = new[] { "🇨🇳", "中文" },
+        ["ja"] = new[] { "🇯🇵", "日本語" },
+        ["ko"] = new[] { "🇰🇷", "한국어" },
+    };
+}
+
+<style>
+    .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
+    .bg-custom-primary  { background-color: #89d957; }
+
+    /* ── AUDIO CARD ── */
+    .audio-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 24px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .audio-card.has-audio { border-color: #bbf7d0; }
+    .audio-card:hover { box-shadow: 0 4px 24px rgba(137,217,87,.12); }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+        background: #f8fafc;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+        border-color: #89d957;
+        background: #f0fce6;
+    }
+
+    /* ── RECORD BUTTON ── */
+    .rec-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 20px; border-radius: 12px; border: none;
+        font-size: 12px; font-weight: 900; cursor: pointer;
+        text-transform: uppercase; letter-spacing: .06em;
+        transition: all .2s;
+    }
+    .rec-btn.idle    { background: #fee2e2; color: #991b1b; }
+    .rec-btn.idle:hover { background: #fecaca; }
+    .rec-btn.recording { background: #dc2626; color: white; animation: rec-pulse 1s infinite; }
+    .rec-btn.recorded  { background: #dcfce7; color: #166534; }
+    @@keyframes rec-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+    /* ── WAVEFORM ── */
+    .waveform-bar {
+        display: flex; align-items: center; gap: 2px;
+        height: 32px;
+    }
+    .waveform-bar span {
+        width: 3px; background: #89d957; border-radius: 2px;
+        animation: wave-anim 0.8s ease-in-out infinite;
+        transform-origin: bottom;
+    }
+    .waveform-bar span:nth-child(2) { animation-delay:.1s; }
+    .waveform-bar span:nth-child(3) { animation-delay:.2s; }
+    .waveform-bar span:nth-child(4) { animation-delay:.3s; }
+    .waveform-bar span:nth-child(5) { animation-delay:.4s; }
+    @@keyframes wave-anim {
+        0%,100% { height: 6px; } 50% { height: 28px; }
+    }
+
+    /* ── PLAYER ── */
+    audio { width: 100%; border-radius: 12px; accent-color: #89d957; }
+
+    .tab-btn { cursor: pointer; transition: all .15s; }
+    .tab-btn.active { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+</style>
+
+<div class="p-6">
+    <div class="max-w-5xl mx-auto">
+
+        @* BREADCRUMB *@
+        <div class="mb-8">
+            <a href="/Audio/AudioList"
+               class="inline-flex items-center gap-2 text-slate-400 hover:text-slate-700 text-xs font-black uppercase tracking-widest mb-4 transition-colors">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center gap-4">
+                    @if (!string.IsNullOrEmpty(poi?.ImageThumbnail))
+                    {
+                        <img src="/images/pois/@poi!.ImageThumbnail" class="w-14 h-14 rounded-2xl object-cover shadow-sm" />
+                    }
+                    else
+                    {
+                        <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl">🌿</div>
+                    }
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">@poi?.Name</h2>
+                        <p class="text-slate-500 text-sm mt-0.5">
+                            ID #@poi?.PoiId &nbsp;·&nbsp;
+                            <span class="@(poi?.CategoryId == 1 ? "text-orange-500" : poi?.CategoryId == 2 ? "text-green-500" : "text-purple-500") font-bold">
+                                @(poi?.CategoryId == 1 ? "Động vật" : poi?.CategoryId == 2 ? "Thực vật" : "Di tích")
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                @* TỔNG TIẾN ĐỘ *@
+                @{
+                    int total  = langs?.Length ?? 0;
+                    int filled = audioMap?.Count ?? 0;
+                    int pct    = total > 0 ? (filled * 100 / total) : 0;
+                }
+                <div class="bg-slate-50 border border-slate-100 rounded-2xl px-6 py-3 text-center min-w-[140px]">
+                    <p class="text-3xl font-black text-slate-800">@filled<span class="text-slate-400 text-lg">/@total</span></p>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Ngôn ngữ có audio</p>
+                    <div class="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-custom rounded-full transition-all" style="width:@pct%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* THÔNG BÁO *@
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-6 flex items-center gap-3 px-5 py-4 bg-green-50 border border-green-100 rounded-2xl text-green-700 text-sm font-semibold">
+                <i class="bi bi-check-circle-fill text-green-500"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-6 flex items-center gap-3 px-5 py-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm font-semibold">
+                <i class="bi bi-exclamation-circle-fill text-red-400"></i> @TempData["Error"]
+            </div>
+        }
+
+        @* TOAST AJAX *@
+        <div id="ajaxToast"
+             class="hidden fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-bold transition-all">
+        </div>
+
+        @* GRID CÁC NGÔN NGỮ *@
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            @if (langs != null)
+            {
+                @foreach (var lang in langs)
+                {
+                    var meta    = langMeta.ContainsKey(lang) ? langMeta[lang] : new[] { "🌐", lang.ToUpper() };
+                    var audio   = audioMap != null && audioMap.ContainsKey(lang) ? audioMap[lang] : null;
+                    bool hasAudio = audio != null;
+
+                    <div class="audio-card @(hasAudio ? "has-audio" : "")">
+
+                        @* CARD HEADER *@
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">@meta[0]</span>
+                                <div>
+                                    <p class="font-black text-slate-700 text-sm uppercase tracking-wide">@meta[1]</p>
+                                    <p class="text-[10px] text-slate-400 font-mono">@lang.ToUpper()</p>
+                                </div>
+                            </div>
+                            @if (hasAudio)
+                            {
+                                <span class="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-100 rounded-full text-[10px] font-black uppercase">
+                                    <i class="bi bi-check-circle-fill"></i> Đã có audio
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-400 rounded-full text-[10px] font-black uppercase">
+                                    <i class="bi bi-dash-circle"></i> Chưa có
+                                </span>
+                            }
+                        </div>
+
+                        @* PLAYER NẾU ĐÃ CÓ AUDIO *@
+                        @if (hasAudio && !string.IsNullOrEmpty(audio!.FilePath))
+                        {
+                            <div class="mb-4 p-3 bg-green-50 rounded-2xl border border-green-100">
+                                <p class="text-[10px] text-green-600 font-black uppercase tracking-widest mb-2">
+                                    <i class="bi bi-play-circle-fill me-1"></i>Audio hiện tại
+                                </p>
+                                <audio controls src="@audio.FilePath" class="mb-2"></audio>
+                                <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                                    <span>@audio.FileName</span>
+                                    @if (audio.FileSizeBytes.HasValue)
+                                    {
+                                        <span>@((audio.FileSizeBytes.Value / 1024.0).ToString("F1")) KB</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @* TAB: UPLOAD / RECORD *@
+                        <div class="flex gap-2 mb-4">
+                            <button type="button"
+                                    onclick="switchTab('@lang', 'upload')"
+                                    id="tab-upload-@lang"
+                                    class="tab-btn active flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border border-slate-200 text-slate-500">
+                                <i class="bi bi-upload me-1"></i>Upload
+                            </button>
+                            <button type="button"
+                                    onclick="switchTab('@lang', 'record')"
+                                    id="tab-record-@lang"
+                                    class="tab-btn flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border border-slate-200 text-slate-500">
+                                <i class="bi bi-mic-fill me-1"></i>Ghi âm
+                            </button>
+                        </div>
+
+                        @* PANEL UPLOAD *@
+                        <div id="panel-upload-@lang" class="tab-content active">
+                            <form method="post" action="/Audio/Upload" enctype="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="PoiId" value="@poi!.PoiId" />
+                                <input type="hidden" name="LanguageCode" value="@lang" />
+
+                                <div class="upload-zone"
+                                     id="zone-@lang"
+                                     ondragover="dragOver(event,'@lang')"
+                                     ondragleave="dragLeave(event,'@lang')"
+                                     ondrop="dropFile(event,'@lang')"
+                                     onclick="document.getElementById('file-@lang').click()">
+                                    <i class="bi bi-cloud-upload text-2xl text-slate-300 mb-1 block"></i>
+                                    <p class="text-[11px] font-bold text-slate-400">Kéo thả hoặc click để chọn</p>
+                                    <p class="text-[10px] text-slate-300 mt-0.5">.mp3 · .wav · .ogg · .m4a</p>
+                                    <p id="fname-@lang" class="text-[11px] font-black text-[#89d957] mt-2 hidden"></p>
+                                </div>
+                                <input type="file" id="file-@lang" name="audioFile" class="hidden"
+                                       accept=".mp3,.wav,.ogg,.m4a,audio/*"
+                                       onchange="showFileName('@lang', this)" />
+
+                                <button type="submit"
+                                        class="mt-3 w-full py-2.5 bg-gradient-custom text-white font-black rounded-xl text-[11px] uppercase tracking-widest hover:opacity-90 transition-opacity shadow shadow-[#89d957]/20">
+                                    <i class="bi bi-cloud-arrow-up me-1"></i>
+                                    @(hasAudio ? "Cập nhật audio" : "Tải lên")
+                                </button>
+                            </form>
+                        </div>
+
+                        @* PANEL RECORD *@
+                        <div id="panel-record-@lang" class="tab-content">
+                            <div class="p-4 bg-slate-50 rounded-2xl">
+
+                                @* WAVEFORM *@
+                                <div id="wave-@lang" class="hidden justify-center mb-3">
+                                    <div class="waveform-bar">
+                                        <span></span><span></span><span></span><span></span><span></span>
+                                    </div>
+                                </div>
+
+                                @* TIMER *@
+                                <p id="timer-@lang" class="text-center text-2xl font-black text-slate-700 mb-3 font-mono hidden">00:00</p>
+
+                                @* PREVIEW PLAYBACK *@
+                                <div id="rec-preview-@lang" class="hidden mb-3">
+                                    <p class="text-[10px] text-slate-400 font-black uppercase mb-1">Nghe lại trước khi lưu:</p>
+                                    <audio id="rec-audio-@lang" controls class="w-full mb-3"></audio>
+
+                                    @* ÔN NHẬP TÊN FILE — hiện sau khi ghi xong *@
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                            Tên file ghi âm
+                                        </label>
+                                        <div class="flex items-center">
+                                            <input type="text"
+                                                   id="rec-fname-@lang"
+                                                   placeholder="vd: su-tu-chau-phi"
+                                                   class="flex-1 px-3 py-2.5 bg-white border border-slate-200 border-r-0 rounded-l-xl text-sm font-mono text-slate-600 outline-none focus:ring-2 focus:ring-[#89d957]/30 focus:border-[#89d957]" />
+                                            <span class="px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-r-xl text-sm font-mono text-slate-400">.webm</span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-300 mt-1">Để trống sẽ dùng tên mặc định</p>
+                                    </div>
+                                </div>
+
+                                @* CONTROLS *@
+                                <div class="flex gap-2">
+                                    <button type="button"
+                                            id="rec-btn-@lang"
+                                            class="rec-btn idle flex-1"
+                                            onclick="toggleRecord('@lang', @poi!.PoiId)">
+                                        <i class="bi bi-record-circle"></i>
+                                        Bắt đầu ghi âm
+                                    </button>
+                                    <button type="button"
+                                            id="cancel-btn-@lang"
+                                            class="hidden px-4 py-2.5 bg-slate-100 text-slate-500 font-black rounded-xl text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-colors"
+                                            onclick="cancelRecord('@lang')">
+                                        <i class="bi bi-x-lg me-1"></i>Hủy
+                                    </button>
+                                    <button type="button"
+                                            id="save-btn-@lang"
+                                            class="hidden px-4 py-2.5 bg-green-500 text-white font-black rounded-xl text-[11px] uppercase tracking-widest hover:bg-green-600 transition-colors"
+                                            onclick="saveRecording('@lang', @poi!.PoiId)">
+                                        <i class="bi bi-floppy me-1"></i>Lưu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* XÓA *@
+                        @if (hasAudio)
+                        {
+                            <form method="post" action="/Audio/Delete" class="mt-3"
+                                  onsubmit="return confirm('Xóa audio [@lang.ToUpper()] của địa điểm này?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="AudioId" value="@audio!.AudioId" />
+                                <input type="hidden" name="PoiId" value="@poi!.PoiId" />
+                                <button type="submit"
+                                        class="w-full py-2 bg-red-50 text-red-500 font-black rounded-xl text-[11px] uppercase tracking-widest hover:bg-red-100 transition-colors">
+                                    <i class="bi bi-trash3 me-1"></i>Xóa audio
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ── TAB SWITCH ──
+function switchTab(lang, tab) {
+    ['upload','record'].forEach(t => {
+        document.getElementById('tab-' + t + '-' + lang).classList.toggle('active', t === tab);
+        document.getElementById('panel-' + t + '-' + lang).classList.toggle('active', t === tab);
+    });
+}
+
+// ── UPLOAD: drag & drop ──
+function dragOver(e, lang)  { e.preventDefault(); document.getElementById('zone-' + lang).classList.add('drag-over'); }
+function dragLeave(e, lang) { document.getElementById('zone-' + lang).classList.remove('drag-over'); }
+function dropFile(e, lang) {
+    e.preventDefault();
+    dragLeave(e, lang);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    document.getElementById('file-' + lang).files = e.dataTransfer.files;
+    showFileName(lang, { files: [file] });
+}
+function showFileName(lang, input) {
+    const el = document.getElementById('fname-' + lang);
+    if (input.files && input.files[0]) {
+        el.textContent = '✓ ' + input.files[0].name;
+        el.classList.remove('hidden');
+    }
+}
+
+// ── RECORD ──
+const recState = {};   // { lang: { mediaRecorder, chunks, timerInterval, blob } }
+
+async function toggleRecord(lang, poiId) {
+    const state = recState[lang];
+    if (state && state.mediaRecorder && state.mediaRecorder.state === 'recording') {
+        // Dừng ghi
+        state.mediaRecorder.stop();
+        return;
+    }
+    // Bắt đầu ghi
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mr = new MediaRecorder(stream);
+        const chunks = [];
+        let seconds = 0;
+
+        recState[lang] = { mediaRecorder: mr, chunks, timerInterval: null, blob: null };
+
+        // UI
+        const btn   = document.getElementById('rec-btn-' + lang);
+        const wave  = document.getElementById('wave-' + lang);
+        const timer = document.getElementById('timer-' + lang);
+        const prev  = document.getElementById('rec-preview-' + lang);
+        const sav   = document.getElementById('save-btn-' + lang);
+
+        btn.className   = 'rec-btn recording flex-1';
+        btn.innerHTML   = '<i class="bi bi-stop-fill"></i> Dừng ghi';
+        wave.classList.replace('hidden', 'flex');
+        timer.classList.remove('hidden');
+        prev.classList.add('hidden');
+        sav.classList.add('hidden');
+        document.getElementById('cancel-btn-' + lang).classList.remove('hidden');
+
+        recState[lang].timerInterval = setInterval(() => {
+            seconds++;
+            const m = String(Math.floor(seconds / 60)).padStart(2,'0');
+            const s = String(seconds % 60).padStart(2,'0');
+            timer.textContent = m + ':' + s;
+        }, 1000);
+
+        mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+        mr.onstop = () => {
+            clearInterval(recState[lang].timerInterval);
+            stream.getTracks().forEach(t => t.stop());
+
+            const blob = new Blob(chunks, { type: 'audio/webm' });
+            recState[lang].blob = blob;
+
+            // Reset UI
+            btn.className  = 'rec-btn recorded flex-1';
+            btn.innerHTML  = '<i class="bi bi-arrow-counterclockwise"></i> Ghi lại';
+            wave.classList.replace('flex', 'hidden');
+            document.getElementById('cancel-btn-' + lang).classList.add('hidden');
+
+            // Preview
+            const url = URL.createObjectURL(blob);
+            document.getElementById('rec-audio-' + lang).src = url;
+            prev.classList.remove('hidden');
+            sav.classList.remove('hidden');
+        };
+
+        mr.start();
+
+    } catch (err) {
+        alert('Không thể truy cập microphone: ' + err.message);
+    }
+}
+
+function cancelRecord(lang) {
+    const state = recState[lang];
+    if (state?.mediaRecorder) {
+        // Dừng stream nhưng không trigger onstop bình thường — override trước
+        state.mediaRecorder.onstop = () => {}; // bỏ qua handler cũ
+        state.mediaRecorder.stop();
+        state.mediaRecorder.stream?.getTracks().forEach(t => t.stop());
+    }
+    if (state?.timerInterval) clearInterval(state.timerInterval);
+    delete recState[lang];
+
+    // Reset toàn bộ UI về trạng thái ban đầu
+    const btn    = document.getElementById('rec-btn-' + lang);
+    const wave   = document.getElementById('wave-' + lang);
+    const timer  = document.getElementById('timer-' + lang);
+    const prev   = document.getElementById('rec-preview-' + lang);
+    const sav    = document.getElementById('save-btn-' + lang);
+    const cancel = document.getElementById('cancel-btn-' + lang);
+
+    btn.className = 'rec-btn idle flex-1';
+    btn.innerHTML = '<i class="bi bi-record-circle"></i> Bắt đầu ghi âm';
+    wave.classList.replace('flex', 'hidden');
+    timer.classList.add('hidden');
+    timer.textContent = '00:00';
+    prev.classList.add('hidden');
+    sav.classList.add('hidden');
+    cancel.classList.add('hidden');
+
+    // Xóa tên file đã nhập
+    const fnInput = document.getElementById('rec-fname-' + lang);
+    if (fnInput) fnInput.value = '';
+}
+
+async function saveRecording(lang, poiId) {
+    const blob = recState[lang]?.blob;
+    if (!blob) { alert('Chưa có dữ liệu ghi âm.'); return; }
+
+    // Lấy tên file tùy chỉnh nếu có
+    const customName = document.getElementById('rec-fname-' + lang)?.value?.trim();
+    const safe = customName
+        ? customName.replace(/[^a-zA-Z0-9\-_]/g, '-').toLowerCase().replace(/^-+|-+$/g, '') + '.webm'
+        : 'recording.webm';
+
+    const btn = document.getElementById('save-btn-' + lang);
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Đang lưu...';
+
+    const fd = new FormData();
+    fd.append('PoiId', poiId);
+    fd.append('LanguageCode', lang);
+    fd.append('recordedBlob', blob, safe);
+
+    // Lấy CSRF token
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    if (token) fd.append('__RequestVerificationToken', token.value);
+
+    try {
+        const res  = await fetch('/Audio/SaveRecording', { method: 'POST', body: fd });
+        const data = await res.json();
+        showToast(data.success, data.message);
+        if (data.success) setTimeout(() => location.reload(), 1200);
+    } catch {
+        showToast(false, 'Lỗi kết nối, vui lòng thử lại.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-floppy me-1"></i>Lưu';
+    }
+}
+
+// ── TOAST ──
+function showToast(success, msg) {
+    const t = document.getElementById('ajaxToast');
+    t.className = 'fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-bold transition-all ' +
+        (success ? 'bg-green-500 text-white' : 'bg-red-500 text-white');
+    t.innerHTML = `<i class="bi bi-${success ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i>${msg}`;
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 3000);
+}
+</script>
+}

@@ -77,4 +77,8 @@
     <MauiImage Include="wwwroot\images\pois\zero_hero.jpg" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\audio\pois\" />
+  </ItemGroup>
+
 </Project>

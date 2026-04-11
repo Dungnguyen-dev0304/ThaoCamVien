@@ -85,6 +85,13 @@
                 <span>Quản lý bản dịch</span>
             </a>
 
+            
+             @* Quản lý bản dịch *@
+            <a href="/Audio/AudioList" class="nav-link @(ViewData["Active"]?.ToString() == "audio" ? "active" : "")">
+                <i class="bi bi-mic-fill"></i>
+                <span>Quản lý Audio</span>
+            </a>
+
             @* Quản lý tour *@
             <a href="/Tour/TourList" class="nav-link @(ViewData["Active"]?.ToString() == "tourlist" ? "active" : "")">
                 <i class="bi bi-signpost-split-fill"></i>
