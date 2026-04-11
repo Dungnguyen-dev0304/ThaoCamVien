@@ -24,7 +24,7 @@ namespace WebThaoCamVien.Controllers
         }
 
         // GET: /Translation/Index
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> TranslationList()
         {
             SetViewData("translation", "Quản lý bản dịch", "Quản lý bản dịch");
 

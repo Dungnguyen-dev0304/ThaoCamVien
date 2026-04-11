@@ -161,15 +161,20 @@
 
                                 @* TTS BAR cho card *@
                                 <div class="tts-bar">
-                                    @* Nút nghe TÊN *@
+                                    @* Nút nghe TÊN + MÔ TẢ *@
                                     <button type="button"
-                                            class="tts-btn play"
-                                            title="Nghe tên"
-                                            onclick="ttsSpeak(this,'name-@t.TranslationId',@Json.Serialize(t.Name),'@t.LanguageCode')">
-                                        <i class="bi bi-person-lines-fill" style="font-size:15px"></i>
+                                            class="tts-btn play tts-card-btn"
+                                            title="Nghe tên + mô tả"
+                                            data-tid="@t.TranslationId"
+                                            data-name="@System.Net.WebUtility.HtmlEncode(t.Name)"
+                                            data-desc="@System.Net.WebUtility.HtmlEncode(t.Description)"
+                                            data-lang="@t.LanguageCode">
+                                        <i class="bi bi-volume-up-fill" style="font-size:15px"></i>
                                     </button>
 
-                                  
+                                    @* Label trạng thái *@
+                                    <span id="tts-lbl-@t.TranslationId" class="tts-label">Nghe tên + mô tả</span>
+
                                     @* Tốc độ *@
                                     <div class="tts-speed">
                                         <i class="bi bi-speedometer2"></i>
@@ -183,7 +188,7 @@
                                     <button type="button"
                                             class="tts-btn stop"
                                             title="Dừng"
-                                            onclick="ttsStopCard('@t.TranslationId','@t.LanguageCode')">
+                                            onclick="ttsStopCard('@t.TranslationId')">
                                         <i class="bi bi-stop-fill" style="font-size:15px"></i>
                                     </button>
                                 </div>
@@ -227,11 +232,15 @@
             </button>
         </div>
 
-        <form id="translationForm" method="post" action="/Translation/Save">
+        <div id="langMismatchError" class="hidden mb-4 flex items-start gap-3 px-5 py-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-semibold">
+            <i class="bi bi-exclamation-triangle-fill text-red-500 mt-0.5 flex-shrink-0"></i>
+            <span id="langMismatchMsg"></span>
+        </div>
+
+        <form id="translationForm" method="post" action="/Translation/Save" onsubmit="return validateLang(event)">
             @Html.AntiForgeryToken()
             <input type="hidden" id="modalTranslationId" name="TranslationId" value="0" />
             <input type="hidden" id="modalPoiId"         name="PoiId"          value="@poi?.PoiId" />
-            {{-- Hidden input lưu langCode hiện tại để TTS đọc chính xác --}}
             <input type="hidden" id="modalCurrentLang"   value="en" />
 
             @* Mã ngôn ngữ *@
@@ -246,9 +255,6 @@
                     <option value="ja">🇯🇵 日本語 (ja)</option>
                     <option value="ko">🇰🇷 한국어 (ko)</option>
                     <option value="fr">🇫🇷 Français (fr)</option>
-                    <option value="de">🇩🇪 Deutsch (de)</option>
-                    <option value="es">🇪🇸 Español (es)</option>
-                    <option value="th">🇹🇭 ภาษาไทย (th)</option>
                 </select>
             </div>
 
@@ -320,6 +326,84 @@
 
 @section Scripts {
 <script>
+// ══════════════════════════════════════════════
+//  LANGUAGE MISMATCH DETECTION
+// ══════════════════════════════════════════════
+
+const SCRIPT_RULES = {
+    zh: { test: t => /[一-鿿㐀-䶿]/.test(t),    label: 'Tiếng Trung (chữ Hán)' },
+    ja: { test: t => /[぀-ゟ゠-ヿ]/.test(t),     label: 'Tiếng Nhật (Hiragana/Katakana)' },
+    ko: { test: t => /[가-힯ᄀ-ᇿ]/.test(t),     label: 'Tiếng Hàn (Hangul)' },
+    th: { test: t => /[฀-๿]/.test(t),                  label: 'Tiếng Thái' },
+};
+
+const LATIN_LANGS  = ['en', 'fr', 'de', 'es'];
+const LANG_LABELS  = {
+    en:'Tiếng Anh', zh:'Tiếng Trung', ja:'Tiếng Nhật',
+    ko:'Tiếng Hàn', fr:'Tiếng Pháp',  de:'Tiếng Đức',
+    es:'Tiếng Tây Ban Nha', th:'Tiếng Thái'
+};
+
+function detectScriptLang(text) {
+    for (const [code, rule] of Object.entries(SCRIPT_RULES)) {
+        if (rule.test(text)) return { code, label: rule.label };
+    }
+    return { code: 'latin', label: 'Latin (en/fr/de/es/...)' };
+}
+
+function showLangError(msg) {
+    const el = document.getElementById('langMismatchError');
+    document.getElementById('langMismatchMsg').textContent = msg;
+    el.classList.remove('hidden');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideLangError() {
+    document.getElementById('langMismatchError').classList.add('hidden');
+}
+
+function validateLang() {
+    hideLangError();
+    const selectedLang  = getModalLang();
+    const combined      = (document.getElementById('modalName').value + ' ' +
+                           document.getElementById('modalDescription').value).trim();
+    const detected      = detectScriptLang(combined);
+    const selectedLabel = LANG_LABELS[selectedLang] || selectedLang.toUpperCase();
+
+    // Chọn ngôn ngữ non-Latin nhưng nội dung không có script tương ứng
+    if (!LATIN_LANGS.includes(selectedLang)) {
+        const rule = SCRIPT_RULES[selectedLang];
+        if (rule && !rule.test(combined)) {
+            showLangError(
+                'Bạn chọn "' + selectedLabel + '" nhưng nội dung không chứa ký tự ' +
+                rule.label + '. Vui lòng kiểm tra lại trước khi lưu.'
+            );
+            return false;
+        }
+    }
+
+    // Chọn Latin (en/fr/de/es) nhưng nội dung chứa script non-Latin
+    if (LATIN_LANGS.includes(selectedLang) && detected.code !== 'latin') {
+        showLangError(
+            'Bạn chọn "' + selectedLabel + '" nhưng nội dung có vẻ được viết bằng ' +
+            detected.label + '. Vui lòng kiểm tra lại trước khi lưu.'
+        );
+        return false;
+    }
+
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    ['modalName', 'modalDescription', 'modalLanguageCode'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', hideLangError);
+    });
+    document.getElementById('translationForm').addEventListener('submit', function(e) {
+        if (!validateLang()) e.preventDefault();
+    });
+});
+
 // ── BCP-47 map ──
 const LANG_MAP = {
     en:'en-US', zh:'zh-CN', ja:'ja-JP', ko:'ko-KR',
@@ -401,21 +485,43 @@ function _speak(key, text, langCode, rateId, labelId, btn, defaultLabel) {
 }
 
 // ── API dùng cho CARD ──
-function ttsSpeak(btn, key, text, langCode) {
-    const tid = key.replace(/^(name|desc)-/, '');
-    _speak(key, text, langCode,
+function ttsSpeakCard(btn, tid, name, description, langCode) {
+    const key = 'card-' + tid;
+    const combinedText = (name || '').trim() + '. ' + (description || '').trim();
+    _speak(key, combinedText, langCode,
            'tts-rate-' + tid,
            'tts-lbl-' + tid,
            btn,
-           'Nghe TTS · ' + langCode.toUpperCase());
+           'Nghe tên + mô tả');
 }
 
 function ttsStopCard(tid) { ttsStopAll(); }
 
+// Dùng event delegation để tránh lỗi inline onclick với ký tự đặc biệt
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.tts-card-btn');
+    if (!btn) return;
+    const tid  = btn.dataset.tid;
+    const name = btn.dataset.name;
+    const desc = btn.dataset.desc;
+    const lang = btn.dataset.lang;
+    ttsSpeakCard(btn, tid, name, desc, lang);
+});
+
 // ── API dùng cho MODAL ──
+function getModalLang() {
+    // Nếu đang edit thì select bị ẩn, đọc từ hidden input
+    // Nếu đang add thì đọc thẳng từ select (luôn đồng bộ)
+    const sel = document.getElementById('modalLanguageCode');
+    if (!sel.classList.contains('hidden')) {
+        return sel.value || 'en';
+    }
+    return document.getElementById('modalCurrentLang').value || 'en';
+}
+
 function ttsModalSpeak(btn, inputId, key) {
     const isName = key === 'modal-name';
-    const lang   = document.getElementById('modalCurrentLang').value || 'en';
+    const lang   = getModalLang();
     _speak(
         key,
         () => document.getElementById(inputId).value.trim(),
@@ -440,9 +546,6 @@ function openAddModal() {
     document.getElementById('modalDescription').value = '';
     document.getElementById('modalLanguageCode').classList.remove('hidden');
     document.getElementById('langCodeDisplay').classList.add('hidden');
-    const sel = document.getElementById('modalLanguageCode');
-    document.getElementById('modalCurrentLang').value = sel.value;
-    sel.onchange = () => { document.getElementById('modalCurrentLang').value = sel.value; };
     document.getElementById('translationModal').classList.add('open');
 }
 
