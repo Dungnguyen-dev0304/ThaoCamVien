@@ -20,22 +20,14 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.tailwindcss.com"></script>
 
-@* --- THAY THẾ ĐOẠN TIÊU ĐỀ CŨ BẰNG KHỐI NÀY --- *@
-<div class="flex items-center justify-between mb-8">
-    <div>
-        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Tạo địa điểm mới</h2>
-        <p class="text-sm text-slate-400 mt-1 font-medium">Thêm điểm dừng chân mới vào hệ thống bản đồ</p>
-    </div>
-    
-    @* Nút Quay lại màu đỏ - Kích thước chuẩn TourList *@
-    <a href="/Admin/PoiList" 
-       class="flex items-center gap-2 px-5 py-3 bg-red-500 text-white font-black rounded-xl shadow-lg shadow-red-500/25 text-sm uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95">
-        <i class="bi bi-arrow-left"></i> Quay lại
+ @*PHẦN 1: THÊM POI*@
+<div class="px-4 pt-4 pb-2">
+    <a href="/Admin/PoiList"
+       class="inline-flex items-center gap-2 text-slate-400 hover:text-slate-700 text-xs font-black uppercase tracking-widest transition-colors">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại danh sách
     </a>
 </div>
-@* ---------------------------------------------- *@
-
-
 <div class="p-4 grid grid-cols-1 xl:grid-cols-12 gap-6">
     <div class="xl:col-span-5 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
         <h3 class="text-lg font-black text-slate-800 uppercase mb-6 flex items-center">
