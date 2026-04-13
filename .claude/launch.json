@@ -1,0 +1,41 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "API - ThaoCamVien (http://localhost:5281)",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "ApiThaoCamVien/ApiThaoCamVien.csproj",
+        "--launch-profile",
+        "http"
+      ],
+      "port": 5281
+    },
+    {
+      "name": "Web Admin CMS (http://localhost:5181)",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "WebThaoCamVien/WebThaoCamVien.csproj",
+        "--launch-profile",
+        "http"
+      ],
+      "port": 5181
+    },
+    {
+      "name": "API - Swagger UI (https://localhost:7208)",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "ApiThaoCamVien/ApiThaoCamVien.csproj",
+        "--launch-profile",
+        "https"
+      ],
+      "port": 7208
+    }
+  ]
+}

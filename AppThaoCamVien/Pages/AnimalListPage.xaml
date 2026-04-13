@@ -15,9 +15,9 @@
 
     <Grid RowDefinitions="Auto, Auto, *">
 
-        <Entry x:Name="SearchEntry" IsVisible="False" />
+         <Entry x:Name="SearchEntry" IsVisible="False" />
 
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="20,60,20,15">
+         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="20,60,20,15">
             <VerticalStackLayout Grid.Column="0" Spacing="5" VerticalOptions="Center">
                 <Label Text="{DynamicResource TxtAnimalKingdom}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource TextMain}" />
                 <Label Text="{DynamicResource TxtAnimalDesc}" FontSize="14" TextColor="{StaticResource TextGray}" />
@@ -32,7 +32,7 @@
                     <Label Text="EN" TextColor="#ADB5BD" FontAttributes="Bold" FontSize="12" VerticalOptions="Center" />
                 </HorizontalStackLayout>
             </Border>
-        </Grid>
+        </Grid> 
 
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding Filters}"

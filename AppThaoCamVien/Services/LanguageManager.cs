@@ -4,7 +4,7 @@
     {
         public static readonly List<(string Code, string Flag, string Label)> Languages =
         [
-            ("vi", "🇻🇳", "VI"), ("en", "🇬🇧", "EN"), ("ja", "🇯🇵", "JA"),
+            ("vi", "🇻🇳", "VI"), ("en", "🇬🇧", "EN"), 
             ("th", "🇹🇭", "TH"), ("id", "🇮🇩", "ID"), ("ms", "🇲🇾", "MS"), ("km", "🇰🇭", "KM"),
         ];
 

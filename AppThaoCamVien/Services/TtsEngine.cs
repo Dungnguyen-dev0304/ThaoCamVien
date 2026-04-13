@@ -21,7 +21,7 @@ namespace AppThaoCamVien.Services
         private static readonly Dictionary<string, string[]> LocalePrefixes = new()
         {
             ["vi"] = ["vi"],
-            ["en"] = ["en-US", "en-GB", "en"],
+            ["en"] = ["en-US"],
             ["th"] = ["th"],
             ["id"] = ["id"],
             ["ms"] = ["ms"],

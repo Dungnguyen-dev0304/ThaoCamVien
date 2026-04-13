@@ -44,27 +44,7 @@
                                 </HorizontalStackLayout>
                             </Border>
                         </Grid>
-
-                        <HorizontalStackLayout Spacing="10">
-                            <Border BackgroundColor="#F8F9FA" Padding="12,6" StrokeThickness="0">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="12" />
-                                </Border.StrokeShape>
-                                <Label Text="Thú ăn thịt" FontSize="12" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold"/>
-                            </Border>
-                            <Border BackgroundColor="#F8F9FA" Padding="12,6" StrokeThickness="0">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="12" />
-                                </Border.StrokeShape>
-                                <Label Text="Đang bảo tồn" FontSize="12" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold"/>
-                            </Border>
-                            <Border BackgroundColor="#F8F9FA" Padding="12,6" StrokeThickness="0">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="12" />
-                                </Border.StrokeShape>
-                                <Label Text="Nguy cấp" FontSize="12" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold"/>
-                            </Border>
-                        </HorizontalStackLayout>
+                        
 
                         <Border BackgroundColor="#F8F9FA" StrokeThickness="1" Stroke="{StaticResource BorderLight}" Padding="20" Margin="0,15">
                             <Border.StrokeShape>
@@ -74,33 +54,41 @@
                                 <Shadow Brush="Black" Opacity="0.05" Radius="15" Offset="0,5" />
                             </Border.Shadow>
 
-                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="20">
-                                <VerticalStackLayout Grid.Column="0" Spacing="5" VerticalOptions="Center">
-                                    <HorizontalStackLayout Spacing="6">
-                                        <Label Text="🔊" FontSize="16" TextColor="{StaticResource TextGray}" />
-                                        <Label Text="THUYẾT MINH TỰ ĐỘNG" FontSize="13" TextColor="{StaticResource TextGray}" FontAttributes="Bold" />
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="25">
+                                <VerticalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="🔊" FontSize="16" TextColor="#6C757D" VerticalOptions="Center" />
+                                        <Label Text="THUYẾT MINH TỰ ĐỘNG" FontSize="13" TextColor="#6C757D" FontAttributes="Bold" VerticalOptions="Center" />
                                     </HorizontalStackLayout>
 
                                     <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" Color="{StaticResource BrandGreen}" HeightRequest="20"/>
 
-                                    <Slider x:Name="ProgressSlider" Minimum="0" Maximum="100" Value="0" MinimumTrackColor="{StaticResource BrandGreen}" MaximumTrackColor="{StaticResource BorderLight}" ThumbColor="{StaticResource BrandGreen}" DragCompleted="OnSliderDragCompleted" Margin="0,5"/>
+                                    <Slider x:Name="ProgressSlider" 
+                                            Minimum="0" Maximum="100" Value="30" 
+                                            MinimumTrackColor="#3FA34D" 
+                                            MaximumTrackColor="#E0E5E0" 
+                                            ThumbColor="Transparent" 
+                                            DragCompleted="OnSliderDragCompleted" 
+                                            Margin="0,5,0,0"/>
+
                                     <Grid ColumnDefinitions="*, *">
-                                        <Label x:Name="CurrentTimeLabel" Grid.Column="0" Text="00:00" FontSize="11" TextColor="{StaticResource TextGray}" FontAttributes="Bold" HorizontalOptions="Start"/>
-                                        <Label x:Name="TotalTimeLabel" Grid.Column="1" Text="00:00" FontSize="11" TextColor="{StaticResource TextGray}" FontAttributes="Bold" HorizontalOptions="End"/>
+                                        <Label x:Name="CurrentTimeLabel" Grid.Column="0" Text="01:12" FontSize="12" TextColor="#4A5568" FontAttributes="Bold" HorizontalOptions="Start"/>
+                                        <Label x:Name="TotalTimeLabel" Grid.Column="1" Text="03:45" FontSize="12" TextColor="#4A5568" FontAttributes="Bold" HorizontalOptions="End"/>
                                     </Grid>
                                 </VerticalStackLayout>
 
-                                <Border Grid.Column="1" WidthRequest="65" HeightRequest="65" BackgroundColor="{StaticResource BrandGreen}" StrokeThickness="0" VerticalOptions="Center">
+                                <Border Grid.Column="1" WidthRequest="65" HeightRequest="65" BackgroundColor="#1E5631" StrokeThickness="0" VerticalOptions="Center">
                                     <Border.StrokeShape>
                                         <RoundRectangle CornerRadius="32.5" />
                                     </Border.StrokeShape>
                                     <Border.Shadow>
-                                        <Shadow Brush="{StaticResource BrandGreen}" Offset="0,5" Radius="15" Opacity="0.4" />
+                                        <Shadow Brush="#1E5631" Offset="0,4" Radius="10" Opacity="0.3" />
                                     </Border.Shadow>
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnPlayPauseClicked" />
                                     </Border.GestureRecognizers>
-                                    <Image x:Name="PlayPauseIcon" Source="icon_play_white.png" Aspect="AspectFit" Margin="20" />
+
+                                    <Image x:Name="PlayPauseIcon" Source="icon_play_white.png" Aspect="AspectFit" Margin="22,20,18,20" />
                                 </Border>
                             </Grid>
                         </Border>
@@ -121,80 +109,6 @@
                                 FontAttributes="Bold"
                                 Margin="0,20,0,30" />
 
-                        <VerticalStackLayout Spacing="15" Opacity="0.5">
-                            <Label Text="Thông số sinh học (Dữ liệu bổ sung)" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextGray}"/>
-                            <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="12" RowSpacing="12">
-                                <Border Grid.Row="0" Grid.Column="0" BackgroundColor="#F8F9FA" Padding="15" StrokeThickness="0">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="12"/>
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout HorizontalOptions="Center">
-                                        <Label Text="200" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextMain}" HorizontalOptions="Center"/>
-                                        <Label Text="Cá thể" FontSize="12" TextColor="{StaticResource TextGray}" HorizontalOptions="Center"/>
-                                    </VerticalStackLayout>
-                                </Border>
-                                <Border Grid.Row="0" Grid.Column="1" BackgroundColor="#F8F9FA" Padding="15" StrokeThickness="0">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="12"/>
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout HorizontalOptions="Center">
-                                        <Label Text="15-20 năm" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextMain}" HorizontalOptions="Center"/>
-                                        <Label Text="Tuổi thọ" FontSize="12" TextColor="{StaticResource TextGray}" HorizontalOptions="Center"/>
-                                    </VerticalStackLayout>
-                                </Border>
-                                <Border Grid.Row="1" Grid.Column="0" BackgroundColor="#F8F9FA" Padding="15" StrokeThickness="0">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="12"/>
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout HorizontalOptions="Center">
-                                        <Label Text="150-195kg" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextMain}" HorizontalOptions="Center"/>
-                                        <Label Text="Cân nặng" FontSize="12" TextColor="{StaticResource TextGray}" HorizontalOptions="Center"/>
-                                    </VerticalStackLayout>
-                                </Border>
-                                <Border Grid.Row="1" Grid.Column="1" BackgroundColor="#F8F9FA" Padding="15" StrokeThickness="0">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="12"/>
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout HorizontalOptions="Center">
-                                        <Label Text="Đông Nam Á" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextMain}" HorizontalOptions="Center"/>
-                                        <Label Text="Phân bố" FontSize="12" TextColor="{StaticResource TextGray}" HorizontalOptions="Center"/>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </Grid>
-
-                            <controls:StateContainer State="{Binding State}" EmptyMessage="{Binding EmptyMessage}" ErrorMessage="{Binding ErrorMessage}" RetryCommand="{Binding RetryCommand}">
-                                <controls:StateContainer.SuccessContent>
-                                    <VerticalStackLayout Spacing="10">
-                                        <Label Text="{DynamicResource TxtVoice}" TextColor="{StaticResource TextMain}" FontSize="14" FontAttributes="Bold" />
-                                        <CollectionView ItemsSource="{Binding Voices}" SelectionMode="None" HeightRequest="80" HorizontalScrollBarVisibility="Never">
-                                            <CollectionView.ItemsLayout>
-                                                <LinearItemsLayout Orientation="Vertical" />
-                                            </CollectionView.ItemsLayout>
-                                            <CollectionView.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BackgroundColor="#F8F9FA" Padding="10,8" StrokeThickness="0" Margin="0,0,0,5">
-                                                        <Border.StrokeShape>
-                                                            <RoundRectangle CornerRadius="12" />
-                                                        </Border.StrokeShape>
-                                                        <Label Text="{Binding DisplayName}" TextColor="{StaticResource TextMain}" FontSize="12" LineBreakMode="TailTruncation" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </CollectionView.ItemTemplate>
-                                        </CollectionView>
-
-                                        <Label Text="{DynamicResource TxtLyrics}" TextColor="{StaticResource TextMain}" FontSize="14" FontAttributes="Bold" />
-                                        <CollectionView ItemsSource="{Binding Lyrics}" SelectionMode="None" HeightRequest="120">
-                                            <CollectionView.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Label Text="{Binding Text}" TextColor="{StaticResource TextGray}" FontSize="13" LineBreakMode="TailTruncation" Margin="0,4,0,0" />
-                                                </DataTemplate>
-                                            </CollectionView.ItemTemplate>
-                                        </CollectionView>
-                                    </VerticalStackLayout>
-                                </controls:StateContainer.SuccessContent>
-                            </controls:StateContainer>
-                        </VerticalStackLayout>
-
                     </VerticalStackLayout>
                 </Border>
             </Grid>
@@ -209,3 +123,4 @@
 
     </Grid>
 </ContentPage>
+  

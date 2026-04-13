@@ -10,7 +10,7 @@
             <Border BackgroundColor="{StaticResource TcvBrandForest}"
                     StrokeThickness="0"
                     Padding="{StaticResource TcvSpaceL}"
-                    Margin="0,{StaticResource TcvSpaceM},0,0">
+                    Margin="0,0,0,0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
@@ -29,7 +29,7 @@
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </Border>
-
+    
             <Button Style="{StaticResource TcvPrimaryButton}"
                     Text="{DynamicResource OnboardingCtaStart}"
                     Clicked="OnStartClicked" />

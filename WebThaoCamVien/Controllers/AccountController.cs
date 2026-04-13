@@ -45,6 +45,10 @@ namespace WebThaoCamVien.Controllers
                 return View();
             }
 
+
+            var checkEmail = email; // Đặt breakpoint ở đây (bấm F9)
+            var allUsers = _context.Users.ToList(); // Ép Entity Framework lôi hết user ra
+
             // Tìm user trong database (So sánh trực tiếp password)
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);

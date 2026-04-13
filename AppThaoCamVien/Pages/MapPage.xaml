@@ -105,15 +105,32 @@
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
 
-                            <Border Grid.Column="2" BackgroundColor="#28A745" Padding="15,0" HeightRequest="40" StrokeThickness="0" VerticalOptions="Center">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="12"/>
-                                </Border.StrokeShape>
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnListenNowTapped"/>
-                                </Border.GestureRecognizers>
-                                <Label Text="{DynamicResource TxtListenBtn}" TextColor="White" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
+                            <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="8">
+
+                                <Border BackgroundColor="#E9ECEF" Padding="15,0" HeightRequest="35" StrokeThickness="0">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12"/>
+                                    </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnDirectionsTapped"/>
+                                    </Border.GestureRecognizers>
+                                    <HorizontalStackLayout Spacing="4" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Label Text="🗺" FontSize="12" VerticalOptions="Center"/>
+                                        <Label Text="Chỉ đường" TextColor="#1A1A1A" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                </Border>
+
+                                <Border BackgroundColor="#28A745" Padding="15,0" HeightRequest="35" StrokeThickness="0">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12"/>
+                                    </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnListenNowTapped"/>
+                                    </Border.GestureRecognizers>
+                                    <Label Text="{DynamicResource TxtListenBtn}" TextColor="White" FontSize="11" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+
+                            </VerticalStackLayout>
                         </Grid>
                     </Border>
 
