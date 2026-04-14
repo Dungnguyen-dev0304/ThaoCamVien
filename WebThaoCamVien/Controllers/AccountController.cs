@@ -1,94 +1,111 @@
-﻿using ApiThaoCamVien.Models; // Chứa WebContext
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Configuration;
-using SharedThaoCamVien.Models; // Chứa User model
+using ApiThaoCamVien.Models;
+using ApiThaoCamVien.ViewModels;
 using System.Security.Claims;
 
-namespace WebThaoCamVien.Controllers
+namespace ApiThaoCamVien.Controllers;
+
+public class AccountController : Controller
 {
-    [Authorize]
-    public class AccountController : Controller
+    private readonly WebContext _context;
+
+    public AccountController(WebContext context)
     {
-        private readonly WebContext _context;
+        _context = context;
+    }
 
-        public AccountController(WebContext context)
+    // GET: /Account/Login
+    [HttpGet]
+    public IActionResult Login(string returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Home");
+
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
+    }
+
+    // POST: /Account/Login
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        // Tìm user theo email
+        var user = _context.Users
+            .FirstOrDefault(u => u.Email == model.Email);
+
+        // Không tìm thấy email
+        if (user == null)
         {
-            _context = context;
+            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
+            return View(model);
         }
 
-        // GET: /Account/Login
-        [AllowAnonymous]
-        [HttpGet]
-        public IActionResult Login()
+        // Sai mật khẩu
+        // Nếu dùng BCrypt: thay bằng BCrypt.Verify(model.Password, user.Password)
+        if (user.Password != model.Password)
         {
-            // Nếu đã đăng nhập thì vào thẳng Admin
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Admin");
-            }
-            return View();
+            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
+            return View(model);
         }
 
-        // POST: /Account/Login
-        [AllowAnonymous]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string email, string password)
+        // Chặn User thường (Role = 1) — không cho vào hệ thống quản trị
+        if (user.Role != 0)
         {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
-            {
-                ViewBag.Error = "Vui lòng nhập Email và Mật khẩu.";
-                return View();
-            }
-
-
-            var checkEmail = email; // Đặt breakpoint ở đây (bấm F9)
-            var allUsers = _context.Users.ToList(); // Ép Entity Framework lôi hết user ra
-
-            // Tìm user trong database (So sánh trực tiếp password)
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
-
-            if (user != null)
-            {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Name, user.DisplayName),
-                    new Claim(ClaimTypes.Role, "Admin")
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = true,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
-
-                // Chuyển hướng về trang Index trong folder Admin
-                return RedirectToAction("Index", "Admin");
-            }
-
-            ViewBag.Error = "Email hoặc mật khẩu không chính xác.";
-            return View();
+            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
+            return View(model);
         }
 
-        // GET: /Account/Logout
-        [HttpGet]
-        public async Task<IActionResult> Logout()
+        // Chỉ Admin (Role = 0) mới được tạo session
+        var claims = new List<Claim>
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Account");
-        }
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.DisplayName),
+            new Claim(ClaimTypes.Role, "Admin"),
+        };
+
+        var claimsIdentity = new ClaimsIdentity(
+            claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var authProperties = new AuthenticationProperties
+        {
+            IsPersistent = model.RememberMe,
+            ExpiresUtc = model.RememberMe
+                ? DateTimeOffset.UtcNow.AddDays(30)
+                : DateTimeOffset.UtcNow.AddHours(8)
+        };
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(claimsIdentity),
+            authProperties);
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return Redirect(returnUrl);
+
+        return RedirectToAction("Index", "Home");
+    }
+
+    // POST: /Account/Logout
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Login", "Account");
+    }
+
+    // GET: /Account/AccessDenied
+    public IActionResult AccessDenied()
+    {
+        return View();
     }
 }

@@ -21,11 +21,30 @@ public partial class QrPage : ContentPage
         BindingContext = _vm;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        BarcodeReader.IsDetecting = true;
         _busy = false;
+
+        // Runtime permission check — bắt buộc trên Android 6.0+ (API 23+)
+        var camStatus = await Permissions.CheckStatusAsync<Permissions.Camera>();
+        if (camStatus != PermissionStatus.Granted)
+            camStatus = await Permissions.RequestAsync<Permissions.Camera>();
+
+        if (camStatus == PermissionStatus.Granted)
+        {
+            BarcodeReader.IsDetecting = true;
+        }
+        else
+        {
+            // Người dùng từ chối quyền Camera
+            BarcodeReader.IsDetecting = false;
+            await DisplayAlert(
+                "Quyền Camera",
+                "Ứng dụng cần quyền Camera để quét mã QR. Vui lòng cấp quyền trong Cài đặt.",
+                "OK");
+        }
+
         _ = _vm.SafeReloadAsync();
         StartAnim();
     }

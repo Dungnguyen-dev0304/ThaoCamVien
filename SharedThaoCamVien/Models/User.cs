@@ -18,7 +18,13 @@ public partial class User
     public DateTime CreatedAt { get; set; }
 
     [StringLength(50)]
-    public String Password { get; set; }
+    public string Password { get; set; }
+
+    /// <summary>
+    /// 0 = Admin, 1 = User
+    /// </summary>
+    [Required]
+    public int Role { get; set; } = 1; // Mặc định là User
 
     public virtual ICollection<PoiVisitHistory> PoiVisitHistories { get; set; } = new List<PoiVisitHistory>();
 

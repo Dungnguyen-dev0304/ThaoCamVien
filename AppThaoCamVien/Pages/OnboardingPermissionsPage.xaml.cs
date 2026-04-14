@@ -29,6 +29,14 @@ public partial class OnboardingPermissionsPage : ContentPage
         HintLabel.IsVisible = true;
     }
 
+    private async void OnRequestCameraClicked(object? sender, EventArgs e)
+    {
+        var s = await Permissions.CheckStatusAsync<Permissions.Camera>();
+        if (s != PermissionStatus.Granted)
+            s = await Permissions.RequestAsync<Permissions.Camera>();
+        HintLabel.IsVisible = true;
+    }
+
     private async void OnRequestNotificationsClicked(object? sender, EventArgs e)
     {
 #if ANDROID

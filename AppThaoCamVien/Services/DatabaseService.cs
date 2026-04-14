@@ -29,13 +29,12 @@ namespace AppThaoCamVien.Services
 
         public DatabaseService()
         {
-            // Sync POI lấy từ API qua /api/Pois
-            // - Android emulator: 10.0.2.2
-            // - Android device/iOS device: cần IP nội bộ của máy PC (vd 192.168.1.100)
-            var pref = Preferences.Default.Get("ApiBaseUrl", "http://10.0.2.2:5281");
-            _apiBase = pref.EndsWith("/api", StringComparison.OrdinalIgnoreCase)
-                ? pref.TrimEnd('/')
-                : $"{pref.TrimEnd('/')}/api";
+            // Dùng chung logic resolve URL với ApiService (không hardcode IP cá nhân).
+            var pref = Preferences.Default.Get("ApiBaseUrl", string.Empty);
+            var baseUrl = string.IsNullOrWhiteSpace(pref) ? ApiService.ResolveDefaultApiUrl() : pref;
+            _apiBase = baseUrl.EndsWith("/api", StringComparison.OrdinalIgnoreCase)
+                ? baseUrl.TrimEnd('/')
+                : $"{baseUrl.TrimEnd('/')}/api";
 
             var handler = new HttpClientHandler();
 #if DEBUG

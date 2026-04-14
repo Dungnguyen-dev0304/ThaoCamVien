@@ -28,6 +28,18 @@
             <Border Style="{StaticResource TcvCardBorder}">
                 <VerticalStackLayout Spacing="{StaticResource TcvSpaceS}">
                     <Label Style="{StaticResource TcvLabelH2}"
+                           Text="Camera" />
+                    <Label Style="{StaticResource TcvLabelBody}"
+                           Text="Cho phép camera để quét mã QR tại các chuồng thú." />
+                    <Button Style="{StaticResource TcvSecondaryButton}"
+                            Text="Cấp quyền Camera"
+                            Clicked="OnRequestCameraClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource TcvCardBorder}">
+                <VerticalStackLayout Spacing="{StaticResource TcvSpaceS}">
+                    <Label Style="{StaticResource TcvLabelH2}"
                            Text="{DynamicResource OnboardingPermNotifTitle}" />
                     <Label Style="{StaticResource TcvLabelBody}"
                            Text="{DynamicResource OnboardingPermNotifBody}" />

@@ -19,8 +19,12 @@ public sealed class ApiService
     {
         // Cho phép thay BaseUrl nhanh khi test (Android emulator/device, iOS simulator/device).
         // Ví dụ: http://10.0.2.2:5281 hoặc http://192.168.1.100:5281
+        // Đọc IP từ Preferences (đã lưu từ lần config trước hoặc từ màn hình cài đặt).
+        // Nếu chưa có → dùng default phù hợp với loại thiết bị.
+        // Trên thiết bị thật, App.xaml.cs sẽ hỏi dev nhập IP ở lần chạy đầu.
         var pref = Preferences.Default.Get("ApiBaseUrl", string.Empty);
-        BaseUrl = string.IsNullOrWhiteSpace(pref) ? "http://10.0.2.2:5281" : pref;
+        var defaultUrl = ResolveDefaultApiUrl();
+        BaseUrl = string.IsNullOrWhiteSpace(pref) ? defaultUrl : pref;
 
         var handler = new HttpClientHandler();
 #if DEBUG
@@ -38,6 +42,31 @@ public sealed class ApiService
     }
 
     public string BaseUrl { get; set; }
+
+    /// <summary>
+    /// Chọn URL mặc định theo loại thiết bị. Không hardcode IP cá nhân.
+    /// Emulator → 10.0.2.2 (alias localhost của host).
+    /// Thiết bị thật → placeholder, sẽ được ghi đè bởi prompt nhập IP ở App.xaml.cs.
+    /// </summary>
+    internal static string ResolveDefaultApiUrl()
+    {
+#if ANDROID
+        return DeviceInfo.DeviceType == DeviceType.Virtual
+            ? "http://10.0.2.2:5281"
+            : "http://192.168.0.101:5281";  // Sentinel — App.xaml.cs sẽ phát hiện và hỏi dev
+#elif IOS
+        return DeviceInfo.DeviceType == DeviceType.Virtual
+            ? "http://localhost:5281"
+            : "http://192.168.0.101:5281";
+#else
+        return "http://localhost:5281";
+#endif
+    }
+
+    /// <summary>Kiểm tra xem dev đã cấu hình IP chưa.</summary>
+    public static bool NeedsConfiguration
+        => !Preferences.Default.ContainsKey("ApiBaseUrl")
+           && ResolveDefaultApiUrl().Contains("192.168.0.101");
 
     private string BuildUrl(string endpoint)
         => $"{BaseUrl.TrimEnd('/')}/{endpoint.TrimStart('/')}";
