@@ -5,6 +5,9 @@ using System.Net.Http;
 using System.Diagnostics;
 using Microsoft.Maui.Networking;
 using Microsoft.Maui.Storage;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 namespace AppThaoCamVien.Services
 {
@@ -23,6 +26,7 @@ namespace AppThaoCamVien.Services
 
         private readonly string _apiBase;
         private readonly HttpClient _httpClient;
+        private readonly ResiliencePipeline _pipeline;
 
         // UI có thể đọc để hiển thị message cho người dùng
         public string? LastSyncError { get; private set; }
@@ -43,8 +47,11 @@ namespace AppThaoCamVien.Services
 #endif
             _httpClient = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(6)
+                // HttpClient timeout > Polly total timeout (15s)
+                Timeout = TimeSpan.FromSeconds(20)
             };
+
+            _pipeline = ResiliencePolicies.HttpPipeline;
         }
 
         public string CurrentLanguage { get; set; } = "vi";
@@ -117,19 +124,34 @@ namespace AppThaoCamVien.Services
             try
             {
                 var url = $"{_apiBase}/Pois?lang={CurrentLanguage}";
-                var pois = await _httpClient.GetFromJsonAsync<List<Poi>>(url);
+
+                // Polly pipeline: Retry(2x) + CircuitBreaker + Timeout(15s)
+                var pois = await _pipeline.ExecuteAsync(async ct =>
+                {
+                    return await _httpClient.GetFromJsonAsync<List<Poi>>(url, ct);
+                }, CancellationToken.None);
 
                 if (pois != null && pois.Count > 0)
                 {
                     var db = await GetDbAsync();
                     await db.DeleteAllAsync<Poi>();
                     await db.InsertAllAsync(pois);
-                    System.Diagnostics.Debug.WriteLine($"[DB] API sync OK: {pois.Count} POIs");
+                    Debug.WriteLine($"[DB] API sync OK: {pois.Count} POIs");
                     return;
                 }
 
                 // API phản hồi được nhưng rỗng -> không xóa cache hiện tại
-                System.Diagnostics.Debug.WriteLine("[DB] API trả về rỗng/không có active POIs.");
+                Debug.WriteLine("[DB] API trả về rỗng/không có active POIs.");
+            }
+            catch (BrokenCircuitException)
+            {
+                LastSyncError = "Server không khả dụng (circuit open).";
+                Debug.WriteLine("[DB] Circuit breaker open → offline");
+            }
+            catch (TimeoutRejectedException)
+            {
+                LastSyncError = "API timeout (Polly).";
+                Debug.WriteLine("[DB] Polly total timeout → offline");
             }
             catch (TaskCanceledException ex) when (!ex.CancellationToken.IsCancellationRequested)
             {

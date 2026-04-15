@@ -22,11 +22,37 @@ public sealed class MobileController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Resolve ngôn ngữ: Accept-Language header (ưu tiên) → query param → "vi".
+    /// Mobile app gửi Accept-Language header qua ApiService.ApplyLanguageHeader().
+    /// Web browser / Swagger vẫn dùng ?lang= query param.
+    /// </summary>
+    private string ResolveLang(string? queryLang)
+    {
+        // Ưu tiên 1: Accept-Language header
+        var acceptLang = Request.Headers.AcceptLanguage.FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(acceptLang))
+        {
+            // Header có thể là "en", "en-US", "vi-VN,vi;q=0.9" — lấy language code đầu tiên
+            var primary = acceptLang.Split(',')[0].Trim().Split('-')[0].Trim().Split(';')[0].Trim();
+            if (!string.IsNullOrEmpty(primary) && primary.Length >= 2)
+                return primary.ToLowerInvariant();
+        }
+
+        // Ưu tiên 2: Query param
+        if (!string.IsNullOrWhiteSpace(queryLang))
+            return queryLang.ToLowerInvariant();
+
+        return "vi";
+    }
+
     /// <summary>GET /api/mobile/home-feed?lang=vi</summary>
     [HttpGet("home-feed")]
-    public async Task<IActionResult> GetHomeFeed([FromQuery] string lang = "vi")
+    public async Task<IActionResult> GetHomeFeed([FromQuery] string? lang = null)
     {
+        lang = ResolveLang(lang);
         var pois = await GetActivePoisOrderedAsync();
+        await ApplyTranslationsAsync(pois, lang);
         var cards = pois.Select(p => new HomeFeedCardResponse
         {
             Id = p.PoiId,
@@ -64,8 +90,9 @@ public sealed class MobileController : ControllerBase
 
     /// <summary>GET /api/mobile/weather/current?lang=vi — dữ liệu demo local (không gọi dịch vụ thời tiết).</summary>
     [HttpGet("weather/current")]
-    public Task<IActionResult> GetWeather([FromQuery] string lang = "vi")
+    public Task<IActionResult> GetWeather([FromQuery] string? lang = null)
     {
+        lang = ResolveLang(lang);
         var dto = lang switch
         {
             "en" => new WeatherResponse
@@ -100,8 +127,9 @@ public sealed class MobileController : ControllerBase
 
     /// <summary>GET /api/mobile/pois/nearby</summary>
     [HttpGet("pois/nearby")]
-    public async Task<IActionResult> GetNearby([FromQuery] double lat, [FromQuery] double lng, [FromQuery] int radius = 200, [FromQuery] string lang = "vi")
+    public async Task<IActionResult> GetNearby([FromQuery] double lat, [FromQuery] double lng, [FromQuery] int radius = 200, [FromQuery] string? lang = null)
     {
+        lang = ResolveLang(lang);
         var pois = await GetActivePoisOrderedAsync();
         var list = new List<NearbyPoiResponse>();
         foreach (var p in pois)
@@ -128,8 +156,9 @@ public sealed class MobileController : ControllerBase
 
     /// <summary>GET /api/mobile/animals?lang=vi</summary>
     [HttpGet("animals")]
-    public async Task<IActionResult> GetAnimals([FromQuery] string lang = "vi")
+    public async Task<IActionResult> GetAnimals([FromQuery] string? lang = null)
     {
+        lang = ResolveLang(lang);
         // Animals = active POIs grouped by their POI category.
         // Conservation status is derived from Priority (no extra table in current DB schema).
         var q =
@@ -196,8 +225,9 @@ public sealed class MobileController : ControllerBase
 
     /// <summary>GET /api/mobile/tts/voices?lang=vi</summary>
     [HttpGet("tts/voices")]
-    public Task<IActionResult> GetVoices([FromQuery] string lang = "vi")
+    public Task<IActionResult> GetVoices([FromQuery] string? lang = null)
     {
+        lang = ResolveLang(lang);
         var voices = new List<VoiceResponse>
         {
             new()
@@ -266,6 +296,41 @@ public sealed class MobileController : ControllerBase
             }
         };
         return Task.FromResult<IActionResult>(Ok(sections));
+    }
+
+    /// <summary>
+    /// Lấy bản dịch cho ngôn ngữ lang, overlay lên Name/Description của POI.
+    /// Nếu lang == "vi" hoặc không có bản dịch → giữ nguyên data gốc.
+    /// </summary>
+    private async Task ApplyTranslationsAsync(List<Poi> pois, string lang)
+    {
+        if (lang == "vi" || pois.Count == 0) return;
+
+        try
+        {
+            var poiIds = pois.Select(p => p.PoiId).ToList();
+            var translations = await _ctx.PoiTranslations
+                .AsNoTracking()
+                .Where(t => t.LanguageCode == lang && poiIds.Contains(t.PoiId))
+                .ToListAsync();
+
+            if (translations.Count == 0) return;
+
+            var lookup = translations.ToDictionary(t => t.PoiId);
+            foreach (var poi in pois)
+            {
+                if (lookup.TryGetValue(poi.PoiId, out var tr))
+                {
+                    if (!string.IsNullOrWhiteSpace(tr.Name)) poi.Name = tr.Name;
+                    if (!string.IsNullOrWhiteSpace(tr.Description)) poi.Description = tr.Description;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Nếu bảng chưa tồn tại hoặc lỗi khác → bỏ qua, dùng data gốc
+            _logger.LogWarning(ex, "ApplyTranslationsAsync failed for lang={Lang}", lang);
+        }
     }
 
     private async Task<List<Poi>> GetActivePoisOrderedAsync()

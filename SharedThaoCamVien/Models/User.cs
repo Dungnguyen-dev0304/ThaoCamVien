@@ -9,16 +9,16 @@ public partial class User
     public int UserId { get; set; }
 
     [Required]
-    public string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
     [Required]
-    public string DisplayName { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
 
     [Required]
     public DateTime CreatedAt { get; set; }
 
     [StringLength(50)]
-    public string Password { get; set; }
+    public string Password { get; set; } = string.Empty;
 
     /// <summary>
     /// 0 = Admin, 1 = User

@@ -38,6 +38,7 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<NarrationEngine>();
             builder.Services.AddSingleton<AutoTranslateService>();
             builder.Services.AddSingleton<ApiService>();
+            builder.Services.AddSingleton<DirectionsService>();
 
             // ── Pages ─────────────────────────────────────────────────────
             // QUAN TRỌNG: Dùng Transient cho tất cả Pages.

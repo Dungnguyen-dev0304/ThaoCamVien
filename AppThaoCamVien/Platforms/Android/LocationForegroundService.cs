@@ -6,6 +6,7 @@ using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
 
+#pragma warning disable CA1416 // Platform compatibility — đã có runtime check Build.VERSION.SdkInt
 namespace AppThaoCamVien.Platforms.Android
 {
     /// <summary>

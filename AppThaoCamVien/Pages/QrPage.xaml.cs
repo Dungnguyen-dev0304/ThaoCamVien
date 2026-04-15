@@ -1,4 +1,4 @@
-﻿using ZXing.Net.Maui;
+using ZXing.Net.Maui;
 using AppThaoCamVien.Services;
 using AppThaoCamVien.ViewModels;
 using SharedThaoCamVien.Models;
@@ -11,6 +11,7 @@ public partial class QrPage : ContentPage
     private readonly QrPageViewModel _vm;
     private bool _busy = false;
     private bool _flashOn = false;
+    private bool _cameraPermissionGranted = false;
     private CancellationTokenSource? _animCts;
 
     public QrPage(QrPageViewModel vm, IServiceProvider sp)
@@ -20,43 +21,83 @@ public partial class QrPage : ContentPage
         _vm = vm;
         BindingContext = _vm;
     }
-
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         _busy = false;
 
-        // Runtime permission check — bắt buộc trên Android 6.0+ (API 23+)
-        var camStatus = await Permissions.CheckStatusAsync<Permissions.Camera>();
-        if (camStatus != PermissionStatus.Granted)
-            camStatus = await Permissions.RequestAsync<Permissions.Camera>();
+        await EnsureCameraPermissionAsync();
 
-        if (camStatus == PermissionStatus.Granted)
+        if (_cameraPermissionGranted)
         {
+            // Bật camera — ZXing handler sẽ acquire native camera
             BarcodeReader.IsDetecting = true;
-        }
-        else
-        {
-            // Người dùng từ chối quyền Camera
-            BarcodeReader.IsDetecting = false;
-            await DisplayAlert(
-                "Quyền Camera",
-                "Ứng dụng cần quyền Camera để quét mã QR. Vui lòng cấp quyền trong Cài đặt.",
-                "OK");
         }
 
         _ = _vm.SafeReloadAsync();
         StartAnim();
     }
-
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         BarcodeReader.IsDetecting = false;
+        if (_flashOn)
+        {
+            _flashOn = false;
+            try { BarcodeReader.IsTorchOn = false; } catch { }
+        }
         _animCts?.Cancel();
-        if (_flashOn) { _flashOn = false; BarcodeReader.IsTorchOn = false; }
+    }
+    private async Task EnsureCameraPermissionAsync()
+    {
+        try
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.Camera>();
+            }
+
+            _cameraPermissionGranted = (status == PermissionStatus.Granted);
+
+            if (!_cameraPermissionGranted)
+            {
+                BarcodeReader.IsDetecting = false;
+
+
+                if (status == PermissionStatus.Denied)
+                {
+                    var goSettings = await DisplayAlert(
+                        "Quyền Camera",
+                        "Ứng dụng cần quyền Camera để quét mã QR.\n" +
+                        "Vui lòng vào Cài đặt → Quyền ứng dụng → Camera để cấp quyền.",
+                        "Mở Cài đặt",
+                        "Bỏ qua");
+
+                    if (goSettings)
+                    {
+                        try { AppInfo.ShowSettingsUI(); }
+                        catch { /* Một số device không support */ }
+                    }
+                }
+                else
+                {
+                    await DisplayAlert(
+                        "Quyền Camera",
+                        "Ứng dụng cần quyền Camera để quét mã QR. Vui lòng cấp quyền.",
+                        "OK");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QrPage] Permission check error: {ex.Message}");
+            _cameraPermissionGranted = false;
+        }
     }
 
+    
     private void StartAnim()
     {
         _animCts = new CancellationTokenSource();
@@ -70,7 +111,7 @@ public partial class QrPage : ContentPage
                 {
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        await ScanLine.TranslateToAsync(0, down ? 220 : 10, 1200, Easing.SinInOut);
+                        await ScanLine.TranslateTo(0, down ? 220 : 10, 1200, Easing.SinInOut);
                         down = !down;
                     });
                 }
@@ -82,6 +123,7 @@ public partial class QrPage : ContentPage
         }, tok);
     }
 
+  
     private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
     {
         if (_busy) return;
@@ -100,7 +142,6 @@ public partial class QrPage : ContentPage
             var poi = _vm.ResolvedPoiModel;
             if (poi != null)
             {
-                // Phát narration ngay lập tức
                 var narration = _sp.GetService<NarrationEngine>();
                 _ = narration?.PlayAsync(poi, forcePlay: true);
 
@@ -114,20 +155,28 @@ public partial class QrPage : ContentPage
         }
         catch (Exception ex)
         {
-            // VM sẽ tự set state Error nếu ResolveQrAsync bắt lỗi.
             System.Diagnostics.Debug.WriteLine($"[QrPage] HandleAsync error: {ex.Message}");
         }
         finally
         {
             _busy = false;
-            // Giữ UI scanning ổn định; state container sẽ phản ánh Empty/Error.
         }
     }
 
+   
     private void OnToggleFlash(object sender, TappedEventArgs e)
     {
+        if (!_cameraPermissionGranted) return;
         _flashOn = !_flashOn;
-        BarcodeReader.IsTorchOn = _flashOn;
+        try
+        {
+            BarcodeReader.IsTorchOn = _flashOn;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QrPage] Flash toggle error: {ex.Message}");
+            _flashOn = false;
+        }
         FlashButton.BackgroundColor = _flashOn
             ? Color.FromArgb("#4CAF50") : Color.FromArgb("#2C2C2E");
     }
@@ -139,6 +188,4 @@ public partial class QrPage : ContentPage
     }
 
     private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
-
-    
 }

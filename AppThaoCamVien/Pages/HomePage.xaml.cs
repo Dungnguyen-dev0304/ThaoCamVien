@@ -87,7 +87,7 @@ public partial class HomePage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 
@@ -131,7 +131,7 @@ public partial class HomePage : ContentPage
             if (poi == null)
             {
                 System.Diagnostics.Debug.WriteLine($"[HomePage] miss both local/api poiId={poiId}");
-                await DisplayAlertAsync("Thông báo", "Không tìm thấy điểm tham quan.", "OK");
+                await DisplayAlert("Thông báo", "Không tìm thấy điểm tham quan.", "OK");
                 return;
             }
 
@@ -141,7 +141,7 @@ public partial class HomePage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 
@@ -229,5 +229,21 @@ public partial class HomePage : ContentPage
         };
         _miniTimer.Start();
     }
-}
+   
+    private async void OnViewAllTapped(object sender, TappedEventArgs e)
+    {
+        try
+        {
+            var page = _sp.GetService<AnimalsPage>();
+            if (page != null)
+            {
+                await Navigation.PushAsync(page);
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Lỗi", "Không thể mở trang danh sách: " + ex.Message, "OK");
+        }
+    }
+} // Ký tự đóng class HomePage
 

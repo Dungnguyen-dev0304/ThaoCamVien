@@ -97,16 +97,13 @@ public partial class StoryAudioPage : ContentPage
         PoiDescTitleLabel.Text = lang switch
         {
             "en" => $"{poi.Name} Story",
-            "th" => $"เรื่องของ{poi.Name}",
-            "id" => $"Kisah {poi.Name}",
-            "ms" => $"Kisah {poi.Name}",
-            "km" => $"រឿង{poi.Name}",
+            
             _ => $"Câu chuyện {poi.Name}",
         };
 
         var desc = poi.Description ?? "Chưa có thông tin chi tiết.";
         PoiDescLabel.Text = desc;
-        ShortIntroLabel.Text = desc.Length > 120 ? desc[..120] + "..." : desc;
+        //ShortIntroLabel.Text = desc.Length > 120 ? desc[..120] + "..." : desc;
 
         // Ảnh: an toàn với try-catch
         try
@@ -255,7 +252,7 @@ public partial class StoryAudioPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 

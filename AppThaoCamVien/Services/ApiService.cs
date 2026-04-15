@@ -1,44 +1,48 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Diagnostics;
 using Microsoft.Maui.Storage;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 namespace AppThaoCamVien.Services;
 
 /// <summary>
 /// Safe HTTP client wrapper for mobile app.
-/// Never throws outside; return null and let ViewModel switch to Error/Empty states.
+/// Tích hợp Polly v8: Retry (2x exponential) + Circuit Breaker + Timeout.
+/// Never throws outside; return null và let ViewModel switch to Error/Empty states.
 /// </summary>
 public sealed class ApiService
 {
     private readonly HttpClient _httpClient;
+    private readonly ResiliencePipeline _pipeline;
 
     public ApiService()
     {
-        // Cho phép thay BaseUrl nhanh khi test (Android emulator/device, iOS simulator/device).
-        // Ví dụ: http://10.0.2.2:5281 hoặc http://192.168.1.100:5281
-        // Đọc IP từ Preferences (đã lưu từ lần config trước hoặc từ màn hình cài đặt).
-        // Nếu chưa có → dùng default phù hợp với loại thiết bị.
-        // Trên thiết bị thật, App.xaml.cs sẽ hỏi dev nhập IP ở lần chạy đầu.
         var pref = Preferences.Default.Get("ApiBaseUrl", string.Empty);
         var defaultUrl = ResolveDefaultApiUrl();
         BaseUrl = string.IsNullOrWhiteSpace(pref) ? defaultUrl : pref;
 
         var handler = new HttpClientHandler();
 #if DEBUG
-        // Chỉ áp dụng trong môi trường dev: bypass chứng chỉ self-signed (nếu có).
         handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 #endif
 
         _httpClient = new HttpClient(handler)
         {
-            Timeout = TimeSpan.FromSeconds(12)
+            // Timeout của HttpClient > Polly total timeout
+            // để Polly quản lý timeout, không phải HttpClient.
+            Timeout = TimeSpan.FromSeconds(20)
         };
 
         _httpClient.DefaultRequestHeaders.Accept.Clear();
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        // Polly pipeline: Timeout(15s) → Retry(2x) → CircuitBreaker
+        _pipeline = ResiliencePolicies.HttpPipeline;
     }
 
     public string BaseUrl { get; set; }
@@ -77,12 +81,45 @@ public sealed class ApiService
         catch { return null; }
     }
 
+    /// <summary>
+    /// GET request với Polly resilience pipeline.
+    /// Circuit Breaker mở → fail-fast (không chờ timeout).
+    /// Retry → exponential backoff 1s, 2s.
+    /// Timeout tổng → 15s cho cả pipeline.
+    /// </summary>
+    /// <summary>
+    /// Gắn Accept-Language header trước mỗi request.
+    /// Dùng LanguageManager.Current để lấy ngôn ngữ hiện tại.
+    /// Format: "en", "vi", "th"... — server sẽ ưu tiên header này hơn query param.
+    /// </summary>
+    private void ApplyLanguageHeader()
+    {
+        var lang = LanguageManager.Current; // "vi", "en", "th", ...
+        _httpClient.DefaultRequestHeaders.AcceptLanguage.Clear();
+        _httpClient.DefaultRequestHeaders.AcceptLanguage.Add(
+            new System.Net.Http.Headers.StringWithQualityHeaderValue(lang));
+    }
+
     public async Task<T?> GetAsync<T>(string endpoint, CancellationToken ct = default) where T : class
     {
         var url = BuildUrl(endpoint);
         try
         {
-            return await _httpClient.GetFromJsonAsync<T>(url, ct);
+            ApplyLanguageHeader();
+            return await _pipeline.ExecuteAsync(async token =>
+            {
+                return await _httpClient.GetFromJsonAsync<T>(url, token);
+            }, ct);
+        }
+        catch (BrokenCircuitException)
+        {
+            Debug.WriteLine($"[ApiService] GET circuit open (fail-fast): {url}");
+            return null;
+        }
+        catch (TimeoutRejectedException)
+        {
+            Debug.WriteLine($"[ApiService] GET total timeout: {url}");
+            return null;
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
@@ -106,22 +143,45 @@ public sealed class ApiService
         }
     }
 
+    /// <summary>
+    /// POST request với Polly resilience pipeline.
+    /// </summary>
     public async Task<TResponse?> PostAsync<TRequest, TResponse>(string endpoint, TRequest payload, CancellationToken ct = default)
         where TResponse : class
     {
         var url = BuildUrl(endpoint);
         try
         {
-            using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
-
-            if (!response.IsSuccessStatusCode)
+            ApplyLanguageHeader();
+            return await _pipeline.ExecuteAsync(async token =>
             {
-                var body = await SafeReadBodyAsync(response);
-                Debug.WriteLine($"[ApiService] POST failed status={(int)response.StatusCode} url={url} body={body}");
-                return null;
-            }
+                using var response = await _httpClient.PostAsJsonAsync(url, payload, token);
 
-            return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: ct);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await SafeReadBodyAsync(response);
+                    Debug.WriteLine($"[ApiService] POST failed status={(int)response.StatusCode} url={url} body={body}");
+
+                    // 4xx → không nên retry (lỗi logic, không phải transient)
+                    if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
+                        return null;
+
+                    // 5xx → ném exception để Polly retry
+                    response.EnsureSuccessStatusCode();
+                }
+
+                return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: token);
+            }, ct);
+        }
+        catch (BrokenCircuitException)
+        {
+            Debug.WriteLine($"[ApiService] POST circuit open (fail-fast): {url}");
+            return null;
+        }
+        catch (TimeoutRejectedException)
+        {
+            Debug.WriteLine($"[ApiService] POST total timeout: {url}");
+            return null;
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {

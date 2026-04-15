@@ -13,7 +13,16 @@ namespace SharedThaoCamVien.Models
         public int? CategoryId { get; set; }
 
         [SQLite.Column("name")]
+<<<<<<< HEAD
         public string Name { get; set; }
+=======
+        public string? Name { get; set; }
+
+        [SQLite.Column("description")]
+        [Column("name")]
+        [Required]
+        public string Name { get; set; } = null!;
+>>>>>>> fd5d546fa8e1a642f0233c45cdd4de1dbea5ae9a
 
         [SQLite.Column("description")]
         public string Description { get; set; }
@@ -32,7 +41,13 @@ namespace SharedThaoCamVien.Models
         public int? Priority { get; set; }
 
         [SQLite.Column("image_thumbnail")]
+<<<<<<< HEAD
         public string ImageThumbnail { get; set; }
+=======
+
+        [Column("image_thumbnail")]
+        public string? ImageThumbnail { get; set; }
+>>>>>>> fd5d546fa8e1a642f0233c45cdd4de1dbea5ae9a
 
         [SQLite.Column("is_active")]
         public bool IsActive { get; set; }

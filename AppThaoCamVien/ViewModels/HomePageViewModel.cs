@@ -1,4 +1,4 @@
-using AppThaoCamVien.Services;
+﻿using AppThaoCamVien.Services;
 using AppThaoCamVien.Services.Api;
 using AppThaoCamVien.ViewModels.Core;
 using System.Collections.ObjectModel;
@@ -12,10 +12,10 @@ public sealed class HomePageViewModel : BaseViewModel
     private readonly DatabaseService _db;
     private readonly LocationService _location;
 
-    // Always non-null để XAML binding không gặp rủi ro null khi 1 request API thất bại.
+    // Always non-null Ä‘á»ƒ XAML binding khÃ´ng gáº·p rá»§i ro null khi 1 request API tháº¥t báº¡i.
     private HomeFeedDto _feed = new();
 
-    // ── UI models for “Home like reference screenshot” ──────────────────
+    // â”€â”€ UI models for â€œHome like reference screenshotâ€ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private ContinueListeningCard _continueListening = new(
         PoiId: 0,
         Title: "",
@@ -122,7 +122,7 @@ public sealed class HomePageViewModel : BaseViewModel
         _api = api;
         _db = db;
         _location = location;
-        EmptyMessage = "Hiện chưa có nội dung phù hợp.";
+        EmptyMessage = "Hiá»‡n chÆ°a cÃ³ ná»™i dung phÃ¹ há»£p.";
     }
 
     public void UpdatePlaybackUi(double positionSeconds, double durationSeconds, bool isPlaying)
@@ -154,7 +154,7 @@ public sealed class HomePageViewModel : BaseViewModel
 
     protected override async Task LoadAsync()
     {
-        // Sync theo ngôn ngữ hiện tại (API-first)
+        // Sync theo ngÃ´n ngá»¯ hiá»‡n táº¡i (API-first)
         var lang = LanguageManager.Current;
         _db.CurrentLanguage = lang;
 
@@ -178,7 +178,7 @@ public sealed class HomePageViewModel : BaseViewModel
         else
         {
             IsOffline = true;
-            OfflineMessage = "Không tải được dữ liệu từ máy chủ. Vui lòng kiểm tra Internet/IP/SSL.";
+            OfflineMessage = "KhÃ´ng táº£i Ä‘Æ°á»£c dá»¯ liá»‡u tá»« mÃ¡y chá»§. Vui lÃ²ng kiá»ƒm tra Internet/IP/SSL.";
         }
 
         // Continue Listening / Mini player: last visit from local DB (synced from API).
@@ -210,6 +210,7 @@ public sealed class HomePageViewModel : BaseViewModel
         }
 
         // Nearby places from GPS -> API.
+        // Nearby places from GPS -> API.
         try
         {
             var loc = await _location.GetCurrentAsync();
@@ -221,7 +222,11 @@ public sealed class HomePageViewModel : BaseViewModel
                 NearbyPlaces.Clear();
                 if (nearby != null)
                 {
-                    foreach (var n in nearby.OrderBy(x => x.DistanceMeters))
+                    // THAY ĐỔI Ở ĐÂY: Thêm .Take(5) sau khi đã sắp xếp theo khoảng cách
+                    // Việc này đảm bảo UI chỉ render 5 Card, vuốt rất nhẹ mượt và không bị loãng trang chủ
+                    var top5Nearby = nearby.OrderBy(x => x.DistanceMeters).Take(5);
+
+                    foreach (var n in top5Nearby)
                     {
                         NearbyPlaces.Add(new NearbyPlaceCard(
                             PoiId: n.PoiId,
@@ -252,11 +257,11 @@ public sealed class HomePageViewModel : BaseViewModel
         if (string.IsNullOrWhiteSpace(s)) return "";
         s = s.Trim();
         if (s.Length <= max) return s;
-        return s[..max] + "…";
+        return s[..max] + "â€¦";
     }
 }
 
-// ── Simple UI models for new HomePage design ─────────────────────────────
+// â”€â”€ Simple UI models for new HomePage design â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public sealed record HomeQuickAction(string Emoji, string Title, ICommand Command);
 public sealed record FeaturedAnimalCard(int Id, string Name, string Subtitle, string ImageUrl);
 public sealed record UpcomingEventCard(string Emoji, string Title, string TimeLabel, string Location);
@@ -273,7 +278,7 @@ public sealed record ContinueListeningCard(
     string DurationLabel,
     bool IsPlaying)
 {
-    public string PlayGlyph => IsPlaying ? "⏸" : "▶";
+    public string PlayGlyph => IsPlaying ? "â¸" : "â–¶";
 }
 
 public sealed record MiniPlayerCard(
@@ -286,5 +291,5 @@ public sealed record MiniPlayerCard(
     string DurationLabel,
     bool IsPlaying)
 {
-    public string PlayGlyph => IsPlaying ? "⏸" : "▶";
+    public string PlayGlyph => IsPlaying ? "â¸" : "â–¶";
 }
