@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="420" viewBox="0 0 1100 420">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="40" y="48" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f2937">AUC-05 - Xem bản đồ và marker POI</text>
+  <rect x="70" y="130" width="190" height="180" rx="12" fill="#ecfccb" stroke="#65a30d" stroke-width="2"/>
+  <text x="165" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#0f172a">Người dùng</text>
+  <line x1="260" y1="220" x2="330" y2="220" stroke="#475569" stroke-width="2"/>
+  <ellipse cx="640" cy="220" rx="280" ry="95" fill="#f7fee7" stroke="#84cc16" stroke-width="2"/>
+  <text x="640" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#365314">Xem bản đồ và marker POI</text>
+  <text x="640" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#3f6212">Hiển thị vị trí hiện tại và các điểm tham quan</text>
+  <text x="640" y="266" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#3f6212">làm nổi bật POI gần nhất hoặc đang phát</text>
+</svg>

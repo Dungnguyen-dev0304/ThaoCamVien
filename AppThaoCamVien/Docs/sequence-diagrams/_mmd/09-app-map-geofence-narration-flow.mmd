@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant Map as MapPage
+    participant VM as MapPageViewModel
+    participant DB as DatabaseService
+    participant GPS as LocationService
+    participant Geo as GeofencingEngine
+    participant Nar as NarrationEngine
+
+    U->>Map: Mở màn hình Bản đồ
+    Map->>VM: SafeReloadAsync()
+    VM->>DB: SyncDataFromApiAsync() + GetAllPoisAsync()
+    DB-->>VM: Danh sách POI
+    VM-->>Map: Render pins + chips
+    Map->>Geo: SetPois(pois)
+
+    Map->>GPS: CheckAndRequestPermissionAsync()
+    alt Quyền GPS được cấp
+        Map->>GPS: StartAsync()
+        loop Mỗi khi có LocationUpdated
+            GPS-->>Map: Vị trí hiện tại
+            Map->>Geo: Process(location)
+            Geo-->>Map: ActivePoi + CanTrigger + khoảng cách
+            alt Có ActivePoi và được phép trigger
+                Map->>Geo: MarkTriggered(poiId)
+                Map->>Nar: PlayAsync(activePoi, forcePlay=false)
+                Nar-->>U: Tự phát audio/TTS theo POI
+            else Chỉ đang tiếp cận hoặc ngoài vùng
+                Map-->>U: Cập nhật panel trạng thái khoảng cách
+            end
+        end
+    else Từ chối quyền GPS
+        Map-->>U: Hiển thị bản đồ tĩnh không theo dõi vị trí
+    end

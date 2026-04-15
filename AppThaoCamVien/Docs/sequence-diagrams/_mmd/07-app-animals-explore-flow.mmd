@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as AnimalsPage
+    participant VM as AnimalsViewModel
+    participant DB as DatabaseService
+    participant API as API Mobile
+    participant Story as StoryAudioPage
+
+    U->>A: Mở tab Khám phá (Animals)
+    A->>VM: Execute LoadCommand
+    VM->>DB: SyncDataFromApiAsync()
+    VM->>API: GET /api/mobile/animals?lang={lang}
+    API-->>VM: Danh sách động vật + bộ lọc
+
+    alt Có dữ liệu
+        VM-->>A: Hiển thị danh sách + filter + tìm kiếm
+        U->>A: Chọn một loài
+        A->>DB: GetPoiByIdAsync(animal.Id)
+        alt Có POI trong local DB
+            DB-->>A: Trả POI
+        else Chưa có cache local
+            A->>API: GET /api/Pois/{id}?lang={lang}
+            API-->>A: Trả POI
+            A->>DB: SavePoiAsync(poi)
+        end
+        A->>Story: LoadPoi(poi) + PushAsync
+    else Lỗi hoặc rỗng
+        VM-->>A: Hiển thị lỗi + nút Thử lại
+    end

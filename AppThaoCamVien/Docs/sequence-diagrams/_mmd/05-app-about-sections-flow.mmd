@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as App MAUI (AboutViewModel)
+    participant API as API Mobile
+    participant S as About Sections API
+    participant F as Dữ liệu liên hệ fallback
+
+    U->>A: Mở màn hình Giới thiệu
+    A->>A: State = Loading (hiển thị skeleton)
+    A->>API: GET /api/mobile/about/sections
+    API->>S: Lấy danh sách section
+    S-->>API: Payload sections
+    API-->>A: Response sections
+
+    alt Có section
+        A->>A: State = Success
+        A-->>U: Hiển thị accordion nội dung
+    else Danh sách rỗng
+        A->>A: State = Empty
+        A-->>U: Hiển thị trạng thái trống
+    else Lỗi mạng/server
+        A->>A: State = Error
+        A->>F: Tải thông tin liên hệ cục bộ
+        F-->>A: Dữ liệu fallback
+        A-->>U: Hiển thị lỗi + liên hệ fallback + nút Thử lại
+    end

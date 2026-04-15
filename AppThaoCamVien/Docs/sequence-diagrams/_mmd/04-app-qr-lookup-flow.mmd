@@ -1,0 +1,31 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as App MAUI (QrViewModel)
+    participant Scan as Bộ quét QR
+    participant API as API Mobile
+    participant Q as QR Lookup API
+
+    U->>A: Mở màn hình QR
+    A->>A: State = Loading camera
+    A->>Scan: Khởi tạo camera và bộ quét
+    Scan-->>A: Sẵn sàng quét
+    A-->>U: Hiển thị khung quét
+
+    U->>Scan: Quét mã QR
+    Scan-->>A: Trả mã QR
+    A->>API: POST /api/mobile/qr/lookup
+    API->>Q: Tra cứu POI theo mã
+    Q-->>API: Kết quả tra cứu
+    API-->>A: Response lookup
+
+    alt Tìm thấy POI
+        A->>A: State = Success
+        A-->>U: Điều hướng đến chi tiết POI
+    else Không tìm thấy mã (404/null)
+        A->>A: State = Empty
+        A-->>U: Thông báo mã không tồn tại + nhập tay
+    else Lỗi mạng/server
+        A->>A: State = Error
+        A-->>U: Hiển thị lỗi + Thử quét lại
+    end

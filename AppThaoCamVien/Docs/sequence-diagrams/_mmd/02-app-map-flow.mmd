@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as App MAUI (MapViewModel)
+    participant API as API Mobile
+    participant C as POI Clusters API
+    participant N as Nearby API
+    participant Cache as Bộ nhớ đệm bản đồ
+
+    U->>A: Mở màn hình Bản đồ
+    A->>A: State = Loading (hiển thị skeleton)
+    A->>Cache: Đọc dữ liệu bản đồ đã lưu
+    Cache-->>A: Trả dữ liệu cache (nếu có)
+
+    par Lấy cụm POI theo viewport
+        A->>API: GET /api/mobile/pois/clusters?z={zoom}&bbox={bbox}
+        API->>C: Truy vấn cụm POI
+        C-->>API: Dữ liệu cụm POI
+        API-->>A: 200 + PoiClusters
+    and Lấy đối tượng gần vị trí hiện tại
+        A->>API: GET /api/mobile/pois/nearby?lat={lat}&lng={lng}&radius={m}
+        API->>N: Truy vấn NearbyAnimals
+        N-->>API: Dữ liệu nearby
+        API-->>A: 200 + NearbyAnimals
+    end
+
+    alt Có POI trong viewport
+        A->>A: State = Success
+        A-->>U: Hiển thị marker + danh sách gần bạn
+    else Không có POI trong viewport
+        A->>A: State = Empty
+        A-->>U: Hiển thị trạng thái trống trên bản đồ
+    else Lỗi API
+        A->>A: State = Error
+        A-->>U: Hiển thị lỗi + giữ bản đồ cache + nút Thử lại
+    end
