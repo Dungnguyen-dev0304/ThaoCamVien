@@ -32,9 +32,7 @@ namespace ApiThaoCamVien.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PoiId"));
 
                     b.Property<string>("AudioCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("audio_code");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int")
@@ -47,10 +45,12 @@ namespace ApiThaoCamVien.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
                     b.Property<string>("ImageThumbnail")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .IsUnicode(false)
                         .HasColumnType("varchar(255)")

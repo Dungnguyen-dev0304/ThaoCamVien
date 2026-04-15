@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApiThaoCamVien.Migrations
 {
     [DbContext(typeof(WebContext))]
-    [Migration("20260415145533_AddPoiAudioTableAndAudioCode")]
-    partial class AddPoiAudioTableAndAudioCode
+    [Migration("20260415165751_AddAuidoCodeInPoi")]
+    partial class AddAuidoCodeInPoi
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,9 +35,7 @@ namespace ApiThaoCamVien.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PoiId"));
 
                     b.Property<string>("AudioCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("audio_code");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int")
@@ -50,10 +48,12 @@ namespace ApiThaoCamVien.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
                     b.Property<string>("ImageThumbnail")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .IsUnicode(false)
                         .HasColumnType("varchar(255)")
