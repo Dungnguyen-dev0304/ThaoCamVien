@@ -15,18 +15,15 @@ namespace SharedThaoCamVien.Models
         [Column("category_id")]
         public int? CategoryId { get; set; }
 
-<<<<<<< HEAD
         [SQLite.Column("name")]
         public string? Name { get; set; }
 
         [SQLite.Column("description")]
-=======
         [Column("name")]
         [Required]
         public string Name { get; set; } = null!;
 
         [Column("description")]
->>>>>>> 8676c5c5565ad0aefbd93bee1ad8937b987a981c
         public string? Description { get; set; }
 
         // Bạn không cần ghi TypeName ở đây vì WebContext đã có decimal(11, 8)
@@ -42,11 +39,9 @@ namespace SharedThaoCamVien.Models
         [Column("priority")]
         public int? Priority { get; set; }
 
-<<<<<<< HEAD
         [SQLite.Column("image_thumbnail")]
-=======
+
         [Column("image_thumbnail")]
->>>>>>> 8676c5c5565ad0aefbd93bee1ad8937b987a981c
         public string? ImageThumbnail { get; set; }
 
         [Column("is_active")]

@@ -105,7 +105,7 @@
                 ["TabMap"] = "Sơ đồ",
                 ["TabAbout"] = "Giới thiệu",
                 ["TxtHi"] = "Chào mừng tới Thảo Cầm Viên Tour",
-                ["TxtDiscoveries"] = "Chào mừng tới Thảo Cầm Viên Tour",
+                ["TxtDiscoveries"] = "Khám phá nổi bật",
                 ["TxtZooName"] = "THẢO CẦM VIÊN SÀI GÒN",
                 ["TxtAudioGuide"] = "AUDIO GUIDE TOUR",
                 ["TxtHeroTitle"] = "Hành Trình Âm Thanh",
