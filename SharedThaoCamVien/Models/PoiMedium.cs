@@ -1,19 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SharedThaoCamVien.Models;
-
-public partial class PoiMedium
+namespace SharedThaoCamVien.Models
 {
-    public int MediaId { get; set; }
+    [Table("poi_media")]
+    public partial class PoiMedium
+    {
+        [Key]
+        [Column("media_id")]
+        public int MediaId { get; set; }
 
-    public int PoiId { get; set; }
+        [Column("poi_id")]
+        public int PoiId { get; set; }
 
-    public string MediaType { get; set; } = null!;
+        [Column("media_type")]
+        [Required]
+        public string MediaType { get; set; } = null!;
 
-    public string MediaUrl { get; set; } = null!;
+        [Column("media_url")]
+        [Required]
+        public string MediaUrl { get; set; } = null!;
 
-    public string? Language { get; set; }
-    //[SQLite.Ignore]
-    public virtual Poi Poi { get; set; } = null!;
+        [Column("language")]
+        public string? Language { get; set; }
+
+        // Khóa ngoại liên kết ngược lại bảng Poi
+        [ForeignKey("PoiId")]
+        public virtual Poi Poi { get; set; } = null!;
+    }
 }
