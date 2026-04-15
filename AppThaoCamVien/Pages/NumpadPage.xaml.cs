@@ -79,10 +79,10 @@ public partial class NumpadPage : ContentPage
     {
         for (int i = 0; i < 4; i++)
         {
-            await CodeDisplay.TranslateToAsync(-8, 0, 50);
-            await CodeDisplay.TranslateToAsync(8, 0, 50);
+            await CodeDisplay.TranslateTo(-8, 0, 50);
+            await CodeDisplay.TranslateTo(8, 0, 50);
         }
-        await CodeDisplay.TranslateToAsync(0, 0, 50);
+        await CodeDisplay.TranslateTo(0, 0, 50);
     }
 
     private async void OnBackClicked(object s, EventArgs e) => await Navigation.PopAsync();

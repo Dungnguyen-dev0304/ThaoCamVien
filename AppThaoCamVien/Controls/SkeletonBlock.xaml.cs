@@ -49,8 +49,8 @@ public partial class SkeletonBlock : ContentView
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
                     RootBorder.BackgroundColor = Color.FromArgb("#E6E9E6");
-                    await RootBorder.FadeToAsync(0.65, 550, Easing.Linear);
-                    await RootBorder.FadeToAsync(1, 550, Easing.Linear);
+                    await RootBorder.FadeTo(0.65, 550, Easing.Linear);
+                    await RootBorder.FadeTo(1, 550, Easing.Linear);
                 });
             }
             catch

@@ -14,10 +14,10 @@ namespace SharedThaoCamVien.Models
         public int? CategoryId { get; set; }
 
         [SQLite.Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [SQLite.Column("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         // Cứ giữ là decimal theo đúng database SQL của bạn
         [SQLite.Column("latitude")]
@@ -33,7 +33,7 @@ namespace SharedThaoCamVien.Models
         public int? Priority { get; set; }
 
         [SQLite.Column("image_thumbnail")]
-        public string ImageThumbnail { get; set; }
+        public string? ImageThumbnail { get; set; }
 
         [SQLite.Column("is_active")]
         public bool IsActive { get; set; }

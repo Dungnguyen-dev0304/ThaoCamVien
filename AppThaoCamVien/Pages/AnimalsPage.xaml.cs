@@ -59,7 +59,7 @@ public partial class AnimalsPage : ContentPage
             if (poi == null)
             {
                 System.Diagnostics.Debug.WriteLine($"[AnimalsPage] miss both local/api poiId={animal.Id}");
-                await DisplayAlertAsync("Thông báo", "Không tìm thấy thông tin chi tiết của loài này.", "OK");
+                await DisplayAlert("Thông báo", "Không tìm thấy thông tin chi tiết của loài này.", "OK");
                 return;
             }
 
@@ -69,7 +69,7 @@ public partial class AnimalsPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 }

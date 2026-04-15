@@ -116,7 +116,7 @@
                                     </Border.GestureRecognizers>
                                     <HorizontalStackLayout Spacing="4" HorizontalOptions="Center" VerticalOptions="Center">
                                         <Label Text="🗺" FontSize="12" VerticalOptions="Center"/>
-                                        <Label Text="Chỉ đường" TextColor="#1A1A1A" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                                        <Label Text="{DynamicResource TxtDirections}" TextColor="#1A1A1A" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
                                     </HorizontalStackLayout>
                                 </Border>
 

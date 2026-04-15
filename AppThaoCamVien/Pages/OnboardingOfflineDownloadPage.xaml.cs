@@ -157,7 +157,7 @@ public partial class OnboardingOfflineDownloadPage : ContentPage
         var msg = Application.Current?.Resources["OnboardingSkipWarnMessage"] as string ?? "";
         var cancel = Application.Current?.Resources["OnboardingSkipWarnCancel"] as string ?? "";
         var ok = Application.Current?.Resources["OnboardingSkipWarnOk"] as string ?? "";
-        var confirm = await DisplayAlertAsync(title, msg, ok, cancel);
+        var confirm = await DisplayAlert(title, msg, ok, cancel);
         if (!confirm)
             return;
         OnboardingNavigationHelper.CompleteToShell(_sp);

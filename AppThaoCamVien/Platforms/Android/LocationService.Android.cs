@@ -3,12 +3,13 @@ using Android.Content;
 using Android.OS;
 using AndroidX.Core.App;
 
+#pragma warning disable CA1416 // Platform compatibility — đã có runtime check Build.VERSION.SdkInt
 namespace AppThaoCamVien.Platforms.Android
 {
     [Service(ForegroundServiceType = global::Android.Content.PM.ForegroundService.TypeLocation)]
     public class AndroidLocationService : Service
     {
-        public override IBinder OnBind(Intent intent) => null;
+        public override IBinder? OnBind(Intent? intent) => null;
 
         public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
         {
@@ -18,8 +19,8 @@ namespace AppThaoCamVien.Platforms.Android
             if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
             {
                 var channel = new NotificationChannel(channelId, "GPS Tracking", NotificationImportance.Low);
-                var manager = (NotificationManager)GetSystemService(NotificationService);
-                manager.CreateNotificationChannel(channel);
+                var manager = (NotificationManager?)GetSystemService(NotificationService);
+                manager?.CreateNotificationChannel(channel);
             }
 
             // Tạo thông báo hiển thị trên thanh trạng thái

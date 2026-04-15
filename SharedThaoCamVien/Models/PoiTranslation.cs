@@ -15,18 +15,18 @@ namespace SharedThaoCamVien.Models
 
         [ForeignKey("PoiId")]
         //[SQLite.Ignore]
-        public Poi Poi { get; set; }
+        public Poi? Poi { get; set; }
 
         [Required]
         [StringLength(10)]
         [Column("language_code")]
-        public string LanguageCode { get; set; }
+        public string LanguageCode { get; set; } = string.Empty;
 
         [Required]
         [Column("name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Column("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

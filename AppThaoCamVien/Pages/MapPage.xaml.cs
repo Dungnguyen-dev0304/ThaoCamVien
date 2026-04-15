@@ -4,6 +4,7 @@ using AppThaoCamVien.Services;
 using AppThaoCamVien.ViewModels;
 using SharedThaoCamVien.Models;
 using Microsoft.Maui.Devices.Sensors;
+using System.Diagnostics;
 
 namespace AppThaoCamVien.Pages;
 
@@ -16,6 +17,7 @@ public partial class MapPage : ContentPage
     private readonly LocationService _gps;
     private readonly GeofencingEngine _geo;
     private readonly NarrationEngine _narration;
+    private readonly DirectionsService _directions;
     private readonly IServiceProvider _sp;
     private readonly MapPageViewModel _vm;
 
@@ -24,14 +26,17 @@ public partial class MapPage : ContentPage
     private Poi? _focusPoi;
     private CancellationTokenSource? _dotCts;
     private bool _mapReady = false;
+    private bool _routeVisible = false;
 
     public MapPage(DatabaseService db, LocationService gps,
                    GeofencingEngine geo, NarrationEngine narration,
+                   DirectionsService directions,
                    IServiceProvider sp,
                    MapPageViewModel vm)
     {
         InitializeComponent();
-        _db = db; _gps = gps; _geo = geo; _narration = narration; _sp = sp;
+        _db = db; _gps = gps; _geo = geo; _narration = narration;
+        _directions = directions; _sp = sp;
         _vm = vm;
         BindingContext = _vm;
     }
@@ -97,6 +102,13 @@ public partial class MapPage : ContentPage
         _gps.Stop();
         _dotCts?.Cancel();
         _ = _narration.StopAsync();
+
+        // Cleanup route khi rời trang
+        if (_routeVisible)
+        {
+            DirectionsService.RemoveRouteLayer(ZooMap.Map);
+            _routeVisible = false;
+        }
     }
 
     // ── Load POIs ─────────────────────────────────────────────────────────
@@ -320,7 +332,7 @@ public partial class MapPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Lỗi", ex.Message, "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 
@@ -355,6 +367,141 @@ public partial class MapPage : ContentPage
 
     private void OnCenterClicked(object sender, EventArgs e) => CenterZoo();
     private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
+
+    // ── Directions (Route Polyline) ─────────────────────────────────────
+    private async void OnDirectionsTapped(object sender, TappedEventArgs e)
+    {
+        if (_nearPoi == null) return;
+
+        try
+        {
+            // Toggle: nếu route đang hiển thị → xoá
+            if (_routeVisible)
+            {
+                DirectionsService.RemoveRouteLayer(ZooMap.Map);
+                _routeVisible = false;
+                ResetAllPins(); // Hiển thị lại tất cả pins
+                return;
+            }
+
+            // Cần vị trí hiện tại làm điểm xuất phát
+            var loc = _gps.LastLocation;
+            if (loc == null)
+            {
+                await DisplayAlert(
+                    GetRes("TxtMapTitle", "Bản đồ"),
+                    "Chưa có vị trí GPS. Vui lòng bật GPS và thử lại.",
+                    "OK");
+                return;
+            }
+
+            var destLat = (double)_nearPoi.Latitude;
+            var destLng = (double)_nearPoi.Longitude;
+
+            // Hiển thị loading
+            MainThread.BeginInvokeOnMainThread(() =>
+                NearPoiDist.Text = "🔄 Đang tìm đường...");
+
+            var route = await _directions.GetRouteAsync(
+                loc.Latitude, loc.Longitude,
+                destLat, destLng);
+
+            if (route.Points.Count < 2)
+            {
+                await DisplayAlert(
+                    GetRes("TxtMapTitle", "Bản đồ"),
+                    "Không tìm được đường đi.",
+                    "OK");
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                try
+                {
+                    // Xoá route cũ (nếu có)
+                    DirectionsService.RemoveRouteLayer(ZooMap.Map);
+
+                    // Thêm route layer mới
+                    var layer = DirectionsService.BuildRouteLayer(route.Points);
+                    ZooMap.Map?.Layers.Add(layer);
+                    _routeVisible = true;
+
+                    // Cập nhật thông tin khoảng cách
+                    NearPoiDist.Text = $"🗺 {route.DistanceText}"
+                        + (string.IsNullOrEmpty(route.DurationText) || route.DurationText == "—"
+                            ? "" : $" · {route.DurationText}");
+
+                    // Stateful markers: chỉ hiển thị pin đích, ẩn các pin khác
+                    ShowOnlySelectedPin(_nearPoi);
+
+                    if (route.IsFallback)
+                    {
+                        Debug.WriteLine("[MapPage] Route is straight-line fallback (no API key).");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[MapPage] Route layer error: {ex.Message}");
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MapPage] OnDirectionsTapped error: {ex.Message}");
+            await DisplayAlert("Lỗi", "Không thể tìm đường đi. Vui lòng thử lại.", "OK");
+        }
+    }
+
+    // ── Stateful Map Markers ────────────────────────────────────────────
+
+    /// <summary>
+    /// Ẩn tất cả pin, chỉ hiển thị pin cho POI được chọn (màu đỏ nổi bật).
+    /// Dùng khi hiển thị route — giảm visual clutter.
+    /// </summary>
+    private void ShowOnlySelectedPin(Poi selected)
+    {
+        try
+        {
+            ZooMap.Pins.Clear();
+            ZooMap.Pins.Add(new Pin(ZooMap)
+            {
+                Label = selected.Name ?? "---",
+                Position = new Position((double)selected.Latitude, (double)selected.Longitude),
+                Type = PinType.Pin,
+                Color = Color.FromArgb("#E53935") // Đỏ nổi bật
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MapPage] ShowOnlySelectedPin error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Hiển thị lại TẤT CẢ pins (sau khi xoá route).
+    /// </summary>
+    private void ResetAllPins()
+    {
+        try
+        {
+            ZooMap.Pins.Clear();
+            foreach (var p in _pois)
+            {
+                ZooMap.Pins.Add(new Pin(ZooMap)
+                {
+                    Label = p.Name ?? "---",
+                    Position = new Position((double)p.Latitude, (double)p.Longitude),
+                    Type = PinType.Pin,
+                    Color = Colors.OrangeRed
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MapPage] ResetAllPins error: {ex.Message}");
+        }
+    }
 
     // ── GPS dot animation ────────────────────────────────────────────────
     private void StartDotBlink()
