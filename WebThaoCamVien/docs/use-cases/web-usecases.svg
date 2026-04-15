@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1320" viewBox="0 0 1600 1320" role="img" aria-labelledby="title desc">
+  <title id="title">WebThaoCamVien - Use Case Diagram</title>
+  <desc id="desc">Use case tong hop cho cac chuc nang web quan tri</desc>
+  <style>
+    .bg{fill:#ffffff}
+    .sys{fill:#f8fafc;stroke:#94a3b8;stroke-width:2}
+    .actor{fill:#1f2937}
+    .label{font-family:Segoe UI,Arial,sans-serif;fill:#111827}
+    .title{font-size:28px;font-weight:700}
+    .subtitle{font-size:16px;fill:#334155}
+    .uc{fill:#ffffff;stroke:#2563eb;stroke-width:2}
+    .uct{font-size:13px;font-weight:600;text-anchor:middle;dominant-baseline:middle}
+    .actorText{font-size:16px;font-weight:600}
+    .link{fill:#1d4ed8;text-decoration:underline;font-size:12px}
+    .line{stroke:#64748b;stroke-width:1.6}
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1320"/>
+  <text class="label title" x="60" y="52">WebThaoCamVien - Use Case (CMS/Admin)</text>
+  <text class="label subtitle" x="60" y="80">Phien ban tong hop theo chuc nang web quan tri. Anchor id: #uc01 ... #uc18</text>
+
+  <rect class="sys" x="240" y="110" width="1310" height="1160" rx="20"/>
+  <text class="label subtitle" x="270" y="145">System boundary: WebThaoCamVien (Admin)</text>
+
+  <!-- Actor: Admin -->
+  <circle class="actor" cx="120" cy="250" r="16"/>
+  <line class="actor" x1="120" y1="266" x2="120" y2="320" stroke-width="4"/>
+  <line class="actor" x1="88" y1="285" x2="152" y2="285" stroke-width="4"/>
+  <line class="actor" x1="120" y1="320" x2="92" y2="362" stroke-width="4"/>
+  <line class="actor" x1="120" y1="320" x2="148" y2="362" stroke-width="4"/>
+  <text class="label actorText" x="86" y="392">Admin</text>
+
+  <!-- Use cases -->
+  <ellipse id="uc01" class="uc" cx="430" cy="220" rx="160" ry="44"/>
+  <text class="label uct" x="430" y="220">UC01 - Dang nhap</text>
+
+  <ellipse id="uc02" class="uc" cx="800" cy="220" rx="160" ry="44"/>
+  <text class="label uct" x="800" y="220">UC02 - Dang xuat</text>
+
+  <ellipse id="uc03" class="uc" cx="1170" cy="220" rx="160" ry="44"/>
+  <text class="label uct" x="1170" y="220">UC03 - Xem danh sach tour</text>
+
+  <ellipse id="uc04" class="uc" cx="430" cy="350" rx="160" ry="44"/>
+  <text class="label uct" x="430" y="350">UC04 - Them tour</text>
+
+  <ellipse id="uc05" class="uc" cx="800" cy="350" rx="160" ry="44"/>
+  <text class="label uct" x="800" y="350">UC05 - Sua tour</text>
+
+  <ellipse id="uc06" class="uc" cx="1170" cy="350" rx="160" ry="44"/>
+  <text class="label uct" x="1170" y="350">UC06 - Toggle/Xoa tour</text>
+
+  <ellipse id="uc07" class="uc" cx="430" cy="480" rx="160" ry="44"/>
+  <text class="label uct" x="430" y="480">UC07 - Quan ly POI</text>
+
+  <ellipse id="uc08" class="uc" cx="800" cy="480" rx="160" ry="44"/>
+  <text class="label uct" x="800" y="480">UC08 - Quan ly audio POI</text>
+
+  <ellipse id="uc09" class="uc" cx="1170" cy="480" rx="160" ry="44"/>
+  <text class="label uct" x="1170" y="480">UC09 - Quan ly ban dich</text>
+
+  <ellipse id="uc10" class="uc" cx="430" cy="610" rx="160" ry="44"/>
+  <text class="label uct" x="430" y="610">UC10 - Dashboard Analytics</text>
+
+  <ellipse id="uc11" class="uc" cx="800" cy="610" rx="160" ry="44"/>
+  <text class="label uct" x="800" y="610">UC11 - Them POI</text>
+
+  <ellipse id="uc12" class="uc" cx="1170" cy="610" rx="160" ry="44"/>
+  <text class="label uct" x="1170" y="610">UC12 - Sua POI</text>
+
+  <ellipse id="uc13" class="uc" cx="430" cy="740" rx="160" ry="44"/>
+  <text class="label uct" x="430" y="740">UC13 - Xoa POI</text>
+
+  <ellipse id="uc14" class="uc" cx="800" cy="740" rx="160" ry="44"/>
+  <text class="label uct" x="800" y="740">UC14 - Upload audio</text>
+
+  <ellipse id="uc15" class="uc" cx="1170" cy="740" rx="160" ry="44"/>
+  <text class="label uct" x="1170" y="740">UC15 - Luu ghi am web</text>
+
+  <ellipse id="uc16" class="uc" cx="430" cy="870" rx="160" ry="44"/>
+  <text class="label uct" x="430" y="870">UC16 - Xoa audio</text>
+
+  <ellipse id="uc17" class="uc" cx="800" cy="870" rx="160" ry="44"/>
+  <text class="label uct" x="800" y="870">UC17 - Them ban dich</text>
+
+  <ellipse id="uc18" class="uc" cx="1170" cy="870" rx="160" ry="44"/>
+  <text class="label uct" x="1170" y="870">UC18 - Cap nhat ban dich</text>
+
+  <!-- links from actor to first column (representative) -->
+  <line class="line" x1="160" y1="285" x2="270" y2="220"/>
+  <line class="line" x1="160" y1="295" x2="270" y2="350"/>
+  <line class="line" x1="160" y1="305" x2="270" y2="480"/>
+  <line class="line" x1="160" y1="315" x2="270" y2="610"/>
+  <line class="line" x1="160" y1="325" x2="270" y2="740"/>
+  <line class="line" x1="160" y1="335" x2="270" y2="870"/>
+
+  <text class="label" x="270" y="1015" style="font-size:14px;fill:#475569">
+    Ghi chu: Co the link truc tiep tung use case bang anchor, vi du:
+  </text>
+  <text class="link" x="270" y="1040">web-usecases.svg#uc11</text>
+</svg>

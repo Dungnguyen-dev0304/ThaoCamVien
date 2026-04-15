@@ -1,44 +1,66 @@
 ﻿using System;
-// Bỏ dòng "using SQLite;" đi để tránh nhầm lẫn
-using SQLite;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedThaoCamVien.Models
 {
-    [SQLite.Table("pois")]
+    [Table("pois")]
     public class Poi
     {
-        [SQLite.PrimaryKey, SQLite.AutoIncrement, SQLite.Column("poi_id")]
+        [Key]
+        [Column("poi_id")]
         public int PoiId { get; set; }
 
-        [SQLite.Column("category_id")]
+        [Column("category_id")]
         public int? CategoryId { get; set; }
 
+<<<<<<< HEAD
         [SQLite.Column("name")]
         public string? Name { get; set; }
 
         [SQLite.Column("description")]
+=======
+        [Column("name")]
+        [Required]
+        public string Name { get; set; } = null!;
+
+        [Column("description")]
+>>>>>>> 8676c5c5565ad0aefbd93bee1ad8937b987a981c
         public string? Description { get; set; }
 
-        // Cứ giữ là decimal theo đúng database SQL của bạn
-        [SQLite.Column("latitude")]
+        // Bạn không cần ghi TypeName ở đây vì WebContext đã có decimal(11, 8)
+        [Column("latitude")]
         public decimal Latitude { get; set; }
 
-        [SQLite.Column("longitude")]
+        [Column("longitude")]
         public decimal Longitude { get; set; }
 
-        [SQLite.Column("radius")]
+        [Column("radius")]
         public int? Radius { get; set; }
 
-        [SQLite.Column("priority")]
+        [Column("priority")]
         public int? Priority { get; set; }
 
+<<<<<<< HEAD
         [SQLite.Column("image_thumbnail")]
+=======
+        [Column("image_thumbnail")]
+>>>>>>> 8676c5c5565ad0aefbd93bee1ad8937b987a981c
         public string? ImageThumbnail { get; set; }
 
-        [SQLite.Column("is_active")]
+        [Column("is_active")]
         public bool IsActive { get; set; }
 
-        [SQLite.Column("created_at")]
+        [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
+
+        // Mã số để người dùng nhập trên App (ví dụ: "001", "002")
+        [Column("audio_code")]
+        [StringLength(10)]
+        public string? AudioCode { get; set; }
+
+        // Kết nối đến danh sách các file âm thanh
+        public virtual ICollection<PoiAudio> PoiAudios { get; set; } = new List<PoiAudio>();
     }
 }
