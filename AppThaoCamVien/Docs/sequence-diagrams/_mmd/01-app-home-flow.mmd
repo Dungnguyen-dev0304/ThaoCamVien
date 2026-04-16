@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as App MAUI (HomeViewModel)
+    participant API as API Mobile
+    participant HF as HomeFeed API
+    participant W as Weather API
+
+    U->>A: Mở màn hình Trang chủ
+    A->>A: State = Loading (hiển thị skeleton)
+    par Tải dữ liệu HomeFeed
+        A->>API: GET /api/mobile/home-feed
+        API->>HF: Lấy dữ liệu HomeFeed
+        HF-->>API: Payload HomeFeed
+        API-->>A: 200 + HomeFeed
+    and Tải dữ liệu thời tiết
+        A->>API: GET /api/mobile/weather/current
+        API->>W: Lấy thời tiết hiện tại
+        W-->>API: Payload Weather
+        API-->>A: 200 + Weather
+    end
+
+    alt Có dữ liệu HappenNow hoặc Recommended
+        A->>A: State = Success
+        A-->>U: Hiển thị nội dung trang chủ
+    else Cả hai danh sách đều rỗng
+        A->>A: State = Empty
+        A-->>U: Hiển thị trạng thái trống
+    else Lỗi mạng/timeout/server
+        A->>A: State = Error
+        A-->>U: Hiển thị lỗi + nút Thử lại + Mở bản đồ
+        U->>A: Nhấn Thử lại
+    end

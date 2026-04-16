@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant App as App MAUI
+    participant Welcome as OnboardingWelcomePage
+    participant Perm as OnboardingPermissionsPage
+    participant Loc as LocationService
+    participant ODL as OnboardingOfflineDownloadPage
+    participant DL as OfflineBundleDownloadService
+    participant Pref as Preferences
+    participant Shell as AppShell
+
+    App->>Pref: Đọc Pref OnboardingCompleted
+    alt Chưa hoàn tất onboarding
+        App->>Welcome: Mở màn hình chào mừng
+        U->>Welcome: Nhấn Bắt đầu
+        Welcome->>Perm: Điều hướng sang quyền truy cập
+
+        U->>Perm: Cấp quyền vị trí
+        Perm->>Loc: CheckAndRequestPermissionAsync()
+        Loc-->>Perm: Granted/Denied
+
+        U->>Perm: Cấp quyền camera/thông báo
+        Perm-->>ODL: Nhấn Tiếp tục
+
+        U->>ODL: Chọn ngôn ngữ tải offline
+        U->>ODL: Nhấn Tải dữ liệu
+        ODL->>DL: DownloadAsync()
+        loop Khi còn mạng và chưa hoàn tất
+            DL-->>ODL: ProgressChanged(%)
+        end
+
+        alt Mất mạng giữa chừng
+            DL-->>ODL: StatusChanged(network_lost)
+            U->>ODL: Nhấn Tiếp tục tải
+            ODL->>DL: DownloadAsync() từ tiến độ đã lưu
+        else Tải hoàn tất
+            DL-->>ODL: StatusChanged(completed)
+            U->>ODL: Nhấn Vào ứng dụng
+            ODL->>Pref: Set OnboardingCompleted = true
+            ODL->>Shell: CompleteToShell()
+        end
+    else Đã hoàn tất onboarding
+        App->>Shell: Mở thẳng AppShell
+    end

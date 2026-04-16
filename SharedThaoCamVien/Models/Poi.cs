@@ -1,13 +1,19 @@
 ﻿using System;
-// Bỏ dòng "using SQLite;" đi để tránh nhầm lẫn
+
 using SQLite;
+
+using System.Collections.Generic; // Cần dòng này để dùng ICollection
+
 
 namespace SharedThaoCamVien.Models
 {
     [SQLite.Table("pois")]
     public class Poi
     {
+
         [SQLite.PrimaryKey, SQLite.Column("poi_id")]
+
+        //[SQLite.PrimaryKey, SQLite.AutoIncrement, SQLite.Column("poi_id")]
         public int PoiId { get; set; }
 
         [SQLite.Column("category_id")]
@@ -19,7 +25,6 @@ namespace SharedThaoCamVien.Models
         [SQLite.Column("description")]
         public string Description { get; set; }
 
-        // Cứ giữ là decimal theo đúng database SQL của bạn
         [SQLite.Column("latitude")]
         public decimal Latitude { get; set; }
 
@@ -40,5 +45,14 @@ namespace SharedThaoCamVien.Models
 
         [SQLite.Column("created_at")]
         public DateTime? CreatedAt { get; set; }
+
+        // Thêm cột audio_code để người dùng nhập "1", "2"
+        [SQLite.Column("audio_code")]
+        public string? AudioCode { get; set; }
+
+        // Kết nối đến danh sách các file âm thanh
+        // Lưu ý: SQLite thuần sẽ bỏ qua dòng này, nhưng nó cần thiết để bạn dùng chung Model với API
+        [SQLite.Ignore]
+        public virtual ICollection<PoiAudio> PoiAudios { get; set; } = new List<PoiAudio>();
     }
 }

@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant N as NumpadPage
+    participant DB as DatabaseService
+    participant Nar as NarrationEngine
+    participant Story as StoryAudioPage
+
+    U->>N: Nhập mã số POI trên numpad
+    U->>N: Nhấn Xác nhận
+    N->>DB: GetPoiByIdAsync(id)
+
+    alt POI tồn tại và IsActive = true
+        DB-->>N: Trả POI
+        N->>Nar: PlayAsync(poi, forcePlay=true)
+        N->>Story: LoadPoi(poi) + PushAsync
+    else Không tìm thấy hoặc đã bị tắt
+        DB-->>N: null / inactive
+        N-->>U: Hiển thị lỗi + rung ô nhập mã
+    end

@@ -168,6 +168,28 @@ public partial class WebContext : DbContext
                 .HasConstraintName("FK_location_user");
         });
 
+        // 9. Cấu hình bảng PoiAudios
+        modelBuilder.Entity<PoiAudio>(entity =>
+        {
+            entity.HasKey(e => e.AudioId).HasName("PK_PoiAudios");
+            entity.ToTable("PoiAudios");
+
+            entity.Property(e => e.AudioId).HasColumnName("AudioId");
+            entity.Property(e => e.PoiId).HasColumnName("PoiId");
+            entity.Property(e => e.LanguageCode).HasMaxLength(10).HasColumnName("LanguageCode");
+            entity.Property(e => e.FileName).HasMaxLength(255).HasColumnName("FileName");
+            entity.Property(e => e.FilePath).HasMaxLength(500).HasColumnName("FilePath");
+            entity.Property(e => e.DurationSeconds).HasColumnName("DurationSeconds");
+            entity.Property(e => e.FileSizeBytes).HasColumnName("FileSizeBytes");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            entity.Property(e => e.UpdatedAt).HasColumnName("UpdatedAt");
+
+            entity.HasOne(d => d.Poi)
+                .WithMany(p => p.PoiAudios)
+                .HasForeignKey(d => d.PoiId)
+                .HasConstraintName("FK_PoiAudios_Pois");
+        });
+
         // Thêm vào cấu hình cho bảng POI_TRANSLATIONS
         modelBuilder.Entity<PoiTranslation>(entity =>
         {

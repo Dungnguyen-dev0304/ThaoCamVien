@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as App MAUI (StoryAudioViewModel)
+    participant API as API Mobile
+    participant V as Voices API
+    participant L as Lyrics Timeline API
+    participant P as Trình phát âm thanh
+
+    U->>A: Mở màn hình Story Audio
+    A->>A: State = Loading (hiển thị skeleton)
+
+    par Tải danh sách giọng đọc
+        A->>API: GET /api/mobile/tts/voices?lang={lang}
+        API->>V: Lấy danh sách voices
+        V-->>API: Payload voices
+        API-->>A: 200 + Voices
+    and Tải timeline lời thoại
+        A->>API: GET /api/mobile/audio/lyrics-timeline?poiId={id}&voiceId={id}
+        API->>L: Lấy lyrics timeline
+        L-->>API: Payload timeline
+        API-->>A: 200 + LyricsTimeline
+    end
+
+    alt Có script và timeline hợp lệ
+        A->>A: State = Success
+        U->>A: Nhấn Phát
+        A->>P: Bắt đầu phát audio theo timeline
+        P-->>U: Âm thanh + highlight lời thoại
+    else Không có script hoặc timeline
+        A->>A: State = Empty
+        A-->>U: Hiển thị trạng thái trống
+    else Lỗi API
+        A->>A: State = Error
+        A-->>U: Hiển thị lỗi + Thử lại + fallback studio audio/TTS
+    end

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="420" viewBox="0 0 1100 420">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="40" y="48" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f2937">AUC-04 - Phát thuyết minh theo POI</text>
+  <rect x="70" y="130" width="210" height="180" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="175" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#0f172a">Narration Engine</text>
+  <line x1="280" y1="220" x2="350" y2="220" stroke="#475569" stroke-width="2"/>
+  <ellipse cx="650" cy="220" rx="280" ry="95" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <text x="650" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#7c2d12">Phát thuyết minh theo POI</text>
+  <text x="650" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9a3412">Ưu tiên audio file; fallback TTS khi cần</text>
+  <text x="650" y="266" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9a3412">tránh phát trùng bằng debounce/cooldown</text>
+</svg>
