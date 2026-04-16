@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Pages.OnboardingApiConfigPage"
+             Title=""
+             BackgroundColor="{StaticResource TcvBackgroundPage}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="{StaticResource TcvSpaceL}" Spacing="{StaticResource TcvSpaceM}">
+
+            <Label Style="{StaticResource TcvLabelH1}"
+                   Text="Kết nối Server" />
+            <Label Style="{StaticResource TcvLabelBody}"
+                   Text="Nhập địa chỉ IP của máy chủ API để app lấy dữ liệu động vật, bản đồ và audio." />
+
+            <!-- Card: IP Input -->
+            <Border Style="{StaticResource TcvCardBorder}">
+                <VerticalStackLayout Spacing="{StaticResource TcvSpaceS}">
+                    <Label Style="{StaticResource TcvLabelH2}"
+                           Text="Địa chỉ Server" />
+                    <Label Style="{StaticResource TcvLabelBody}"
+                           Text="Ví dụ: 192.168.1.5 (IP máy tính chạy API trong cùng mạng WiFi)" />
+
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0"
+                               Text="http://"
+                               VerticalOptions="Center"
+                               Style="{StaticResource TcvLabelBody}" />
+                        <Entry x:Name="IpEntry"
+                               Grid.Column="1"
+                               Placeholder="192.168.x.x"
+                               Keyboard="Url"
+                               FontSize="16"
+                               Text="" />
+                        <Label Grid.Column="2"
+                               Text=":5281"
+                               VerticalOptions="Center"
+                               Style="{StaticResource TcvLabelBody}" />
+                    </Grid>
+
+                    <Label Style="{StaticResource TcvLabelCaption}"
+                           TextColor="{StaticResource TcvMuted}"
+                           Text="Port mặc định: 5281. Nếu server dùng port khác, nhập IP:port (vd: 192.168.1.5:8080)" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Test connection -->
+            <Button x:Name="TestBtn"
+                    Style="{StaticResource TcvSecondaryButton}"
+                    Text="Kiểm tra kết nối"
+                    Clicked="OnTestConnectionClicked" />
+
+            <Label x:Name="StatusLabel"
+                   Style="{StaticResource TcvLabelBody}"
+                   IsVisible="False"
+                   HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator x:Name="TestSpinner"
+                               IsVisible="False"
+                               IsRunning="False"
+                               Color="{StaticResource TcvBrandForest}"
+                               HorizontalOptions="Center" />
+
+            <!-- Continue -->
+            <Button x:Name="ContinueBtn"
+                    Style="{StaticResource TcvPrimaryButton}"
+                    Text="Tiếp tục"
+                    Clicked="OnContinueClicked" />
+
+            <!-- Skip (dùng emulator hoặc offline) -->
+            <Button Style="{StaticResource TcvSecondaryButton}"
+                    Text="Bỏ qua (dùng offline)"
+                    Clicked="OnSkipClicked"
+                    Opacity="0.7" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

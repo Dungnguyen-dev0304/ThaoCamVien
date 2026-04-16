@@ -22,9 +22,9 @@ namespace AppThaoCamVien.Services
     {
         private SQLiteAsyncConnection? _db;
         private readonly SemaphoreSlim _dbInitLock = new(1, 1);
-        private const string DB_NAME = "tcv_v4.db3";
+        private const string DB_NAME = "tcv_v5.db3";
 
-        private readonly string _apiBase;
+        private string _apiBase;
         private readonly HttpClient _httpClient;
         private readonly ResiliencePipeline _pipeline;
 
@@ -55,6 +55,19 @@ namespace AppThaoCamVien.Services
         }
 
         public string CurrentLanguage { get; set; } = "vi";
+
+        /// <summary>
+        /// Đọc lại URL từ Preferences (khi user thay đổi IP ở trang cấu hình).
+        /// Gọi trước mỗi lần sync để đảm bảo dùng URL mới nhất.
+        /// </summary>
+        public void RefreshApiBaseUrl()
+        {
+            var pref = Preferences.Default.Get("ApiBaseUrl", string.Empty);
+            var baseUrl = string.IsNullOrWhiteSpace(pref) ? ApiService.ResolveDefaultApiUrl() : pref;
+            _apiBase = baseUrl.EndsWith("/api", StringComparison.OrdinalIgnoreCase)
+                ? baseUrl.TrimEnd('/')
+                : $"{baseUrl.TrimEnd('/')}/api";
+        }
 
         // ─── KHỞI TẠO DB ─────────────────────────────────────────────────
         private async Task<SQLiteAsyncConnection> GetDbAsync()
@@ -134,9 +147,14 @@ namespace AppThaoCamVien.Services
                 if (pois != null && pois.Count > 0)
                 {
                     var db = await GetDbAsync();
+                    // Dùng InsertOrReplace thay vì Delete+Insert
+                    // để giữ nguyên PoiId từ server (không bị SQLite auto-increment gán ID mới)
                     await db.DeleteAllAsync<Poi>();
-                    await db.InsertAllAsync(pois);
-                    Debug.WriteLine($"[DB] API sync OK: {pois.Count} POIs");
+                    foreach (var poi in pois)
+                    {
+                        await db.InsertOrReplaceAsync(poi);
+                    }
+                    Debug.WriteLine($"[DB] API sync OK: {pois.Count} POIs (InsertOrReplace)");
                     return;
                 }
 
@@ -203,11 +221,12 @@ namespace AppThaoCamVien.Services
         {
             // Seed tối thiểu để app không bị trắng màn hình khi mất mạng/DB API trống.
             // Dữ liệu này sẽ được thay thế khi SyncDataFromApiAsync gọi thành công.
+            // QUAN TRỌNG: PoiId phải > 0 và dùng InsertOrReplace để giữ ID cố định.
             var seed = new List<Poi>
             {
                 new Poi
                 {
-                    PoiId = 0,
+                    PoiId = 1,
                     CategoryId = null,
                     Name = "Công viên Thảo Cầm Viên",
                     Description = "Demo offline: không có dữ liệu từ API. Hãy kiểm tra kết nối/IP/SSL.",
@@ -221,7 +240,7 @@ namespace AppThaoCamVien.Services
                 },
                 new Poi
                 {
-                    PoiId = 0,
+                    PoiId = 2,
                     CategoryId = null,
                     Name = "Khu chuồng thú (Demo)",
                     Description = "Demo offline: nội dung sẽ tự cập nhật khi API trả về POIs.",
@@ -235,7 +254,10 @@ namespace AppThaoCamVien.Services
                 }
             };
 
-            await db.InsertAllAsync(seed);
+            foreach (var poi in seed)
+            {
+                await db.InsertOrReplaceAsync(poi);
+            }
         }
 
         // ─── GET POIs ─────────────────────────────────────────────────────

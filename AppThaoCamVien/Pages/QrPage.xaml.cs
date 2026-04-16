@@ -30,17 +30,32 @@ public partial class QrPage : ContentPage
 
         if (_cameraPermissionGranted)
         {
-            // Bật camera — ZXing handler sẽ acquire native camera
-            BarcodeReader.IsDetecting = true;
+            // Workaround cho ZXing.Net.Maui: toggle IsDetecting để force
+            // camera handler re-initialize khi quay lại trang.
+            // Nếu không, camera preview sẽ đen/trắng sau khi navigate back.
+            try
+            {
+                BarcodeReader.IsDetecting = false;
+                await Task.Delay(150); // Cho handler thời gian release camera
+                BarcodeReader.IsDetecting = true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[QrPage] Camera restart error: {ex.Message}");
+            }
         }
 
         _ = _vm.SafeReloadAsync();
         StartAnim();
     }
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        BarcodeReader.IsDetecting = false;
+
+        // Tắt detecting trước khi tắt flash
+        try { BarcodeReader.IsDetecting = false; } catch { }
+
         if (_flashOn)
         {
             _flashOn = false;

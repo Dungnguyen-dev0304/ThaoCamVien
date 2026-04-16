@@ -101,47 +101,71 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
 
             var lang = LanguageManager.Current;
             var dto = await _api.GetAsync<AnimalsResponseDto>($"{ApiEndpoints.Animals}?lang={lang}");
-            if (dto?.Animals == null || dto.Animals.Count == 0)
-            {
-                HasError = true;
-                ErrorMessage = "Không tải được danh sách động vật từ máy chủ.";
-                return;
-            }
 
             AllAnimals.Clear();
             VisibleAnimals.Clear();
             Filters.Clear();
 
-            AnimalFilterChip? first = null;
-            foreach (var f in dto.Filters)
+            if (dto?.Animals != null && dto.Animals.Count > 0)
             {
-                AnimalFilterChip? localChip = null;
-                localChip = new AnimalFilterChip(
-                    title: f.Title,
-                    category: string.IsNullOrWhiteSpace(f.Category) ? null : f.Category,
-                    selectCommand: new Command(() => SelectedFilter = localChip));
+                // ── API có dữ liệu → dùng trực tiếp ──────────────────
+                AnimalFilterChip? first = null;
+                foreach (var f in dto.Filters)
+                {
+                    AnimalFilterChip? localChip = null;
+                    localChip = new AnimalFilterChip(
+                        title: f.Title,
+                        category: string.IsNullOrWhiteSpace(f.Category) ? null : f.Category,
+                        selectCommand: new Command(() => SelectedFilter = localChip));
 
-                Filters.Add(localChip);
-                first ??= localChip;
+                    Filters.Add(localChip);
+                    first ??= localChip;
+                }
+                SelectedFilter = first;
+
+                foreach (var a in dto.Animals)
+                {
+                    AllAnimals.Add(new Animal(
+                        id: a.Id,
+                        name: a.Name,
+                        category: a.Category,
+                        conservationStatus: a.ConservationStatus,
+                        statusColorHex: a.StatusColorHex,
+                        imageUrl: a.ImageUrl));
+                }
+            }
+            else
+            {
+                // ── API không có dữ liệu → fallback SQLite local ──────
+                System.Diagnostics.Debug.WriteLine("[AnimalsVM] API returned null/empty → using local SQLite.");
+                await LoadFromLocalDbAsync();
             }
 
-            SelectedFilter = first;
-
-            foreach (var a in dto.Animals)
+            if (AllAnimals.Count == 0)
             {
-                AllAnimals.Add(new Animal(
-                    id: a.Id,
-                    name: a.Name,
-                    category: a.Category,
-                    conservationStatus: a.ConservationStatus,
-                    statusColorHex: a.StatusColorHex,
-                    imageUrl: a.ImageUrl));
+                HasError = true;
+                ErrorMessage = "Không tải được danh sách động vật. Hãy kiểm tra kết nối mạng và thử lại.";
+                return;
             }
 
             ApplyFilters();
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[AnimalsVM] LoadAsync error: {ex.Message} → trying local.");
+            // Thử fallback local khi API crash
+            try
+            {
+                await LoadFromLocalDbAsync();
+                if (AllAnimals.Count > 0)
+                {
+                    ApplyFilters();
+                    HasError = false;
+                    return;
+                }
+            }
+            catch { }
+
             HasError = true;
             ErrorMessage = string.IsNullOrWhiteSpace(ex.Message)
                 ? "Đã xảy ra lỗi. Vui lòng thử lại."
@@ -150,6 +174,38 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Fallback: tải danh sách từ SQLite local khi API không khả dụng.
+    /// </summary>
+    private async Task LoadFromLocalDbAsync()
+    {
+        var localPois = await _db.GetAllPoisAsync();
+        if (localPois.Count == 0) return;
+
+        // Tạo filter "Tất cả"
+        if (Filters.Count == 0)
+        {
+            AnimalFilterChip? allChip = null;
+            allChip = new AnimalFilterChip(
+                title: "Tất cả",
+                category: null,
+                selectCommand: new Command(() => SelectedFilter = allChip));
+            Filters.Add(allChip);
+            SelectedFilter = allChip;
+        }
+
+        foreach (var p in localPois.OrderByDescending(x => x.Priority))
+        {
+            AllAnimals.Add(new Animal(
+                id: p.PoiId,
+                name: p.Name ?? "---",
+                category: "",
+                conservationStatus: "Thảo Cầm Viên",
+                statusColorHex: "#2E7D32",
+                imageUrl: p.ImageThumbnail ?? ""));
         }
     }
 

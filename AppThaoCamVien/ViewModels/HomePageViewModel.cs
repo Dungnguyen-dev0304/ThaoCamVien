@@ -12,10 +12,8 @@ public sealed class HomePageViewModel : BaseViewModel
     private readonly DatabaseService _db;
     private readonly LocationService _location;
 
-    // Always non-null Ä‘á»ƒ XAML binding khÃ´ng gáº·p rá»§i ro null khi 1 request API tháº¥t báº¡i.
     private HomeFeedDto _feed = new();
 
-    // â”€â”€ UI models for â€œHome like reference screenshotâ€ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private ContinueListeningCard _continueListening = new(
         PoiId: 0,
         Title: "",
@@ -122,7 +120,7 @@ public sealed class HomePageViewModel : BaseViewModel
         _api = api;
         _db = db;
         _location = location;
-        EmptyMessage = "Hiá»‡n chÆ°a cÃ³ ná»™i dung phÃ¹ há»£p.";
+        EmptyMessage = "Hiện chưa có nội dung phù hợp.";
     }
 
     public void UpdatePlaybackUi(double positionSeconds, double durationSeconds, bool isPlaying)
@@ -154,7 +152,6 @@ public sealed class HomePageViewModel : BaseViewModel
 
     protected override async Task LoadAsync()
     {
-        // Sync theo ngÃ´n ngá»¯ hiá»‡n táº¡i (API-first)
         var lang = LanguageManager.Current;
         _db.CurrentLanguage = lang;
 
@@ -178,10 +175,17 @@ public sealed class HomePageViewModel : BaseViewModel
         else
         {
             IsOffline = true;
-            OfflineMessage = "KhÃ´ng táº£i Ä‘Æ°á»£c dá»¯ liá»‡u tá»« mÃ¡y chá»§. Vui lÃ²ng kiá»ƒm tra Internet/IP/SSL.";
+            OfflineMessage = "Đang sử dụng dữ liệu offline.";
+
+            // Cung cấp text mặc định khi API không khả dụng
+            HeaderTitle = lang == "en" ? "Welcome to Saigon Zoo!" : "Chào mừng đến Thảo Cầm Viên!";
+            HeaderSubtitle = lang == "en" ? "Explore wildlife" : "Khám phá thiên nhiên hoang dã";
+            ContinueListeningKicker = lang == "en" ? "CONTINUE LISTENING" : "TIẾP TỤC NGHE";
+            NearbyPlacesTitle = lang == "en" ? "ANIMALS" : "ĐỘNG VẬT";
+            StartTourTitle = lang == "en" ? "START TOUR" : "BẮT ĐẦU HÀNH TRÌNH";
+            StartTourButtonText = lang == "en" ? "Start Tour" : "BẮT ĐẦU";
         }
 
-        // Continue Listening / Mini player: last visit from local DB (synced from API).
         var lastPoi = await _db.GetLastVisitedPoiAsync();
         if (lastPoi == null)
         {
@@ -209,40 +213,61 @@ public sealed class HomePageViewModel : BaseViewModel
             };
         }
 
-        // Nearby places from GPS -> API.
-        // Nearby places from GPS -> API.
+        // ==============================================================
+        // LOGIC LẤY 5 CON VẬT GẦN NHẤT ĐÃ ĐƯỢC FIX LỖI MÁY ẢO
+        // ==============================================================
         try
         {
             var loc = await _location.GetCurrentAsync();
-            if (loc != null)
+
+            // NẾU MÁY ẢO KHÔNG CÓ GPS, DÙNG TỌA ĐỘ GIẢ LẬP CỦA THẢO CẦM VIÊN
+            double lat = loc?.Latitude ?? 10.78738006;
+            double lng = loc?.Longitude ?? 106.70506044;
+
+            var url = $"{ApiEndpoints.NearbyAnimals}?lat={lat}&lng={lng}&radius=5000&lang={lang}";
+            System.Diagnostics.Debug.WriteLine($"[API GỌI]: {url}");
+
+            var nearby = await _api.GetAsync<List<NearbyPoiDto>>(url);
+            NearbyPlaces.Clear();
+
+            if (nearby != null && nearby.Count > 0)
             {
-                var nearby = await _api.GetAsync<List<NearbyPoiDto>>(
-                    $"{ApiEndpoints.NearbyAnimals}?lat={loc.Latitude}&lng={loc.Longitude}&radius=250&lang={lang}");
-
-                NearbyPlaces.Clear();
-                if (nearby != null)
+                var top5Nearby = nearby.OrderBy(x => x.DistanceMeters).Take(5);
+                foreach (var n in top5Nearby)
                 {
-                    // THAY ĐỔI Ở ĐÂY: Thêm .Take(5) sau khi đã sắp xếp theo khoảng cách
-                    // Việc này đảm bảo UI chỉ render 5 Card, vuốt rất nhẹ mượt và không bị loãng trang chủ
-                    var top5Nearby = nearby.OrderBy(x => x.DistanceMeters).Take(5);
-
-                    foreach (var n in top5Nearby)
-                    {
-                        NearbyPlaces.Add(new NearbyPlaceCard(
-                            PoiId: n.PoiId,
-                            Title: n.Name,
-                            DistanceLabel: n.DistanceLabel,
-                            LocationHint: n.LocationHint,
-                            ImageUrl: n.ThumbnailUrl));
-                    }
+                    NearbyPlaces.Add(new NearbyPlaceCard(
+                        PoiId: n.PoiId,
+                        Title: n.Name,
+                        DistanceLabel: n.DistanceLabel,
+                        LocationHint: n.LocationHint,
+                        ImageUrl: n.ThumbnailUrl));
                 }
             }
+            else
+            {
+                // API TRẢ VỀ RỖNG -> BƠM DATA FALLBACK ĐỂ UI KHÔNG BỊ TRẮNG
+                LoadFallbackData();
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            // Không có GPS/permission → vẫn hiển thị Home.
+            System.Diagnostics.Debug.WriteLine($"🚨 LỖI GỌI API NEARBY: {ex.Message}");
+            // LỖI MẠNG HOẶC API -> BƠM DATA FALLBACK ĐỂ UI KHÔNG BỊ TRẮNG
+            LoadFallbackData();
+        }
+        // ==============================================================
+
+        // Luôn hiển thị Success nếu có bất kỳ dữ liệu nào (API hoặc local)
+        // Chỉ Empty khi thực sự không có gì để hiển thị
+        if (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
+        {
+            // Thử lần cuối: load từ local DB
+            LoadFallbackData();
+            // Đợi một chút để fallback load xong
+            await Task.Delay(200);
         }
 
+        // Sau fallback, nếu vẫn hoàn toàn trống thì mới Empty
         if (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
         {
             State = UiState.Empty;
@@ -252,16 +277,54 @@ public sealed class HomePageViewModel : BaseViewModel
         State = UiState.Success;
     }
 
+    /// <summary>
+    /// Fallback: tải danh sách từ SQLite local khi API nearby không khả dụng.
+    /// Dùng dữ liệu POI đã sync từ trước để UI không bị trắng.
+    /// </summary>
+    private async void LoadFallbackData()
+    {
+        System.Diagnostics.Debug.WriteLine("[HomeVM] Loading fallback from local SQLite...");
+
+        try
+        {
+            var localPois = await _db.GetAllPoisAsync();
+            var top5 = localPois.OrderByDescending(p => p.Priority).Take(5).ToList();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                NearbyPlaces.Clear();
+                foreach (var p in top5)
+                {
+                    NearbyPlaces.Add(new NearbyPlaceCard(
+                        PoiId: p.PoiId,
+                        Title: p.Name ?? "---",
+                        DistanceLabel: "THÚ",
+                        LocationHint: "Thảo Cầm Viên",
+                        ImageUrl: p.ImageThumbnail ?? ""));
+                }
+
+                if (NearbyPlaces.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[HomeVM] No local POIs either — UI will be empty.");
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[HomeVM] LoadFallbackData error: {ex.Message}");
+        }
+    }
+
     private static string Truncate(string? s, int max)
     {
         if (string.IsNullOrWhiteSpace(s)) return "";
         s = s.Trim();
         if (s.Length <= max) return s;
-        return s[..max] + "â€¦";
+        return s[..max] + "…";
     }
 }
 
-// â”€â”€ Simple UI models for new HomePage design â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Simple UI models for new HomePage design ────────────────────────
 public sealed record HomeQuickAction(string Emoji, string Title, ICommand Command);
 public sealed record FeaturedAnimalCard(int Id, string Name, string Subtitle, string ImageUrl);
 public sealed record UpcomingEventCard(string Emoji, string Title, string TimeLabel, string Location);
@@ -278,7 +341,7 @@ public sealed record ContinueListeningCard(
     string DurationLabel,
     bool IsPlaying)
 {
-    public string PlayGlyph => IsPlaying ? "â¸" : "â–¶";
+    public string PlayGlyph => IsPlaying ? "⏸" : "▶";
 }
 
 public sealed record MiniPlayerCard(
@@ -291,5 +354,5 @@ public sealed record MiniPlayerCard(
     string DurationLabel,
     bool IsPlaying)
 {
-    public string PlayGlyph => IsPlaying ? "â¸" : "â–¶";
+    public string PlayGlyph => IsPlaying ? "⏸" : "▶";
 }

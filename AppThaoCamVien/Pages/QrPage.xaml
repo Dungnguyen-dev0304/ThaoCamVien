@@ -8,9 +8,19 @@
              Title="{DynamicResource TxtQrTitle}">
 
     <Grid>
-        <zxing:CameraBarcodeReaderView x:Name="BarcodeReader" IsDetecting="True"
+        <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
+            IsDetecting="True"
+            CameraLocation="Rear"
             BarcodesDetected="OnBarcodesDetected"
-            HorizontalOptions="Fill" VerticalOptions="Fill"/>
+            HorizontalOptions="Fill" VerticalOptions="Fill">
+            <zxing:CameraBarcodeReaderView.Options>
+                <zxing:BarcodeReaderOptions
+                    Formats="QrCode"
+                    AutoRotate="True"
+                    Multiple="False"
+                    TryHarder="True" />
+            </zxing:CameraBarcodeReaderView.Options>
+        </zxing:CameraBarcodeReaderView>
 
         <BoxView Color="#1C1C1E" Opacity="0.6" HorizontalOptions="Fill" VerticalOptions="Fill"/>
 

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,23 +18,27 @@ using Polly.Timeout;
 namespace AppThaoCamVien.Services;
 
 /// <summary>
-/// Google Directions API client + polyline decoder cho Mapsui.
+/// OSRM Directions client + polyline decoder cho Mapsui.
 ///
 /// Flow:
-///   1. Gọi Google Directions API (walking mode — phù hợp trong zoo)
+///   1. Gọi OSRM public API (foot profile — phù hợp trong zoo)
 ///   2. Decode encoded polyline → List of (lat, lng)
 ///   3. Build Mapsui MemoryLayer chứa LineString
 ///
-/// Nếu chưa có API Key → trả line thẳng (straight-line fallback).
-/// API Key được lưu trong Preferences ("GoogleDirectionsApiKey").
+/// OSRM miễn phí, KHÔNG cần API Key.
+/// Fallback: nếu OSRM fail → trả line thẳng.
 /// </summary>
 public sealed class DirectionsService
 {
     private readonly HttpClient _httpClient;
     private readonly ResiliencePipeline _pipeline;
 
-    private const string DirectionsBaseUrl =
-        "https://maps.googleapis.com/maps/api/directions/json";
+    /// <summary>
+    /// OSRM public demo server — foot profile cho đi bộ.
+    /// Format: /route/v1/foot/{lng1},{lat1};{lng2},{lat2}?overview=full&geometries=polyline
+    /// </summary>
+    private const string OsrmBaseUrl =
+        "https://router.project-osrm.org/route/v1/foot";
 
     /// <summary>Tên layer route trên MapView — dùng để xoá/replace.</summary>
     public const string RouteLayerName = "RoutePolylineLayer";
@@ -49,65 +54,47 @@ public sealed class DirectionsService
         _pipeline = ResiliencePolicies.HttpPipeline;
     }
 
-    /// <summary>API Key từ Preferences. Trả empty nếu chưa cấu hình.</summary>
-    public static string ApiKey
-    {
-        get => Preferences.Default.Get("GoogleDirectionsApiKey", string.Empty);
-        set => Preferences.Default.Set("GoogleDirectionsApiKey", value);
-    }
-
-    public static bool HasApiKey => !string.IsNullOrWhiteSpace(ApiKey);
-
-   
+    /// <summary>
+    /// Lấy route đi bộ thật (theo đường đi) từ OSRM.
+    /// OSRM miễn phí, không cần API Key.
+    /// </summary>
     public async Task<RouteResult> GetRouteAsync(
         double originLat, double originLng,
         double destLat, double destLng,
         CancellationToken ct = default)
     {
-        if (!HasApiKey)
-        {
-            Debug.WriteLine("[Directions] No API key — using straight-line fallback.");
-            return new RouteResult
-            {
-                Points = [(originLat, originLng), (destLat, destLng)],
-                DurationText = "—",
-                DistanceText = $"{HaversineMeters(originLat, originLng, destLat, destLng):F0}m (đường chim bay)",
-                IsFallback = true
-            };
-        }
-
         try
         {
             return await _pipeline.ExecuteAsync(async token =>
             {
-                var url = $"{DirectionsBaseUrl}" +
-                          $"?origin={originLat},{originLng}" +
-                          $"&destination={destLat},{destLng}" +
-                          $"&mode=walking" +
-                          $"&key={ApiKey}";
+                // OSRM format: /foot/{lng1},{lat1};{lng2},{lat2}?overview=full&geometries=polyline
+                var url = $"{OsrmBaseUrl}/" +
+                          $"{originLng.ToString(CultureInfo.InvariantCulture)},{originLat.ToString(CultureInfo.InvariantCulture)};" +
+                          $"{destLng.ToString(CultureInfo.InvariantCulture)},{destLat.ToString(CultureInfo.InvariantCulture)}" +
+                          $"?overview=full&geometries=polyline&steps=false";
 
-                var response = await _httpClient.GetFromJsonAsync<DirectionsApiResponse>(url, token);
+                Debug.WriteLine($"[Directions] OSRM request: {url}");
 
-                if (response?.Routes == null || response.Routes.Count == 0)
+                var response = await _httpClient.GetFromJsonAsync<OsrmResponse>(url, token);
+
+                if (response?.Code != "Ok" || response.Routes == null || response.Routes.Count == 0)
                 {
-                    Debug.WriteLine($"[Directions] API returned no routes. Status={response?.Status}");
+                    Debug.WriteLine($"[Directions] OSRM returned no routes. Code={response?.Code}");
                     return StraightLineFallback(originLat, originLng, destLat, destLng);
                 }
 
                 var route = response.Routes[0];
-                var points = new List<(double Lat, double Lng)>();
 
-                // Decode từng step → nối thành 1 polyline liên tục
-                foreach (var leg in route.Legs)
+                // Decode overview polyline → list of (lat, lng)
+                var points = DecodePolyline(route.Geometry ?? "");
+
+                if (points.Count < 2)
                 {
-                    foreach (var step in leg.Steps)
-                    {
-                        var decoded = DecodePolyline(step.Polyline.Points);
-                        points.AddRange(decoded);
-                    }
+                    Debug.WriteLine("[Directions] Decoded polyline has < 2 points — fallback.");
+                    return StraightLineFallback(originLat, originLng, destLat, destLng);
                 }
 
-                // Loại bỏ duplicate liên tiếp (điểm cuối step N = điểm đầu step N+1)
+                // Loại bỏ duplicate liên tiếp
                 var cleaned = new List<(double Lat, double Lng)>();
                 foreach (var p in points)
                 {
@@ -119,12 +106,21 @@ public sealed class DirectionsService
                     }
                 }
 
-                var leg0 = route.Legs[0];
+                // OSRM trả distance (meters) và duration (seconds)
+                var distMeters = route.Distance;
+                var durSeconds = route.Duration;
+                var distText = distMeters >= 1000
+                    ? $"{distMeters / 1000.0:F1}km"
+                    : $"{distMeters:F0}m";
+                var durText = durSeconds >= 60
+                    ? $"{(int)(durSeconds / 60)} phút"
+                    : $"{(int)durSeconds}s";
+
                 return new RouteResult
                 {
                     Points = cleaned,
-                    DurationText = leg0.Duration.Text,
-                    DistanceText = leg0.Distance.Text,
+                    DurationText = durText,
+                    DistanceText = distText,
                     IsFallback = false
                 };
             }, ct);
@@ -292,60 +288,33 @@ public sealed class RouteResult
     public string DurationText { get; set; } = "";
     public string DistanceText { get; set; } = "";
 
-    /// <summary>true nếu dùng straight-line (chưa có API Key hoặc API fail).</summary>
+    /// <summary>true nếu dùng straight-line (OSRM fail).</summary>
     public bool IsFallback { get; set; }
 }
 
-// ── Google Directions API response DTOs ─────────────────────────────────
-// Chỉ map các field cần thiết, bỏ qua phần không dùng.
+// ── OSRM API response DTOs ──────────────────────────────────────────────
+// Ref: https://project-osrm.org/docs/v5.24.0/api/#route-service
 
-internal sealed class DirectionsApiResponse
+internal sealed class OsrmResponse
 {
-    [JsonPropertyName("status")]
-    public string Status { get; set; } = "";
+    [JsonPropertyName("code")]
+    public string Code { get; set; } = "";
 
     [JsonPropertyName("routes")]
-    public List<DirectionsRoute> Routes { get; set; } = [];
+    public List<OsrmRoute> Routes { get; set; } = [];
 }
 
-internal sealed class DirectionsRoute
+internal sealed class OsrmRoute
 {
-    [JsonPropertyName("legs")]
-    public List<DirectionsLeg> Legs { get; set; } = [];
+    /// <summary>Encoded polyline (Google format) khi geometries=polyline.</summary>
+    [JsonPropertyName("geometry")]
+    public string? Geometry { get; set; }
 
-    [JsonPropertyName("overview_polyline")]
-    public DirectionsPolyline OverviewPolyline { get; set; } = new();
-}
-
-internal sealed class DirectionsLeg
-{
-    [JsonPropertyName("steps")]
-    public List<DirectionsStep> Steps { get; set; } = [];
-
-    [JsonPropertyName("duration")]
-    public DirectionsTextValue Duration { get; set; } = new();
-
+    /// <summary>Tổng khoảng cách (meters).</summary>
     [JsonPropertyName("distance")]
-    public DirectionsTextValue Distance { get; set; } = new();
-}
+    public double Distance { get; set; }
 
-internal sealed class DirectionsStep
-{
-    [JsonPropertyName("polyline")]
-    public DirectionsPolyline Polyline { get; set; } = new();
-}
-
-internal sealed class DirectionsPolyline
-{
-    [JsonPropertyName("points")]
-    public string Points { get; set; } = "";
-}
-
-internal sealed class DirectionsTextValue
-{
-    [JsonPropertyName("text")]
-    public string Text { get; set; } = "";
-
-    [JsonPropertyName("value")]
-    public int Value { get; set; }
+    /// <summary>Tổng thời gian (seconds).</summary>
+    [JsonPropertyName("duration")]
+    public double Duration { get; set; }
 }

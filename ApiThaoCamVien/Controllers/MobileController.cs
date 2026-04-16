@@ -256,7 +256,14 @@ public sealed class MobileController : ControllerBase
         return Task.FromResult<IActionResult>(Ok(Array.Empty<LyricLineResponse>()));
     }
 
-    /// <summary>POST /api/mobile/qr/lookup</summary>
+    /// <summary>
+    /// POST /api/mobile/qr/lookup
+    ///
+    /// Hỗ trợ nhiều format mã QR:
+    ///   - "TCV-1", "TCV-001", "TCV1" → POI ID 1
+    ///   - "1", "001" → POI ID 1
+    ///   - Bất kỳ string khác → tìm trong bảng qr_codes
+    /// </summary>
     [HttpPost("qr/lookup")]
     public async Task<IActionResult> QrLookup([FromBody] QrLookupRequestBody body)
     {
@@ -264,13 +271,33 @@ public sealed class MobileController : ControllerBase
         if (string.IsNullOrEmpty(code))
             return BadRequest(new { message = "Missing code" });
 
-        var qr = await _ctx.QrCodes.AsNoTracking().FirstOrDefaultAsync(q => q.QrCodeData == code);
-        if (qr == null)
-            return NotFound(new { message = "QR not found" });
+        Poi? poi = null;
 
-        var poi = await _ctx.Pois.AsNoTracking().FirstOrDefaultAsync(p => p.PoiId == qr.PoiId);
+        // Thử parse POI ID trực tiếp từ mã QR
+        // Hỗ trợ: "TCV-1", "TCV-001", "TCV1", "1", "001"
+        var cleaned = System.Text.RegularExpressions.Regex.Replace(
+            code, @"^TCV[- ]?", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        if (int.TryParse(cleaned, out int poiId) && poiId > 0)
+        {
+            poi = await _ctx.Pois.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PoiId == poiId && p.IsActive);
+        }
+
+        // Fallback: tìm trong bảng qr_codes
         if (poi == null)
-            return NotFound(new { message = "POI not found" });
+        {
+            var qr = await _ctx.QrCodes.AsNoTracking()
+                .FirstOrDefaultAsync(q => q.QrCodeData == code);
+            if (qr != null)
+            {
+                poi = await _ctx.Pois.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.PoiId == qr.PoiId);
+            }
+        }
+
+        if (poi == null)
+            return NotFound(new { message = "QR not found" });
 
         var dto = new NearbyPoiResponse
         {
