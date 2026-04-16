@@ -17,6 +17,26 @@ public sealed class HomePageViewModel : BaseViewModel
     private const double ZooLat = 10.78738006;
     private const double ZooLng = 106.70506044;
 
+    /// <summary>Bảng dịch tên POI: Vi → En (dùng cho SQLite fallback).</summary>
+    private static readonly Dictionary<string, string> NameTranslations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Voi Châu Á"]             = "Asian Elephant",
+        ["Hổ Bengal"]              = "Bengal Tiger",
+        ["Hươu cao cổ"]           = "Giraffe",
+        ["Gấu Ngựa"]              = "Sun Bear",
+        ["Hà Mã"]                 = "Hippopotamus",
+        ["Chuồng khỉ"]            = "Monkey House",
+        ["Khỉ sóc"]               = "Squirrel Monkey",
+        ["Chuồng cá sấu"]         = "Crocodile Enclosure",
+        ["Khu bò sát"]            = "Reptile Zone",
+        ["Vườn bướm"]             = "Butterfly Garden",
+        ["Nhà hoa lan kiểng"]     = "Orchid & Bonsai House",
+        ["Cây di sản"]            = "Heritage Tree",
+        ["Đền Hùng"]              = "Hung Kings Temple",
+        ["Bảo tàng"]              = "Museum",
+        ["Công viên Thảo Cầm Viên"] = "Saigon Zoo & Botanical Gardens",
+    };
+
     private HomeFeedDto _feed = new();
 
     private ContinueListeningCard _continueListening = new(
@@ -142,17 +162,28 @@ public sealed class HomePageViewModel : BaseViewModel
         var lang = LanguageManager.Current;
         _db.CurrentLanguage = lang;
 
-        await _db.SyncDataFromApiAsync();
+        try { await _db.SyncDataFromApiAsync(); }
+        catch (Exception ex) { Debug.WriteLine($"[HomeVM] Sync error (ignored): {ex.Message}"); }
 
-        var feed = await _api.GetAsync<HomeFeedDto>($"{ApiEndpoints.HomeFeed}?lang={lang}");
+        HomeFeedDto? feed = null;
+        try { feed = await _api.GetAsync<HomeFeedDto>($"{ApiEndpoints.HomeFeed}?lang={lang}"); }
+        catch (Exception ex) { Debug.WriteLine($"[HomeVM] Feed error (ignored): {ex.Message}"); }
         ApplyFeed(feed, lang);
 
-        await LoadContinueListeningAsync();
-        await LoadNearbyPlacesAsync(lang);
+        try { await LoadContinueListeningAsync(); }
+        catch (Exception ex) { Debug.WriteLine($"[HomeVM] Continue error (ignored): {ex.Message}"); }
 
-        // Nếu hoàn toàn trống → fallback local
-        if (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0)
-            await LoadFallbackDataAsync(lang);
+        try { await LoadNearbyPlacesAsync(lang); }
+        catch (Exception ex) { Debug.WriteLine($"[HomeVM] Nearby error (ignored): {ex.Message}"); }
+
+        // Safety net: luôn đảm bảo có 5 con vật hiển thị dù bất kỳ lỗi gì
+        if (NearbyPlaces.Count == 0)
+        {
+            try { await LoadFallbackDataAsync(lang); }
+            catch { }
+        }
+        if (NearbyPlaces.Count == 0)
+            LoadHardcodedAnimals(lang);
 
         State = (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
             ? UiState.Empty
@@ -256,12 +287,13 @@ public sealed class HomePageViewModel : BaseViewModel
 
     /// <summary>
     /// Fallback: tải top 5 POI từ SQLite local khi API không khả dụng.
+    /// Nếu SQLite cũng trống → dùng dữ liệu hardcoded đảm bảo luôn có nội dung.
     /// </summary>
     private async Task LoadFallbackDataAsync(string lang)
     {
         try
         {
-            if (NearbyPlaces.Count > 0) return; // Already populated
+            if (NearbyPlaces.Count > 0) return;
 
             var localPois = await _db.GetAllPoisAsync();
             var top5 = localPois.OrderByDescending(p => p.Priority).Take(5).ToList();
@@ -272,17 +304,59 @@ public sealed class HomePageViewModel : BaseViewModel
             NearbyPlaces.Clear();
             foreach (var p in top5)
             {
+                var name = p.Name ?? "---";
+                // Dịch tên nếu đang ở chế độ EN
+                if (lang == "en" && NameTranslations.TryGetValue(name, out var en))
+                    name = en;
+
                 NearbyPlaces.Add(new NearbyPlaceCard(
                     PoiId: p.PoiId,
-                    Title: p.Name ?? "---",
+                    Title: name,
                     DistanceLabel: label,
                     LocationHint: hint,
                     ImageUrl: p.ImageThumbnail ?? ""));
             }
+
+            // Last-resort: nếu SQLite cũng trống thì dùng hardcoded data
+            if (NearbyPlaces.Count == 0)
+            {
+                Debug.WriteLine("[HomeVM] SQLite empty → using hardcoded animals.");
+                LoadHardcodedAnimals(lang);
+            }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[HomeVM] Fallback error: {ex.Message}");
+            Debug.WriteLine($"[HomeVM] Fallback error: {ex.Message} → hardcoded.");
+            if (NearbyPlaces.Count == 0)
+                LoadHardcodedAnimals(lang);
+        }
+    }
+
+    /// <summary>Dữ liệu hardcoded đảm bảo Home luôn có 5 con vật hiển thị.</summary>
+    private void LoadHardcodedAnimals(string lang)
+    {
+        var hint = lang == "en" ? "Saigon Zoo" : "Thảo Cầm Viên";
+        var label = lang == "en" ? "ANIMAL" : "THÚ";
+
+        var animals = lang == "en"
+            ? new[] { (1, "Asian Elephant", "elephant.jpg"),
+                      (2, "Bengal Tiger",   "tiger.jpg"),
+                      (3, "Giraffe",        "giraffe.jpg"),
+                      (4, "Sun Bear",       "gau.jpg"),
+                      (5, "Hippopotamus",   "ha_ma.jpg") }
+            : new[] { (1, "Voi Châu Á",    "elephant.jpg"),
+                      (2, "Hổ Bengal",      "tiger.jpg"),
+                      (3, "Hươu cao cổ",   "giraffe.jpg"),
+                      (4, "Gấu Ngựa",      "gau.jpg"),
+                      (5, "Hà Mã",         "ha_ma.jpg") };
+
+        NearbyPlaces.Clear();
+        foreach (var (id, name, img) in animals)
+        {
+            NearbyPlaces.Add(new NearbyPlaceCard(
+                PoiId: id, Title: name,
+                DistanceLabel: label, LocationHint: hint,
+                ImageUrl: img));
         }
     }
 

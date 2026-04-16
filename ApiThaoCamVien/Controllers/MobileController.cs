@@ -159,22 +159,16 @@ public sealed class MobileController : ControllerBase
     public async Task<IActionResult> GetAnimals([FromQuery] string? lang = null)
     {
         lang = ResolveLang(lang);
-        // Animals = active POIs grouped by their POI category.
-        // Conservation status is derived from Priority (no extra table in current DB schema).
-        var q =
-            from p in _ctx.Pois.AsNoTracking().Where(x => x.IsActive)
-            join c in _ctx.PoiCategories.AsNoTracking() on p.CategoryId equals (int?)c.CategoryId into pc
-            from c in pc.DefaultIfEmpty()
-            select new
-            {
-                p.PoiId,
-                p.Name,
-                p.ImageThumbnail,
-                p.Priority,
-                CategoryName = c != null ? c.CategoryName : ""
-            };
 
-        var items = await q.OrderByDescending(x => x.Priority).ToListAsync();
+        // Load POIs kèm category name
+        var pois = await GetActivePoisOrderedAsync();
+
+        // Áp dụng bản dịch (Name, Description) nếu lang != "vi"
+        await ApplyTranslationsAsync(pois, lang);
+
+        // Load category names
+        var categories = await _ctx.PoiCategories.AsNoTracking().ToListAsync();
+        var catLookup = categories.ToDictionary(c => c.CategoryId, c => c.CategoryName ?? "");
 
         string statusVi(int? prio)
         {
@@ -200,14 +194,15 @@ public sealed class MobileController : ControllerBase
             return "Safe";
         }
 
-        var animals = items.Select(x => new AnimalResponse
+        var animals = pois.Select(p => new AnimalResponse
         {
-            Id = x.PoiId,
-            Name = x.Name ?? "",
-            ImageUrl = x.ImageThumbnail ?? "",
-            Category = string.IsNullOrWhiteSpace(x.CategoryName) ? "Khác" : x.CategoryName,
-            ConservationStatus = lang == "en" ? statusEn(x.Priority) : statusVi(x.Priority),
-            StatusColorHex = colorHex(x.Priority)
+            Id = p.PoiId,
+            Name = p.Name ?? "",
+            ImageUrl = p.ImageThumbnail ?? "",
+            Category = p.CategoryId.HasValue && catLookup.TryGetValue(p.CategoryId.Value, out var cn) && !string.IsNullOrWhiteSpace(cn)
+                ? cn : "Khác",
+            ConservationStatus = lang == "en" ? statusEn(p.Priority) : statusVi(p.Priority),
+            StatusColorHex = colorHex(p.Priority)
         }).ToList();
 
         var filters = new List<AnimalFilterResponse>

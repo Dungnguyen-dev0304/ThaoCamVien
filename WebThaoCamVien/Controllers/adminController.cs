@@ -7,7 +7,6 @@ using WebThaoCamVien.ViewModels;
 
 namespace WebThaoCamVien.Controllers
 {
-    [Authorize]
     public class AdminController : Controller
     {
         private readonly WebContext _context;

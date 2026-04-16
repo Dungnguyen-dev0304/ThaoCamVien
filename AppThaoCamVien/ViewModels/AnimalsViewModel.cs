@@ -16,7 +16,7 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
     private readonly ApiService _api;
     private readonly DatabaseService _db;
 
-    /// <summary>Bảng dịch category: Vi ↔ En (key = vi, value = en).</summary>
+    /// <summary>Bảng dịch category: Vi ↔ En.</summary>
     private static readonly (string Vi, string En)[] CategoryTranslations =
     [
         ("Tất cả",     "All"),
@@ -30,6 +30,34 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
         ("Thú",        "Mammals"),
         ("Côn trùng",  "Insects"),
     ];
+
+    private static readonly Dictionary<string, string> NameTranslations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Voi Châu Á"]             = "Asian Elephant",
+        ["Hổ Bengal"]              = "Bengal Tiger",
+        ["Hươu cao cổ"]           = "Giraffe",
+        ["Gấu Ngựa"]              = "Sun Bear",
+        ["Hà Mã"]                 = "Hippopotamus",
+        ["Chuồng khỉ"]            = "Monkey House",
+        ["Khỉ sóc"]               = "Squirrel Monkey",
+        ["Chuồng cá sấu"]         = "Crocodile Enclosure",
+        ["Khu bò sát"]            = "Reptile Zone",
+        ["Vườn bướm"]             = "Butterfly Garden",
+        ["Nhà hoa lan kiểng"]     = "Orchid & Bonsai House",
+        ["Cây di sản"]            = "Heritage Tree",
+        ["Đền Hùng"]              = "Hung Kings Temple",
+        ["Bảo tàng"]              = "Museum",
+        ["Quán Nhân Hương"]       = "Nhan Huong Café",
+        ["Khu chuồng thú (Demo)"] = "Animal House (Demo)",
+        ["Công viên Thảo Cầm Viên"] = "Saigon Zoo & Botanical Gardens",
+    };
+
+    /// <summary>Dịch tên POI sang EN nếu có trong bảng dịch.</summary>
+    private static string TranslateName(string name, string lang)
+    {
+        if (lang != "en" || string.IsNullOrWhiteSpace(name)) return name;
+        return NameTranslations.TryGetValue(name, out var en) ? en : name;
+    }
 
     public AnimalsViewModel(ApiService api, DatabaseService db)
     {
@@ -142,7 +170,10 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
                 {
                     AnimalFilterChip? localChip = null;
                     var translatedTitle = TranslateCategory(f.Title, lang);
-                    var translatedCategory = string.IsNullOrWhiteSpace(f.Category) ? null : f.Category;
+                    // Category phải dịch đồng bộ với Animal.Category để ApplyFilters so sánh khớp
+                    var translatedCategory = string.IsNullOrWhiteSpace(f.Category)
+                        ? null
+                        : TranslateCategory(f.Category, lang);
                     localChip = new AnimalFilterChip(
                         title: translatedTitle,
                         category: translatedCategory,
@@ -157,7 +188,7 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
                 {
                     AllAnimals.Add(new Animal(
                         id: a.Id,
-                        name: a.Name,
+                        name: TranslateName(a.Name, lang),
                         category: TranslateCategory(a.Category, lang),
                         conservationStatus: a.ConservationStatus,
                         statusColorHex: a.StatusColorHex,
@@ -209,6 +240,15 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Map CategoryId → tên category tiếng Việt (dùng cho SQLite fallback).</summary>
+    private static string GetCategoryNameVi(int? categoryId) => categoryId switch
+    {
+        1 => "Di tích",
+        2 => "Động vật",
+        3 => "Thực vật",
+        _ => "Động vật"
+    };
+
     /// <summary>
     /// Fallback: tải danh sách từ SQLite local khi API không khả dụng.
     /// </summary>
@@ -219,7 +259,7 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
 
         var lang = LanguageManager.Current;
 
-        // Tạo filter "Tất cả" / "All" dựa trên ngôn ngữ
+        // Tạo filter chips từ các CategoryId có trong dữ liệu local
         if (Filters.Count == 0)
         {
             AnimalFilterChip? allChip = null;
@@ -229,6 +269,26 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
                 category: null,
                 selectCommand: new Command(() => SelectedFilter = allChip));
             Filters.Add(allChip);
+
+            // Tạo filter chip cho mỗi category có trong dữ liệu
+            var distinctCategories = localPois
+                .Select(p => p.CategoryId)
+                .Where(id => id.HasValue)
+                .Distinct()
+                .OrderBy(id => id);
+
+            foreach (var catId in distinctCategories)
+            {
+                var catNameVi = GetCategoryNameVi(catId);
+                var catName = TranslateCategory(catNameVi, lang);
+                AnimalFilterChip? chip = null;
+                chip = new AnimalFilterChip(
+                    title: catName,
+                    category: catName,
+                    selectCommand: new Command(() => SelectedFilter = chip));
+                Filters.Add(chip);
+            }
+
             SelectedFilter = allChip;
         }
 
@@ -236,10 +296,11 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
 
         foreach (var p in localPois.OrderByDescending(x => x.Priority))
         {
+            var categoryVi = GetCategoryNameVi(p.CategoryId);
             AllAnimals.Add(new Animal(
                 id: p.PoiId,
-                name: p.Name ?? "---",
-                category: "",
+                name: TranslateName(p.Name ?? "---", lang),
+                category: TranslateCategory(categoryVi, lang),
                 conservationStatus: statusLabel,
                 statusColorHex: "#2E7D32",
                 imageUrl: p.ImageThumbnail ?? ""));

@@ -18,8 +18,8 @@
 
     <Grid RowDefinitions="300, *">
 
-        <Image Grid.Row="0" 
-               Source="banner_background.jpg"  Aspect="AspectFill" />
+        <BoxView Grid.Row="0" 
+         Color="#95D951" />
 
         <BoxView Grid.Row="0" BackgroundColor="Black" Opacity="0.3" />
 
