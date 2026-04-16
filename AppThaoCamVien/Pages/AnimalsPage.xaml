@@ -17,17 +17,21 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="300, *">
-        
-        <VerticalStackLayout Spacing="6" Margin="0,0,0,25">
-            <Label Text="Câu chuyện" 
-                       FontSize="34" 
-                       FontAttributes="Bold" 
-                       TextColor="{StaticResource TextMain}" />
-            <Label Text="Khám phá bí mật của các loài động vật" 
-                       FontSize="16" 
-                       TextColor="{StaticResource TextGray}" />
-        </VerticalStackLayout>
 
+        <Image Grid.Row="0" 
+               Source="banner_background.jpg"  Aspect="AspectFill" />
+
+        <BoxView Grid.Row="0" BackgroundColor="Black" Opacity="0.3" />
+
+        <VerticalStackLayout Grid.Row="0" Margin="25,50,0,35">
+            <Label Text="{DynamicResource TxtStory}"    
+                   FontSize="34" 
+                   FontAttributes="Bold" 
+                   TextColor="White" />
+            <Label Text="{DynamicResource TxtDiscover}" 
+                   FontSize="16" 
+                   TextColor="#F8F9FA" />
+        </VerticalStackLayout>
 
         <Border Grid.Row="1"
                 Margin="0,-40,0,0"
@@ -39,16 +43,12 @@
             <Border.Shadow>
                 <Shadow Brush="Black" Offset="0,-5" Radius="15" Opacity="0.1" />
             </Border.Shadow>
-            
-            
 
             <Grid RowDefinitions="Auto, Auto, *" Padding="20,25,20,0">
 
-                
-
                 <CollectionView Grid.Row="1"
                                 ItemsSource="{Binding Filters}"
-                                SelectionMode="Single"
+                                SelectionMode="None" 
                                 SelectedItem="{Binding SelectedFilter}"
                                 HorizontalScrollBarVisibility="Never"
                                 Margin="0,0,0,20"
@@ -58,22 +58,33 @@
                     </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Border Padding="15,8" 
+                            <Border Padding="20,0" 
                                     BackgroundColor="#F0F9F4" 
                                     Stroke="#D1E7DD" 
                                     StrokeThickness="1">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="20" />
                                 </Border.StrokeShape>
+
                                 <Label Text="{Binding Title}" FontSize="13" FontAttributes="Bold" TextColor="#198754" VerticalOptions="Center"/>
+
                                 <Border.Triggers>
-                                    <DataTrigger TargetType="Border"
-                                                 Binding="{Binding IsSelected}"
-                                                 Value="True">
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
                                         <Setter Property="BackgroundColor" Value="#198754" />
                                         <Setter Property="Stroke" Value="#198754" />
                                     </DataTrigger>
                                 </Border.Triggers>
+
+                                <Border.Resources>
+                                    <Style TargetType="Label">
+                                        <Style.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="TextColor" Value="White" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Resources>
+
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding SelectCommand}" />
                                 </Border.GestureRecognizers>
@@ -97,44 +108,51 @@
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Border StrokeThickness="0" BackgroundColor="White" Padding="0">
+                            <Border StrokeThickness="0" 
+            BackgroundColor="White" 
+            Margin="10,8">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="20" />
                                 </Border.StrokeShape>
                                 <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.08" />
+                                    <Shadow Brush="#1A1A1A" Offset="0,8" Radius="20" Opacity="0.06" />
                                 </Border.Shadow>
 
-                                <Grid RowDefinitions="140,Auto">
+                                <Grid RowDefinitions="160,Auto">
+
                                     <Grid Grid.Row="0">
-                                        <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
+                                        <Image Source="{Binding ImageUrl}" 
+                       Aspect="AspectFill" />
                                     </Grid>
 
-                                    <VerticalStackLayout Grid.Row="1" Padding="15" Spacing="5">
-                                        <Label Text="{Binding Name}"
-                                               TextColor="#1A1A1A"
-                                               FontAttributes="Bold"
-                                               FontSize="15"
-                                               LineBreakMode="TailTruncation" />
-
-                                        <Label Text="{Binding Category}"
-                                               TextColor="#6C757D"
-                                               FontSize="12"
-                                               LineBreakMode="TailTruncation" />
+                                    <VerticalStackLayout Grid.Row="1" Padding="16,16,16,20" Spacing="4">
 
                                         <Border HorizontalOptions="Start"
-                                                Padding="8,4"
-                                                Margin="0,5,0,0"
-                                                StrokeThickness="0"
-                                                BackgroundColor="{Binding StatusColor}">
+                        Padding="10,4"
+                        Margin="0,0,0,4"
+                        StrokeThickness="0"
+                        BackgroundColor="{Binding StatusColor}">
                                             <Border.StrokeShape>
-                                                <RoundRectangle CornerRadius="8" />
+                                                <RoundRectangle CornerRadius="12" />
                                             </Border.StrokeShape>
                                             <Label Text="{Binding ConservationStatus}"
-                                                   TextColor="White"
-                                                   FontSize="10"
-                                                   FontAttributes="Bold" />
+                           TextColor="White"
+                           FontSize="10"
+                           FontAttributes="Bold"
+                           TextTransform="Uppercase"
+                           CharacterSpacing="0.5" />
                                         </Border>
+
+                                        <Label Text="{Binding Name}"
+                       TextColor="#111827" 
+                       FontAttributes="Bold"
+                       FontSize="18"
+                       LineBreakMode="TailTruncation" />
+
+                                        <Label Text="{Binding Category}"
+                       TextColor="#6B7280" 
+                       FontSize="13"
+                       LineBreakMode="TailTruncation" />
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>

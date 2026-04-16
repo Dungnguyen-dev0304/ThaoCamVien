@@ -1,7 +1,8 @@
-﻿using AppThaoCamVien.Services;
+using AppThaoCamVien.Services;
 using AppThaoCamVien.Services.Api;
 using AppThaoCamVien.ViewModels.Core;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace AppThaoCamVien.ViewModels;
@@ -12,17 +13,15 @@ public sealed class HomePageViewModel : BaseViewModel
     private readonly DatabaseService _db;
     private readonly LocationService _location;
 
+    // Zoo center coordinates (fallback when GPS unavailable)
+    private const double ZooLat = 10.78738006;
+    private const double ZooLng = 106.70506044;
+
     private HomeFeedDto _feed = new();
 
     private ContinueListeningCard _continueListening = new(
-        PoiId: 0,
-        Title: "",
-        Subtitle: "",
-        ImageUrl: "",
-        Progress01: 0,
-        ElapsedLabel: "00:00",
-        DurationLabel: "00:00",
-        IsPlaying: false);
+        PoiId: 0, Title: "", Subtitle: "", ImageUrl: "",
+        Progress01: 0, ElapsedLabel: "00:00", DurationLabel: "00:00", IsPlaying: false);
     public ContinueListeningCard ContinueListening
     {
         get => _continueListening;
@@ -32,14 +31,8 @@ public sealed class HomePageViewModel : BaseViewModel
     public ObservableCollection<NearbyPlaceCard> NearbyPlaces { get; } = new();
 
     private MiniPlayerCard _miniPlayer = new(
-        PoiId: 0,
-        Title: "",
-        Subtitle: "",
-        ImageUrl: "",
-        Progress01: 0,
-        ElapsedLabel: "00:00",
-        DurationLabel: "00:00",
-        IsPlaying: false);
+        PoiId: 0, Title: "", Subtitle: "", ImageUrl: "",
+        Progress01: 0, ElapsedLabel: "00:00", DurationLabel: "00:00", IsPlaying: false);
     public MiniPlayerCard MiniPlayer
     {
         get => _miniPlayer;
@@ -130,24 +123,18 @@ public sealed class HomePageViewModel : BaseViewModel
         MiniPlayer = MiniPlayer with
         {
             Progress01 = p01,
-            ElapsedLabel = Fmt(positionSeconds),
-            DurationLabel = Fmt(durationSeconds),
+            ElapsedLabel = FormatTime(positionSeconds),
+            DurationLabel = FormatTime(durationSeconds),
             IsPlaying = isPlaying
         };
 
         ContinueListening = ContinueListening with
         {
             Progress01 = p01,
-            ElapsedLabel = Fmt(positionSeconds),
-            DurationLabel = Fmt(durationSeconds),
+            ElapsedLabel = FormatTime(positionSeconds),
+            DurationLabel = FormatTime(durationSeconds),
             IsPlaying = isPlaying
         };
-    }
-
-    private static string Fmt(double seconds)
-    {
-        var t = TimeSpan.FromSeconds(seconds < 0 ? 0 : seconds);
-        return $"{(int)t.TotalMinutes:D2}:{t.Seconds:D2}";
     }
 
     protected override async Task LoadAsync()
@@ -156,14 +143,31 @@ public sealed class HomePageViewModel : BaseViewModel
         _db.CurrentLanguage = lang;
 
         await _db.SyncDataFromApiAsync();
-        var feed = await _api.GetAsync<HomeFeedDto>($"{ApiEndpoints.HomeFeed}?lang={lang}");
 
+        var feed = await _api.GetAsync<HomeFeedDto>($"{ApiEndpoints.HomeFeed}?lang={lang}");
+        ApplyFeed(feed, lang);
+
+        await LoadContinueListeningAsync();
+        await LoadNearbyPlacesAsync(lang);
+
+        // Nếu hoàn toàn trống → fallback local
+        if (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0)
+            await LoadFallbackDataAsync(lang);
+
+        State = (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
+            ? UiState.Empty
+            : UiState.Success;
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────
+
+    private void ApplyFeed(HomeFeedDto? feed, string lang)
+    {
         if (feed != null)
         {
             Feed = feed;
             IsOffline = false;
             OfflineMessage = string.Empty;
-
             HeaderTitle = feed.HeaderTitle;
             HeaderSubtitle = feed.HeaderSubtitle;
             ContinueListeningKicker = feed.ContinueListeningKicker;
@@ -175,9 +179,7 @@ public sealed class HomePageViewModel : BaseViewModel
         else
         {
             IsOffline = true;
-            OfflineMessage = "Đang sử dụng dữ liệu offline.";
-
-            // Cung cấp text mặc định khi API không khả dụng
+            OfflineMessage = lang == "en" ? "Using offline data." : "Đang sử dụng dữ liệu offline.";
             HeaderTitle = lang == "en" ? "Welcome to Saigon Zoo!" : "Chào mừng đến Thảo Cầm Viên!";
             HeaderSubtitle = lang == "en" ? "Explore wildlife" : "Khám phá thiên nhiên hoang dã";
             ContinueListeningKicker = lang == "en" ? "CONTINUE LISTENING" : "TIẾP TỤC NGHE";
@@ -185,7 +187,10 @@ public sealed class HomePageViewModel : BaseViewModel
             StartTourTitle = lang == "en" ? "START TOUR" : "BẮT ĐẦU HÀNH TRÌNH";
             StartTourButtonText = lang == "en" ? "Start Tour" : "BẮT ĐẦU";
         }
+    }
 
+    private async Task LoadContinueListeningAsync()
+    {
         var lastPoi = await _db.GetLastVisitedPoiAsync();
         if (lastPoi == null)
         {
@@ -193,47 +198,41 @@ public sealed class HomePageViewModel : BaseViewModel
             lastPoi = all.OrderByDescending(p => p.Priority).FirstOrDefault();
         }
 
-        if (lastPoi != null)
+        if (lastPoi == null) return;
+
+        var subtitle = Truncate(lastPoi.Description, 70);
+        ContinueListening = ContinueListening with
         {
-            var subtitle = Truncate(lastPoi.Description, 70);
-            ContinueListening = ContinueListening with
-            {
-                PoiId = lastPoi.PoiId,
-                Title = lastPoi.Name ?? "",
-                Subtitle = subtitle,
-                ImageUrl = lastPoi.ImageThumbnail ?? ""
-            };
+            PoiId = lastPoi.PoiId,
+            Title = lastPoi.Name ?? "",
+            Subtitle = subtitle,
+            ImageUrl = lastPoi.ImageThumbnail ?? ""
+        };
+        MiniPlayer = MiniPlayer with
+        {
+            PoiId = lastPoi.PoiId,
+            Title = lastPoi.Name ?? "",
+            Subtitle = subtitle,
+            ImageUrl = lastPoi.ImageThumbnail ?? ""
+        };
+    }
 
-            MiniPlayer = MiniPlayer with
-            {
-                PoiId = lastPoi.PoiId,
-                Title = lastPoi.Name ?? "",
-                Subtitle = subtitle,
-                ImageUrl = lastPoi.ImageThumbnail ?? ""
-            };
-        }
-
-        // ==============================================================
-        // LOGIC LẤY 5 CON VẬT GẦN NHẤT ĐÃ ĐƯỢC FIX LỖI MÁY ẢO
-        // ==============================================================
+    private async Task LoadNearbyPlacesAsync(string lang)
+    {
         try
         {
             var loc = await _location.GetCurrentAsync();
-
-            // NẾU MÁY ẢO KHÔNG CÓ GPS, DÙNG TỌA ĐỘ GIẢ LẬP CỦA THẢO CẦM VIÊN
-            double lat = loc?.Latitude ?? 10.78738006;
-            double lng = loc?.Longitude ?? 106.70506044;
+            double lat = loc?.Latitude ?? ZooLat;
+            double lng = loc?.Longitude ?? ZooLng;
 
             var url = $"{ApiEndpoints.NearbyAnimals}?lat={lat}&lng={lng}&radius=5000&lang={lang}";
-            System.Diagnostics.Debug.WriteLine($"[API GỌI]: {url}");
-
             var nearby = await _api.GetAsync<List<NearbyPoiDto>>(url);
+
             NearbyPlaces.Clear();
 
-            if (nearby != null && nearby.Count > 0)
+            if (nearby is { Count: > 0 })
             {
-                var top5Nearby = nearby.OrderBy(x => x.DistanceMeters).Take(5);
-                foreach (var n in top5Nearby)
+                foreach (var n in nearby.OrderBy(x => x.DistanceMeters).Take(5))
                 {
                     NearbyPlaces.Add(new NearbyPlaceCard(
                         PoiId: n.PoiId,
@@ -245,114 +244,79 @@ public sealed class HomePageViewModel : BaseViewModel
             }
             else
             {
-                // API TRẢ VỀ RỖNG -> BƠM DATA FALLBACK ĐỂ UI KHÔNG BỊ TRẮNG
-                LoadFallbackData();
+                await LoadFallbackDataAsync(lang);
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"🚨 LỖI GỌI API NEARBY: {ex.Message}");
-            // LỖI MẠNG HOẶC API -> BƠM DATA FALLBACK ĐỂ UI KHÔNG BỊ TRẮNG
-            LoadFallbackData();
+            Debug.WriteLine($"[HomeVM] Nearby API error: {ex.Message}");
+            await LoadFallbackDataAsync(lang);
         }
-        // ==============================================================
-
-        // Luôn hiển thị Success nếu có bất kỳ dữ liệu nào (API hoặc local)
-        // Chỉ Empty khi thực sự không có gì để hiển thị
-        if (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
-        {
-            // Thử lần cuối: load từ local DB
-            LoadFallbackData();
-            // Đợi một chút để fallback load xong
-            await Task.Delay(200);
-        }
-
-        // Sau fallback, nếu vẫn hoàn toàn trống thì mới Empty
-        if (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
-        {
-            State = UiState.Empty;
-            return;
-        }
-
-        State = UiState.Success;
     }
 
     /// <summary>
-    /// Fallback: tải danh sách từ SQLite local khi API nearby không khả dụng.
-    /// Dùng dữ liệu POI đã sync từ trước để UI không bị trắng.
+    /// Fallback: tải top 5 POI từ SQLite local khi API không khả dụng.
     /// </summary>
-    private async void LoadFallbackData()
+    private async Task LoadFallbackDataAsync(string lang)
     {
-        System.Diagnostics.Debug.WriteLine("[HomeVM] Loading fallback from local SQLite...");
-
         try
         {
+            if (NearbyPlaces.Count > 0) return; // Already populated
+
             var localPois = await _db.GetAllPoisAsync();
             var top5 = localPois.OrderByDescending(p => p.Priority).Take(5).ToList();
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                NearbyPlaces.Clear();
-                foreach (var p in top5)
-                {
-                    NearbyPlaces.Add(new NearbyPlaceCard(
-                        PoiId: p.PoiId,
-                        Title: p.Name ?? "---",
-                        DistanceLabel: "THÚ",
-                        LocationHint: "Thảo Cầm Viên",
-                        ImageUrl: p.ImageThumbnail ?? ""));
-                }
+            var label = lang == "en" ? "ANIMAL" : "THÚ";
+            var hint = lang == "en" ? "Saigon Zoo" : "Thảo Cầm Viên";
 
-                if (NearbyPlaces.Count == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("[HomeVM] No local POIs either — UI will be empty.");
-                }
-            });
+            NearbyPlaces.Clear();
+            foreach (var p in top5)
+            {
+                NearbyPlaces.Add(new NearbyPlaceCard(
+                    PoiId: p.PoiId,
+                    Title: p.Name ?? "---",
+                    DistanceLabel: label,
+                    LocationHint: hint,
+                    ImageUrl: p.ImageThumbnail ?? ""));
+            }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[HomeVM] LoadFallbackData error: {ex.Message}");
+            Debug.WriteLine($"[HomeVM] Fallback error: {ex.Message}");
         }
+    }
+
+    private static string FormatTime(double seconds)
+    {
+        var t = TimeSpan.FromSeconds(Math.Max(0, seconds));
+        return $"{(int)t.TotalMinutes:D2}:{t.Seconds:D2}";
     }
 
     private static string Truncate(string? s, int max)
     {
         if (string.IsNullOrWhiteSpace(s)) return "";
         s = s.Trim();
-        if (s.Length <= max) return s;
-        return s[..max] + "…";
+        return s.Length <= max ? s : s[..max] + "…";
     }
 }
 
-// ── Simple UI models for new HomePage design ────────────────────────
+// ── UI record models ────────────────────────────────────────────────
+
 public sealed record HomeQuickAction(string Emoji, string Title, ICommand Command);
 public sealed record FeaturedAnimalCard(int Id, string Name, string Subtitle, string ImageUrl);
 public sealed record UpcomingEventCard(string Emoji, string Title, string TimeLabel, string Location);
-
 public sealed record NearbyPlaceCard(int PoiId, string Title, string DistanceLabel, string LocationHint, string ImageUrl);
 
 public sealed record ContinueListeningCard(
-    int PoiId,
-    string Title,
-    string Subtitle,
-    string ImageUrl,
-    double Progress01,
-    string ElapsedLabel,
-    string DurationLabel,
-    bool IsPlaying)
+    int PoiId, string Title, string Subtitle, string ImageUrl,
+    double Progress01, string ElapsedLabel, string DurationLabel, bool IsPlaying)
 {
     public string PlayGlyph => IsPlaying ? "⏸" : "▶";
 }
 
 public sealed record MiniPlayerCard(
-    int PoiId,
-    string Title,
-    string Subtitle,
-    string ImageUrl,
-    double Progress01,
-    string ElapsedLabel,
-    string DurationLabel,
-    bool IsPlaying)
+    int PoiId, string Title, string Subtitle, string ImageUrl,
+    double Progress01, string ElapsedLabel, string DurationLabel, bool IsPlaying)
 {
     public string PlayGlyph => IsPlaying ? "⏸" : "▶";
 }

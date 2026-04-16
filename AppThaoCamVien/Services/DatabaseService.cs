@@ -219,45 +219,49 @@ namespace AppThaoCamVien.Services
 
         private static async Task SeedOfflinePoisAsync(SQLiteAsyncConnection db)
         {
-            // Seed tối thiểu để app không bị trắng màn hình khi mất mạng/DB API trống.
-            // Dữ liệu này sẽ được thay thế khi SyncDataFromApiAsync gọi thành công.
-            // QUAN TRỌNG: PoiId phải > 0 và dùng InsertOrReplace để giữ ID cố định.
+            // Seed 5 POI thật với hình ảnh local để app luôn hiển thị đẹp dù mất mạng.
+            // Dữ liệu sẽ được thay thế khi SyncDataFromApiAsync gọi thành công.
             var seed = new List<Poi>
             {
                 new Poi
                 {
-                    PoiId = 1,
-                    CategoryId = null,
-                    Name = "Công viên Thảo Cầm Viên",
-                    Description = "Demo offline: không có dữ liệu từ API. Hãy kiểm tra kết nối/IP/SSL.",
-                    Latitude = 10.7870m,
-                    Longitude = 106.7055m,
-                    Radius = 30,
-                    Priority = 10,
-                    ImageThumbnail = string.Empty,
-                    IsActive = true,
-                    CreatedAt = null
+                    PoiId = 1, CategoryId = 2, Name = "Voi Châu Á",
+                    Description = "Voi châu Á là loài voi lớn nhất châu Á, sống chủ yếu trong rừng nhiệt đới.",
+                    Latitude = 10.7876m, Longitude = 106.7048m, Radius = 30, Priority = 10,
+                    ImageThumbnail = "elephant.jpg", IsActive = true
                 },
                 new Poi
                 {
-                    PoiId = 2,
-                    CategoryId = null,
-                    Name = "Khu chuồng thú (Demo)",
-                    Description = "Demo offline: nội dung sẽ tự cập nhật khi API trả về POIs.",
-                    Latitude = 10.7900m,
-                    Longitude = 106.7080m,
-                    Radius = 25,
-                    Priority = 5,
-                    ImageThumbnail = string.Empty,
-                    IsActive = true,
-                    CreatedAt = null
+                    PoiId = 2, CategoryId = 2, Name = "Hổ Bengal",
+                    Description = "Hổ Bengal là loài hổ lớn nhất, biểu tượng sức mạnh hoang dã.",
+                    Latitude = 10.7880m, Longitude = 106.7052m, Radius = 25, Priority = 9,
+                    ImageThumbnail = "tiger.jpg", IsActive = true
+                },
+                new Poi
+                {
+                    PoiId = 3, CategoryId = 2, Name = "Hươu cao cổ",
+                    Description = "Hươu cao cổ là loài động vật có vú cao nhất thế giới.",
+                    Latitude = 10.7882m, Longitude = 106.7060m, Radius = 25, Priority = 8,
+                    ImageThumbnail = "giraffe.jpg", IsActive = true
+                },
+                new Poi
+                {
+                    PoiId = 4, CategoryId = 2, Name = "Gấu Ngựa",
+                    Description = "Gấu ngựa có lông đen tuyền với vệt trắng hình chữ V trên ngực.",
+                    Latitude = 10.7870m, Longitude = 106.7055m, Radius = 25, Priority = 7,
+                    ImageThumbnail = "gau.jpg", IsActive = true
+                },
+                new Poi
+                {
+                    PoiId = 5, CategoryId = 2, Name = "Hà Mã",
+                    Description = "Hà mã là loài động vật bán thủy sinh lớn thứ ba trên cạn.",
+                    Latitude = 10.7874m, Longitude = 106.7065m, Radius = 25, Priority = 6,
+                    ImageThumbnail = "ha_ma.jpg", IsActive = true
                 }
             };
 
             foreach (var poi in seed)
-            {
                 await db.InsertOrReplaceAsync(poi);
-            }
         }
 
         // ─── GET POIs ─────────────────────────────────────────────────────

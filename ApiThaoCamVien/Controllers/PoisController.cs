@@ -23,7 +23,7 @@ namespace ApiThaoCamVien.Controllers
         /// GET /api/Pois?lang=en
         /// Test URL (browser): http://localhost:5281/api/Pois
         /// </summary>
-        [HttpGet]
+        [HttpGet]   
         public async Task<IActionResult> GetAll([FromQuery] string lang = "vi")
         {
             try

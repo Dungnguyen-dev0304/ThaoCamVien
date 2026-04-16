@@ -117,9 +117,9 @@
 
                         <VerticalStackLayout Spacing="15">
                             <Grid ColumnDefinitions="*, Auto">
-                                <Label Text="{DynamicResource TxtDiscoveries}" 
-                                       FontSize="22" 
-                                       FontAttributes="Bold" 
+                                <Label Text="{DynamicResource TxtDiscoveries}"
+                                       FontSize="22"
+                                       FontAttributes="Bold"
                                        TextColor="{StaticResource TextMain}"/>
 
                                 <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
@@ -132,63 +132,76 @@
                             </Grid>
 
                             <CollectionView x:Name="NearbyPlacesView"
-                                            HeightRequest="280" 
+                                            HeightRequest="220"
                                             ItemsSource="{Binding NearbyPlaces}"
                                             SelectionMode="Single"
                                             SelectionChanged="OnNearbySelectionChanged"
                                             HorizontalScrollBarVisibility="Never">
                                 <CollectionView.ItemsLayout>
-                                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
+                                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
                                 </CollectionView.ItemsLayout>
                                 <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border WidthRequest="240"
-                                                HeightRequest="270"
+                                    <DataTemplate x:DataType="vm:NearbyPlaceCard">
+                                        <Border WidthRequest="155"
+                                                HeightRequest="210"
                                                 BackgroundColor="White"
                                                 StrokeThickness="0"
-                                                Margin="5">
+                                                Margin="2">
                                             <Border.StrokeShape>
-                                                <RoundRectangle CornerRadius="24" />
+                                                <RoundRectangle CornerRadius="20" />
                                             </Border.StrokeShape>
                                             <Border.Shadow>
-                                                <Shadow Brush="Black" Opacity="0.1" Radius="10" Offset="0,5" />
+                                                <Shadow Brush="#1A1A1A" Opacity="0.08" Radius="12" Offset="0,6" />
                                             </Border.Shadow>
 
-                                            <Grid RowDefinitions="180, *">
-                                                <Image Grid.Row="0" Source="{Binding ImageUrl}" Aspect="AspectFill" HeightRequest="180" />
+                                            <Grid RowDefinitions="130, *">
+                                                <!-- Animal Image with rounded top -->
+                                                <Grid Grid.Row="0">
+                                                    <Image Source="{Binding ImageUrl}" Aspect="AspectFill" HeightRequest="130" />
+                                                    <!-- Gradient overlay at bottom of image -->
+                                                    <BoxView VerticalOptions="End" HeightRequest="40" Opacity="0.3" BackgroundColor="Black" />
+                                                </Grid>
 
-                                                <Border BackgroundColor="{StaticResource BadgeBg}"
+                                                <!-- Category badge -->
+                                                <Border BackgroundColor="{StaticResource BrandGreen}"
                                                         HorizontalOptions="Start"
                                                         VerticalOptions="Start"
-                                                        Margin="15"
-                                                        Padding="8,4"
+                                                        Margin="10"
+                                                        Padding="8,3"
                                                         StrokeThickness="0">
                                                     <Border.StrokeShape>
-                                                        <RoundRectangle CornerRadius="10" />
+                                                        <RoundRectangle CornerRadius="8" />
                                                     </Border.StrokeShape>
-                                                    <Label Text="{Binding DistanceLabel, FallbackValue='THÚ'}" 
-                                                           TextColor="White" 
-                                                           FontSize="10" 
+                                                    <Label Text="{Binding DistanceLabel, FallbackValue='🐾'}"
+                                                           TextColor="White"
+                                                           FontSize="9"
                                                            FontAttributes="Bold" />
                                                 </Border>
 
-                                                <Border BackgroundColor="White"
+                                                <!-- Rating badge on image -->
+                                                <Border BackgroundColor="#DDFFFFFF"
                                                         HorizontalOptions="End"
-                                                        VerticalOptions="End"
-                                                        Margin="15"
-                                                        Padding="8,4"
+                                                        VerticalOptions="Start"
+                                                        Margin="10"
+                                                        Padding="6,3"
                                                         StrokeThickness="0">
                                                     <Border.StrokeShape>
-                                                        <RoundRectangle CornerRadius="10" />
+                                                        <RoundRectangle CornerRadius="8" />
                                                     </Border.StrokeShape>
-                                                    <Label Text="⭐ 4.9" FontSize="11" TextColor="{StaticResource TextMain}" FontAttributes="Bold" />
+                                                    <Label Text="⭐ 4.9" FontSize="9" TextColor="{StaticResource TextMain}" FontAttributes="Bold" />
                                                 </Border>
 
-                                                <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10,15,15" Spacing="2">
-                                                    <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource TextMain}" LineBreakMode="TailTruncation" />
-                                                    <HorizontalStackLayout Spacing="5">
-                                                        <Label Text="📍" FontSize="12" TextColor="{StaticResource TextGray}" VerticalTextAlignment="Center"/>
-                                                        <Label Text="{Binding LocationHint}" FontSize="12" TextColor="{StaticResource TextGray}" LineBreakMode="TailTruncation" VerticalTextAlignment="Center"/>
+                                                <!-- Info section -->
+                                                <VerticalStackLayout Grid.Row="1" Padding="10,8,10,10" Spacing="3" VerticalOptions="Center">
+                                                    <Label Text="{Binding Title}"
+                                                           FontAttributes="Bold"
+                                                           FontSize="14"
+                                                           TextColor="{StaticResource TextMain}"
+                                                           LineBreakMode="TailTruncation"
+                                                           MaxLines="1" />
+                                                    <HorizontalStackLayout Spacing="4">
+                                                        <Label Text="📍" FontSize="10" TextColor="{StaticResource TextGray}" VerticalTextAlignment="Center"/>
+                                                        <Label Text="{Binding LocationHint}" FontSize="11" TextColor="{StaticResource TextGray}" LineBreakMode="TailTruncation" VerticalTextAlignment="Center" MaxLines="1"/>
                                                     </HorizontalStackLayout>
                                                 </VerticalStackLayout>
                                             </Grid>
@@ -197,37 +210,6 @@
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
                         </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="15" Margin="0,0,0,30">
-                            <Label Text="{Binding StartTourTitle}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextMain}" />
-                            <Border StrokeThickness="0" BackgroundColor="Transparent" Padding="0">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="24" />
-                                </Border.StrokeShape>
-                                <Grid HeightRequest="120">
-                                    <Image Source="{Binding StartTourBackgroundImageUrl}" Aspect="AspectFill" />
-                                    <BoxView>
-                                        <BoxView.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#00000000" Offset="0.0" />
-                                                <GradientStop Color="#AA000000" Offset="1.0" />
-                                            </LinearGradientBrush>
-                                        </BoxView.Background>
-                                    </BoxView>
-                                    <Button Text="{Binding StartTourButtonText}" 
-                                            Clicked="OnStartClicked" 
-                                            BackgroundColor="{StaticResource BrandGreen}" 
-                                            TextColor="White" 
-                                            CornerRadius="15" 
-                                            HeightRequest="45" 
-                                            FontAttributes="Bold" 
-                                            Margin="15" 
-                                            HorizontalOptions="Fill" 
-                                            VerticalOptions="End" />
-                                </Grid>
-                            </Border>
-                        </VerticalStackLayout>
-
                     </VerticalStackLayout>
                 </ScrollView>
             </Grid>

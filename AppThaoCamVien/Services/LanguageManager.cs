@@ -63,6 +63,8 @@
                 ["TxtAnimalKingdom"] = "🌿 Animal Kingdom",
                 ["TxtAnimalDesc"] = "Discover the amazing world of wildlife at Saigon Zoo",
                 ["TxtSearchPlaceholder"] = "Search animals...",
+                ["TxtStory"] = "Story",
+
                 // Story
                 ["TxtAutomatic"]="Automatic Narration",
                 ["TxtInfo"] = "Info",
@@ -87,6 +89,7 @@
                 ["TxtDirections"] = "Directions",
                 ["TxtInZone"] = "● In zone",
                 ["TxtApproaching"] = "○ Approaching",
+                ["TxtDiscover"] = "Discover the secrets of animals.",
                 // About
                 ["TxtAboutApp"] = "Introduce",
                 ["TxtAppVersion"] = "Version 1.0.0",
@@ -105,7 +108,9 @@
                 ["TabMap"] = "Sơ đồ",
                 ["TabAbout"] = "Giới thiệu",
                 ["TxtHi"] = "Chào mừng tới Thảo Cầm Viên Tour",
+                ["TxtDiscover"] = "Khám phá bí mật các loài động vật",
                 ["TxtDiscoveries"] = "Khám phá nổi bật",
+                ["TxtStory"] = "Câu chuyện",
                 ["TxtZooName"] = "THẢO CẦM VIÊN SÀI GÒN",
                 ["TxtAudioGuide"] = "AUDIO GUIDE TOUR",
                 ["TxtHeroTitle"] = "Hành Trình Âm Thanh",
@@ -155,10 +160,10 @@
                 ["TxtAboutApp"] = "Giới thiệu",
                 ["TxtAppVersion"] = "Phiên bản 1.0.0",
                 ["TxtAboutTitle"] = "Về ứng dụng",
-                ["TxtAboutDesc"] = "Ứng dụng hướng dẫn tham quan Thảo Cầm Viên thông minh. GPS tự động, QR code, đa ngôn ngữ.",
+                ["TxtAboutDesc"] = "Audio guide thông minh cho Thảo Cầm Viên. Thuyết minh tự động theo GPS, quét QR, hỗ trợ đa ngôn ngữ.",
                 ["TxtDeveloper"] = "Phát triển bởi: Dũng Nguyễn",
                 ["TxtAppInfo"] = "Thông tin ứng dụng",
-            }
+            },
         };
     }
 }

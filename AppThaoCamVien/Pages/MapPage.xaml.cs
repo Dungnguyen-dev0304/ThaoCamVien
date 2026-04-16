@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace AppThaoCamVien.Pages;
 
 /// <summary>
-/// MapPage — FIX: GPS crash khi vào vùng POI, tất cả exception được catch.
+/// Bản đồ Thảo Cầm Viên: hiển thị POI, GPS tracking, geofencing, chỉ đường.
 /// </summary>
 public partial class MapPage : ContentPage
 {
@@ -24,9 +24,17 @@ public partial class MapPage : ContentPage
     private List<Poi> _pois = [];
     private Poi? _nearPoi;
     private Poi? _focusPoi;
+    private Poi? _selectedPoi; // POI đang được chọn (chỉ hiện pin này)
     private CancellationTokenSource? _dotCts;
     private bool _mapReady = false;
     private bool _routeVisible = false;
+
+    // Màu sắc đẹp cho các loại POI
+    private static readonly Color PinColorDefault = Color.FromArgb("#4CAF50");   // Xanh lá
+    private static readonly Color PinColorSelected = Color.FromArgb("#FF6D00");  // Cam nổi bật
+    private static readonly Color PinColorHistoric = Color.FromArgb("#7B1FA2");  // Tím - di tích
+    private static readonly Color PinColorAnimal = Color.FromArgb("#2E7D32");    // Xanh đậm - động vật
+    private static readonly Color PinColorPlant = Color.FromArgb("#00897B");     // Xanh ngọc - thực vật
 
     public MapPage(DatabaseService db, LocationService gps,
                    GeofencingEngine geo, NarrationEngine narration,
@@ -49,12 +57,51 @@ public partial class MapPage : ContentPage
             ZooMap.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
             ZooMap.Map?.Widgets.Clear();
             ZooMap.MyLocationEnabled = true;
+            ZooMap.PinClicked += OnPinClicked;
             CenterZoo();
             _mapReady = true;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[Map] SetupMap error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Khi bấm vào 1 pin: nếu chưa chọn → chỉ hiện pin đó, ẩn các pin khác.
+    /// Nếu đã chọn pin đó rồi → hiện lại tất cả.
+    /// </summary>
+    private void OnPinClicked(object? sender, PinClickedEventArgs e)
+    {
+        try
+        {
+            var clickedPin = e.Pin;
+            if (clickedPin == null) return;
+
+            // Tìm POI tương ứng với pin được bấm
+            var clickedPoi = _pois.FirstOrDefault(p => p.Name == clickedPin.Label);
+            if (clickedPoi == null) return;
+
+            // Nếu đang chọn POI này rồi → toggle: hiện lại tất cả
+            if (_selectedPoi != null && _selectedPoi.PoiId == clickedPoi.PoiId)
+            {
+                _selectedPoi = null;
+                ResetAllPins();
+                ShowDefaultPanel();
+                e.Handled = true;
+                return;
+            }
+
+            // Chọn POI mới → chỉ hiện pin này
+            _selectedPoi = clickedPoi;
+            ShowOnlySelectedPin(clickedPoi);
+            ShowNearPoiPanel(clickedPoi, 0, true);
+            CenterPoi(clickedPoi);
+            e.Handled = true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Map] OnPinClicked error: {ex.Message}");
         }
     }
 
@@ -124,17 +171,8 @@ public partial class MapPage : ContentPage
             {
                 try
                 {
-                    ZooMap.Pins.Clear();
-                    foreach (var p in _pois)
-                    {
-                        ZooMap.Pins.Add(new Pin(ZooMap)
-                        {
-                            Label = p.Name ?? "---",
-                            Position = new Position((double)p.Latitude, (double)p.Longitude),
-                            Type = PinType.Pin,
-                            Color = Colors.OrangeRed
-                        });
-                    }
+                    _selectedPoi = null;
+                    ResetAllPins();
                     BuildChips();
                     PoiCountLbl.Text = $"{_pois.Count} {GetRes("TxtPoints", "điểm")}";
                 }
@@ -157,22 +195,41 @@ public partial class MapPage : ContentPage
             ChipsContainer.Children.Clear();
             foreach (var poi in _pois)
             {
+                var pinColor = GetPinColor(poi);
                 var b = new Border
                 {
-                    BackgroundColor = Color.FromArgb("#0A2A1B"),
-                    Padding = new Thickness(12, 7),
-                    Stroke = Color.FromArgb("#15402A"),
-                    StrokeThickness = 1
+                    BackgroundColor = pinColor,
+                    Padding = new Thickness(14, 8),
+                    StrokeThickness = 0
                 };
-                b.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 };
+                b.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 };
+                b.Shadow = new Shadow { Brush = pinColor, Opacity = 0.3f, Radius = 6, Offset = new Point(0, 3) };
                 b.Content = new Label
                 {
                     Text = poi.Name ?? "---",
                     TextColor = Colors.White,
-                    FontSize = 11
+                    FontSize = 12,
+                    FontAttributes = FontAttributes.Bold
                 };
                 var tap = new TapGestureRecognizer();
-                tap.Tapped += (_, _) => CenterPoi(poi);
+                var capturedPoi = poi;
+                tap.Tapped += (_, _) =>
+                {
+                    // Bấm chip = chọn POI đó (toggle)
+                    if (_selectedPoi != null && _selectedPoi.PoiId == capturedPoi.PoiId)
+                    {
+                        _selectedPoi = null;
+                        ResetAllPins();
+                        ShowDefaultPanel();
+                    }
+                    else
+                    {
+                        _selectedPoi = capturedPoi;
+                        ShowOnlySelectedPin(capturedPoi);
+                        ShowNearPoiPanel(capturedPoi, 0, true);
+                        CenterPoi(capturedPoi);
+                    }
+                };
                 b.GestureRecognizers.Add(tap);
                 ChipsContainer.Children.Add(b);
             }
@@ -313,8 +370,17 @@ public partial class MapPage : ContentPage
         try
         {
             foreach (var pin in ZooMap.Pins)
-                pin.Color = (active != null && pin.Label == active.Name)
-                    ? Color.FromArgb("#FFCA28") : Colors.OrangeRed;
+            {
+                if (active != null && pin.Label == active.Name)
+                {
+                    pin.Color = PinColorSelected;
+                }
+                else
+                {
+                    var poi = _pois.FirstOrDefault(p => p.Name == pin.Label);
+                    pin.Color = poi != null ? GetPinColor(poi) : PinColorDefault;
+                }
+            }
         }
         catch { }
     }
@@ -453,12 +519,21 @@ public partial class MapPage : ContentPage
         }
     }
 
-    // ── Stateful Map Markers ────────────────────────────────────────────
+    // ── Pin Styling ────────────────────────────────────────────────────
 
     /// <summary>
-    /// Ẩn tất cả pin, chỉ hiển thị pin cho POI được chọn (màu đỏ nổi bật).
-    /// Dùng khi hiển thị route — giảm visual clutter.
+    /// Chọn màu pin dựa trên CategoryId.
+    /// 1 = Di tích, 2 = Động vật, 3 = Thực vật (convention từ API).
     /// </summary>
+    private static Color GetPinColor(Poi poi) => poi.CategoryId switch
+    {
+        1 => PinColorHistoric,
+        2 => PinColorAnimal,
+        3 => PinColorPlant,
+        _ => PinColorDefault
+    };
+
+    /// <summary>Chỉ hiện 1 pin được chọn, ẩn tất cả pin khác.</summary>
     private void ShowOnlySelectedPin(Poi selected)
     {
         try
@@ -469,7 +544,7 @@ public partial class MapPage : ContentPage
                 Label = selected.Name ?? "---",
                 Position = new Position((double)selected.Latitude, (double)selected.Longitude),
                 Type = PinType.Pin,
-                Color = Color.FromArgb("#E53935") // Đỏ nổi bật
+                Color = PinColorSelected
             });
         }
         catch (Exception ex)
@@ -478,9 +553,7 @@ public partial class MapPage : ContentPage
         }
     }
 
-    /// <summary>
-    /// Hiển thị lại TẤT CẢ pins (sau khi xoá route).
-    /// </summary>
+    /// <summary>Hiện lại tất cả pins với màu theo category.</summary>
     private void ResetAllPins()
     {
         try
@@ -493,7 +566,7 @@ public partial class MapPage : ContentPage
                     Label = p.Name ?? "---",
                     Position = new Position((double)p.Latitude, (double)p.Longitude),
                     Type = PinType.Pin,
-                    Color = Colors.OrangeRed
+                    Color = GetPinColor(p)
                 });
             }
         }

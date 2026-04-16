@@ -242,8 +242,7 @@ public partial class HomePage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", "Không thể mở trang danh sách: " + ex.Message, "OK");
+            await DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
-} // Ký tự đóng class HomePage
-
+}
