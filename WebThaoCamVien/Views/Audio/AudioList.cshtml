@@ -2,7 +2,10 @@
 @{
     Layout = "_adminlayout";
     var audioMap = ViewBag.AudioMap as Dictionary<int, Dictionary<string, SharedThaoCamVien.Models.PoiAudio>>;
-    var langs = ViewBag.SupportedLangs as string[];
+    var allLangs = ViewBag.SupportedLangs as string[];
+    // Chỉ hiển thị tiếng Việt và tiếng Anh; các ngôn ngữ khác tạm ẩn:
+    // var langs = allLangs;
+    var langs = allLangs?.Where(l => l == "vi" || l == "en").ToArray();
 }
 
 <style>

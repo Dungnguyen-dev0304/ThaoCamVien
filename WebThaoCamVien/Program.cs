@@ -39,13 +39,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // ?i?u h??ng m?c ??nh
-app.MapGet("/", context => {
-    context.Response.Redirect("/Account/Login");
-    return System.Threading.Tasks.Task.CompletedTask;
-});
+//app.MapGet("/", context => {
+//    context.Response.Redirect("/Account/Login");
+//    return System.Threading.Tasks.Task.CompletedTask;
+//});
+
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=admin}/{action=index}/{id?}");
 
 app.Run();
