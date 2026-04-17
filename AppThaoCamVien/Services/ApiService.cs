@@ -57,11 +57,11 @@ public sealed class ApiService
 #if ANDROID
         return DeviceInfo.DeviceType == DeviceType.Virtual
             ? "http://10.0.2.2:5281"
-            : "http://192.168.0.101:5281";  // Sentinel — App.xaml.cs sẽ phát hiện và hỏi dev
+            : "http://172.20.10.3:5281";  // Sentinel — App.xaml.cs sẽ phát hiện và hỏi dev
 #elif IOS
         return DeviceInfo.DeviceType == DeviceType.Virtual
             ? "http://localhost:5281"
-            : "http://192.168.0.101:5281";
+            : "http://172.20.10.3:5281";
 #else
         return "http://localhost:5281";
 #endif
@@ -70,7 +70,7 @@ public sealed class ApiService
     /// <summary>Kiểm tra xem dev đã cấu hình IP chưa.</summary>
     public static bool NeedsConfiguration
         => !Preferences.Default.ContainsKey("ApiBaseUrl")
-           && ResolveDefaultApiUrl().Contains("192.168.0.101");
+           && ResolveDefaultApiUrl().Contains("172.20.10.3");
 
     private string BuildUrl(string endpoint)
         => $"{BaseUrl.TrimEnd('/')}/{endpoint.TrimStart('/')}";

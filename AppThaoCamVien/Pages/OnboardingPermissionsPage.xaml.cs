@@ -56,14 +56,7 @@ public partial class OnboardingPermissionsPage : ContentPage
 
     private async void OnContinueClicked(object? sender, EventArgs e)
     {
-        // Nếu thiết bị thật chưa cấu hình IP server → hiện trang cấu hình API
-        if (ApiService.NeedsConfiguration)
-        {
-            await Navigation.PushAsync(_sp.GetRequiredService<OnboardingApiConfigPage>());
-        }
-        else
-        {
-            await Navigation.PushAsync(_sp.GetRequiredService<OnboardingOfflineDownloadPage>());
-        }
+        // API đã được cấu hình sẵn trên máy → chuyển thẳng đến tải offline
+        await Navigation.PushAsync(_sp.GetRequiredService<OnboardingOfflineDownloadPage>());
     }
 }

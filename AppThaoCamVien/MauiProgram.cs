@@ -61,7 +61,6 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<AnimalsViewModel>();
             builder.Services.AddTransient<OnboardingWelcomePage>();
             builder.Services.AddTransient<OnboardingPermissionsPage>();
-            builder.Services.AddTransient<OnboardingApiConfigPage>();
             builder.Services.AddTransient<OnboardingOfflineDownloadPage>();
 
             // IServiceProvider được tự động inject bởi MAUI DI container

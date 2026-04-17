@@ -9,7 +9,7 @@
 
     <Grid>
         <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
-            IsDetecting="True"
+            
             CameraLocation="Rear"
             BarcodesDetected="OnBarcodesDetected"
             HorizontalOptions="Fill" VerticalOptions="Fill">
@@ -22,7 +22,7 @@
             </zxing:CameraBarcodeReaderView.Options>
         </zxing:CameraBarcodeReaderView>
 
-        <BoxView Color="#1C1C1E" Opacity="0.6" HorizontalOptions="Fill" VerticalOptions="Fill"/>
+       <!-- <BoxView Color="#1C1C1E" Opacity="0.6" HorizontalOptions="Fill" VerticalOptions="Fill"/> -->
 
         <!-- Header -->
         <Grid VerticalOptions="Start" Padding="20,50,20,0" ColumnDefinitions="Auto, *, Auto">
