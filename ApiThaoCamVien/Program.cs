@@ -1,15 +1,18 @@
 ﻿using ApiThaoCamVien.Models;
+using ApiThaoCamVien.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── 1. Database ─────────────────────────────────────────────────────────────
-builder.Services.AddDbContext<WebContext>(options =>
+// ─── 1. Database (nhiều user đồng thời: mỗi HTTP request = DbContext riêng, pool tái sử dụng) ─
+// App MAUI: mỗi máy một client, không có “giới hạn số app”; giới hạn thực tế là API + SQL Server.
+builder.Services.AddDbContextPool<WebContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.CommandTimeout(30)));
+        sql => sql.CommandTimeout(30)),
+    poolSize: 128);
 
 // ─── 2. Controllers + JSON ───────────────────────────────────────────────────
 builder.Services.AddControllers().AddJsonOptions(x =>
@@ -40,6 +43,10 @@ builder.Services.AddSwaggerGen();
 // ─── 5. Logging ──────────────────────────────────────────────────────────────
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+// ─── 6. POI đa ngôn ngữ (Scoped: dùng chung vòng đời DbContext, an toàn khi nhiều request song song)
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<PoiLocalizationService>();
 
 var app = builder.Build();
 

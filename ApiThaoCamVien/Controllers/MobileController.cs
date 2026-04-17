@@ -1,4 +1,5 @@
 using ApiThaoCamVien.Models;
+using ApiThaoCamVien.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiThaoCamVien;
@@ -16,11 +17,13 @@ public sealed class MobileController : ControllerBase
 {
     private readonly WebContext _ctx;
     private readonly ILogger<MobileController> _logger;
+    private readonly PoiLocalizationService _poiLocalization;
 
-    public MobileController(WebContext ctx, ILogger<MobileController> logger)
+    public MobileController(WebContext ctx, ILogger<MobileController> logger, PoiLocalizationService poiLocalization)
     {
         _ctx = ctx;
         _logger = logger;
+        _poiLocalization = poiLocalization;
     }
 
     /// <summary>
@@ -53,7 +56,7 @@ public sealed class MobileController : ControllerBase
     {
         lang = ResolveLang(lang);
         var pois = await GetActivePoisOrderedAsync();
-        await ApplyTranslationsAsync(pois, lang);
+        await _poiLocalization.ApplyToPoisAsync(pois, lang, HttpContext.RequestAborted);
         var cards = pois.Select(p => new HomeFeedCardResponse
         {
             Id = p.PoiId,
@@ -76,7 +79,12 @@ public sealed class MobileController : ControllerBase
         {
             Greeting = greeting,
             HeaderTitle = greeting,
-            HeaderSubtitle = "Khám phá thiên nhiên hoang dã",
+            HeaderSubtitle = lang switch
+            {
+                "en" => "Discover the amazing world of wildlife",
+                "th" => "ค้นพบโลกของสัตว์ป่า",
+                _ => "Khám phá thiên nhiên hoang dã"
+            },
             ContinueListeningKicker = lang == "en" ? "CONTINUE LISTENING" : "TIẾP TỤC NGHE",
             NearbyPlacesTitle = lang == "en" ? "NEARBY PLACES" : "GẦN BẠN",
             StartTourTitle = lang == "en" ? "START TOUR" : "BẮT ĐẦU HÀNH TRÌNH",
@@ -132,6 +140,7 @@ public sealed class MobileController : ControllerBase
     {
         lang = ResolveLang(lang);
         var pois = await GetActivePoisOrderedAsync();
+        await _poiLocalization.ApplyToPoisAsync(pois, lang, HttpContext.RequestAborted);
         var list = new List<NearbyPoiResponse>();
         foreach (var p in pois)
         {
@@ -181,8 +190,7 @@ public sealed class MobileController : ControllerBase
         // Load POIs kèm category name
         var pois = await GetActivePoisOrderedAsync();
 
-        // Áp dụng bản dịch (Name, Description) nếu lang != "vi"
-        await ApplyTranslationsAsync(pois, lang);
+        await _poiLocalization.ApplyToPoisAsync(pois, lang, HttpContext.RequestAborted);
 
         // Load category names
         var categories = await _ctx.PoiCategories.AsNoTracking().ToListAsync();
@@ -212,16 +220,29 @@ public sealed class MobileController : ControllerBase
             return "Safe";
         }
 
-        var animals = pois.Select(p => new AnimalResponse
+        var defaultCat = lang == "en" ? "Other" : "Khác";
+        var catTrans = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var cn in catLookup.Values.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct())
+            catTrans[cn] = await _poiLocalization.TranslatePlainAsync(cn, lang, HttpContext.RequestAborted);
+
+        var animals = new List<AnimalResponse>();
+        foreach (var p in pois)
         {
-            Id = p.PoiId,
-            Name = p.Name ?? "",
-            ImageUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail),
-            Category = p.CategoryId.HasValue && catLookup.TryGetValue(p.CategoryId.Value, out var cn) && !string.IsNullOrWhiteSpace(cn)
-                ? cn : "Khác",
-            ConservationStatus = lang == "en" ? statusEn(p.Priority) : statusVi(p.Priority),
-            StatusColorHex = colorHex(p.Priority)
-        }).ToList();
+            var catVi = p.CategoryId.HasValue && catLookup.TryGetValue(p.CategoryId.Value, out var cnv) && !string.IsNullOrWhiteSpace(cnv)
+                ? cnv
+                : null;
+            var category = string.IsNullOrEmpty(catVi) ? defaultCat : catTrans[catVi];
+
+            animals.Add(new AnimalResponse
+            {
+                Id = p.PoiId,
+                Name = p.Name ?? "",
+                ImageUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail),
+                Category = category,
+                ConservationStatus = lang == "en" ? statusEn(p.Priority) : statusVi(p.Priority),
+                StatusColorHex = colorHex(p.Priority)
+            });
+        }
 
         var filters = new List<AnimalFilterResponse>
         {
@@ -312,6 +333,9 @@ public sealed class MobileController : ControllerBase
         if (poi == null)
             return NotFound(new { message = "QR not found" });
 
+        var lang = ResolveLang(null);
+        await _poiLocalization.ApplyToPoisAsync(new List<Poi> { poi }, lang, HttpContext.RequestAborted);
+
         var dto = new NearbyPoiResponse
         {
             PoiId = poi.PoiId,
@@ -324,53 +348,21 @@ public sealed class MobileController : ControllerBase
 
     /// <summary>GET /api/mobile/about/sections</summary>
     [HttpGet("about/sections")]
-    public Task<IActionResult> GetAboutSections()
+    public Task<IActionResult> GetAboutSections([FromQuery] string? lang = null)
     {
+        lang = ResolveLang(lang);
         var sections = new List<AboutSectionResponse>
         {
             new()
             {
                 Key = "intro",
-                Title = "Thảo Cầm Viên",
-                Body = "Ứng dụng thuyết minh tự động — dữ liệu đồng bộ từ máy chủ nội bộ khi phát triển."
+                Title = lang == "en" ? "Saigon Zoo & Botanical Gardens" : "Thảo Cầm Viên",
+                Body = lang == "en"
+                    ? "Automatic narration app — content syncs from your server when online."
+                    : "Ứng dụng thuyết minh tự động — dữ liệu đồng bộ từ máy chủ nội bộ khi phát triển."
             }
         };
         return Task.FromResult<IActionResult>(Ok(sections));
-    }
-
-    /// <summary>
-    /// Lấy bản dịch cho ngôn ngữ lang, overlay lên Name/Description của POI.
-    /// Nếu lang == "vi" hoặc không có bản dịch → giữ nguyên data gốc.
-    /// </summary>
-    private async Task ApplyTranslationsAsync(List<Poi> pois, string lang)
-    {
-        if (lang == "vi" || pois.Count == 0) return;
-
-        try
-        {
-            var poiIds = pois.Select(p => p.PoiId).ToList();
-            var translations = await _ctx.PoiTranslations
-                .AsNoTracking()
-                .Where(t => t.LanguageCode == lang && poiIds.Contains(t.PoiId))
-                .ToListAsync();
-
-            if (translations.Count == 0) return;
-
-            var lookup = translations.ToDictionary(t => t.PoiId);
-            foreach (var poi in pois)
-            {
-                if (lookup.TryGetValue(poi.PoiId, out var tr))
-                {
-                    if (!string.IsNullOrWhiteSpace(tr.Name)) poi.Name = tr.Name;
-                    if (!string.IsNullOrWhiteSpace(tr.Description)) poi.Description = tr.Description;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Nếu bảng chưa tồn tại hoặc lỗi khác → bỏ qua, dùng data gốc
-            _logger.LogWarning(ex, "ApplyTranslationsAsync failed for lang={Lang}", lang);
-        }
     }
 
     private async Task<List<Poi>> GetActivePoisOrderedAsync()

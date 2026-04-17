@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiThaoCamVien.Models;
+using ApiThaoCamVien;
+using ApiThaoCamVien.Services;
 
 namespace ApiThaoCamVien.Controllers
 {
@@ -10,13 +12,13 @@ namespace ApiThaoCamVien.Controllers
     {
         private readonly WebContext _ctx;
         private readonly ILogger<ToursController> _logger;
+        private readonly PoiLocalizationService _poiLocalization;
 
-        private string BaseUrl => $"{Request.Scheme}://{Request.Host}";
-
-        public ToursController(WebContext ctx, ILogger<ToursController> logger)
+        public ToursController(WebContext ctx, ILogger<ToursController> logger, PoiLocalizationService poiLocalization)
         {
             _ctx = ctx;
             _logger = logger;
+            _poiLocalization = poiLocalization;
         }
 
         // ─────────────────────────────────────────────────────────
@@ -70,6 +72,8 @@ namespace ApiThaoCamVien.Controllers
                 if (tour == null)
                     return NotFound(new { message = $"Tour #{id} không tồn tại" });
 
+                lang = (lang ?? "vi").ToLowerInvariant();
+
                 // Lấy danh sách POI trong tour theo thứ tự OrderIndex
                 var tourPois = await _ctx.TourPois
                     .Where(tp => tp.TourId == id)
@@ -77,31 +81,14 @@ namespace ApiThaoCamVien.Controllers
                     .Include(tp => tp.Poi)
                     .ToListAsync();
 
-                // Áp dụng translation nếu cần
+                var tourPoiEntities = tourPois.Where(tp => tp.Poi != null).Select(tp => tp.Poi!).ToList();
+                if (lang != "vi" && tourPoiEntities.Count > 0)
+                    await _poiLocalization.ApplyToPoisAsync(tourPoiEntities, lang, HttpContext.RequestAborted);
+
                 if (lang != "vi")
                 {
-                    try
-                    {
-                        var poiIds = tourPois
-                            .Where(tp => tp.Poi != null)
-                            .Select(tp => tp.PoiId!.Value)
-                            .ToList();
-
-                        var trans = await _ctx.PoiTranslations
-                            .Where(t => t.LanguageCode == lang && poiIds.Contains(t.PoiId))
-                            .ToDictionaryAsync(t => t.PoiId);
-
-                        foreach (var tp in tourPois)
-                        {
-                            if (tp.Poi == null) continue;
-                            if (trans.TryGetValue(tp.Poi.PoiId, out var t))
-                            {
-                                if (!string.IsNullOrWhiteSpace(t.Name)) tp.Poi.Name = t.Name;
-                                if (!string.IsNullOrWhiteSpace(t.Description)) tp.Poi.Description = t.Description;
-                            }
-                        }
-                    }
-                    catch { /* translations chưa có thì bỏ qua */ }
+                    tour.Name = await _poiLocalization.TranslatePlainAsync(tour.Name ?? "", lang, HttpContext.RequestAborted);
+                    tour.Description = await _poiLocalization.TranslatePlainAsync(tour.Description ?? "", lang, HttpContext.RequestAborted);
                 }
 
                 var result = new
@@ -124,10 +111,9 @@ namespace ApiThaoCamVien.Controllers
                         tp.Poi.Description,
                         tp.Poi.ImageThumbnail,
                         tp.Poi.Radius,
-                        // Trả về URL ảnh đầy đủ luôn cho app dùng
                         ImageUrl = string.IsNullOrEmpty(tp.Poi.ImageThumbnail)
                             ? null
-                            : $"{BaseUrl}/images/pois/{tp.Poi.ImageThumbnail}"
+                            : PoiMediaUrls.ResolveThumbnail(Request, tp.Poi.ImageThumbnail)
                     })
                 };
 

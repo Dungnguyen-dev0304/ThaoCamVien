@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SharedThaoCamVien.Models;
 using ApiThaoCamVien.Models;
 using ApiThaoCamVien;
+using ApiThaoCamVien.Services;
 
 namespace ApiThaoCamVien.Controllers
 {
@@ -12,11 +13,13 @@ namespace ApiThaoCamVien.Controllers
     {
         private readonly WebContext _ctx;
         private readonly ILogger<PoisController> _logger;
+        private readonly PoiLocalizationService _poiLocalization;
 
-        public PoisController(WebContext ctx, ILogger<PoisController> logger)
+        public PoisController(WebContext ctx, ILogger<PoisController> logger, PoiLocalizationService poiLocalization)
         {
             _ctx = ctx;
             _logger = logger;
+            _poiLocalization = poiLocalization;
         }
 
         /// <summary>
@@ -29,6 +32,7 @@ namespace ApiThaoCamVien.Controllers
         {
             try
             {
+                lang = (lang ?? "vi").ToLowerInvariant();
                 _logger.LogInformation("GetAll called, lang={Lang}", lang);
 
                 var pois = await _ctx.Pois
@@ -63,39 +67,8 @@ namespace ApiThaoCamVien.Controllers
                     return Ok(new List<Poi>()); // Trả về array rỗng, không phải 404
                 }
 
-                // Áp dụng bản dịch nếu cần
                 if (lang != "vi" && _ctx.Database.CanConnect())
-                {
-                    try
-                    {
-                        var hasTranslations = await _ctx.Database
-                            .ExecuteSqlRawAsync("SELECT 1") >= 0;
-
-                        var transTable = _ctx.Model.FindEntityType(typeof(PoiTranslation));
-                        if (transTable != null)
-                        {
-                            var trans = await _ctx.PoiTranslations
-                                .Where(t => t.LanguageCode == lang)
-                                .ToDictionaryAsync(t => t.PoiId);
-
-                            foreach (var poi in pois)
-                            {
-                                if (trans.TryGetValue(poi.PoiId, out var t))
-                                {
-                                    if (!string.IsNullOrWhiteSpace(t.Name))
-                                        poi.Name = t.Name;
-                                    if (!string.IsNullOrWhiteSpace(t.Description))
-                                        poi.Description = t.Description;
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Bảng poi_translations chưa tồn tại → bỏ qua, trả về tiếng Việt
-                        _logger.LogWarning("Translations not available: {Msg}", ex.Message);
-                    }
-                }
+                    await _poiLocalization.ApplyToPoisAsync(pois, lang, HttpContext.RequestAborted);
 
                 foreach (var poi in pois)
                     poi.ImageThumbnail = PoiMediaUrls.ResolveThumbnail(Request, poi.ImageThumbnail);
@@ -113,24 +86,13 @@ namespace ApiThaoCamVien.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetOne(int id, [FromQuery] string lang = "vi")
         {
+            lang = (lang ?? "vi").ToLowerInvariant();
             var poi = await _ctx.Pois.FindAsync(id);
             if (poi == null)
                 return NotFound(new { message = $"POI #{id} không tồn tại" });
 
             if (lang != "vi")
-            {
-                try
-                {
-                    var t = await _ctx.PoiTranslations
-                        .FirstOrDefaultAsync(x => x.PoiId == id && x.LanguageCode == lang);
-                    if (t != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(t.Name)) poi.Name = t.Name;
-                        if (!string.IsNullOrWhiteSpace(t.Description)) poi.Description = t.Description;
-                    }
-                }
-                catch { /* translations table may not exist */ }
-            }
+                await _poiLocalization.ApplyToPoisAsync(new List<Poi> { poi }, lang, HttpContext.RequestAborted);
 
             poi.ImageThumbnail = PoiMediaUrls.ResolveThumbnail(Request, poi.ImageThumbnail);
             return Ok(poi);

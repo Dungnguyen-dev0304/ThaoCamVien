@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SharedThaoCamVien.Models;
 using ApiThaoCamVien.Models;
+using ApiThaoCamVien.Services;
 
 namespace ApiThaoCamVien.Controllers
 {
@@ -11,11 +12,13 @@ namespace ApiThaoCamVien.Controllers
     {
         private readonly WebContext _ctx;
         private readonly ILogger<PoiExtController> _logger;
+        private readonly PoiLocalizationService _poiLocalization;
 
-        public PoiExtController(WebContext ctx, ILogger<PoiExtController> logger)
+        public PoiExtController(WebContext ctx, ILogger<PoiExtController> logger, PoiLocalizationService poiLocalization)
         {
             _ctx = ctx;
             _logger = logger;
+            _poiLocalization = poiLocalization;
         }
 
         // ─────────────────────────────────────────────────────────
@@ -32,26 +35,9 @@ namespace ApiThaoCamVien.Controllers
                     .OrderByDescending(p => p.Priority)
                     .ToListAsync();
 
+                lang = (lang ?? "vi").ToLowerInvariant();
                 if (lang != "vi")
-                {
-                    try
-                    {
-                        var poiIds = pois.Select(p => p.PoiId).ToList();
-                        var trans = await _ctx.PoiTranslations
-                            .Where(t => t.LanguageCode == lang && poiIds.Contains(t.PoiId))
-                            .ToDictionaryAsync(t => t.PoiId);
-
-                        foreach (var poi in pois)
-                        {
-                            if (trans.TryGetValue(poi.PoiId, out var t))
-                            {
-                                if (!string.IsNullOrWhiteSpace(t.Name)) poi.Name = t.Name;
-                                if (!string.IsNullOrWhiteSpace(t.Description)) poi.Description = t.Description;
-                            }
-                        }
-                    }
-                    catch { /* translations chưa có thì bỏ qua */ }
-                }
+                    await _poiLocalization.ApplyToPoisAsync(pois, lang, HttpContext.RequestAborted);
 
                 return Ok(pois);
             }

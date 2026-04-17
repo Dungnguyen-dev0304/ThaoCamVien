@@ -13,6 +13,7 @@ public sealed class HomePageViewModel : BaseViewModel
     private readonly ApiService _api;
     private readonly DatabaseService _db;
     private readonly LocationService _location;
+    private readonly AutoTranslateService _autoTranslate;
 
     // Zoo center coordinates (fallback when GPS unavailable)
     private const double ZooLat = 10.78738006;
@@ -129,11 +130,12 @@ public sealed class HomePageViewModel : BaseViewModel
         private set => SetProperty(ref _startTourBackgroundImageUrl, value);
     }
 
-    public HomePageViewModel(ApiService api, DatabaseService db, LocationService location)
+    public HomePageViewModel(ApiService api, DatabaseService db, LocationService location, AutoTranslateService autoTranslate)
     {
         _api = api;
         _db = db;
         _location = location;
+        _autoTranslate = autoTranslate;
         EmptyMessage = "Hiện chưa có nội dung phù hợp.";
     }
 
@@ -332,8 +334,13 @@ public sealed class HomePageViewModel : BaseViewModel
             foreach (var p in top5)
             {
                 var name = p.Name ?? "---";
-                if (lang == "en" && NameTranslations.TryGetValue(name, out var en))
-                    name = en;
+                if (lang == "en")
+                {
+                    if (NameTranslations.TryGetValue(name, out var en))
+                        name = en;
+                    else
+                        name = await _autoTranslate.TranslateAsync(name, "en");
+                }
 
                 cards.Add(new NearbyPlaceCard(
                     PoiId: p.PoiId,
