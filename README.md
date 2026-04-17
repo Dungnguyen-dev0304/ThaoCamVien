@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 # 🦁 Thảo Cầm Viên Tour — Hệ Thống Hướng Dẫn Tham Quan Thông Minh
 
 > **Nền tảng đa phương tiện (Multi-platform) hỗ trợ du khách trải nghiệm Thảo Cầm Viên Sài Gòn thông qua Audio Guide, GPS Tracking, QR Code và bản đồ tương tác — hoạt động cả khi không có Internet.**
@@ -487,4 +484,3 @@ ThaoCamVienTour/
 ---
 
 > *"Công nghệ tốt nhất là công nghệ mà du khách không nhận ra mình đang dùng — họ chỉ biết rằng chuyến tham quan hôm nay thú vị hơn mọi khi."*
->>>>>>> 69f1c27 (App moi UI/UX)

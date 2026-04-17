@@ -47,6 +47,14 @@ public sealed class ApiService
 
     public string BaseUrl { get; set; }
 
+    /// <summary>Reload BaseUrl from Preferences (or device default).</summary>
+    public void RefreshBaseUrlFromPreferences()
+    {
+        var pref = Preferences.Default.Get("ApiBaseUrl", string.Empty);
+        var resolved = string.IsNullOrWhiteSpace(pref) ? ResolveDefaultApiUrl() : pref;
+        BaseUrl = resolved.TrimEnd('/');
+    }
+
     /// <summary>
     /// Chọn URL mặc định theo loại thiết bị. Không hardcode IP cá nhân.
     /// Emulator → 10.0.2.2 (alias localhost của host).
@@ -57,7 +65,7 @@ public sealed class ApiService
 #if ANDROID
         return DeviceInfo.DeviceType == DeviceType.Virtual
             ? "http://10.0.2.2:5281"
-            : "http://172.20.10.3:5281";  // Sentinel — App.xaml.cs sẽ phát hiện và hỏi dev
+            : "http://172.20.10.3:5281";
 #elif IOS
         return DeviceInfo.DeviceType == DeviceType.Virtual
             ? "http://localhost:5281"
@@ -178,30 +186,10 @@ public sealed class ApiService
             Debug.WriteLine($"[ApiService] POST circuit open (fail-fast): {url}");
             return null;
         }
-        catch (TimeoutRejectedException)
-        {
-            Debug.WriteLine($"[ApiService] POST total timeout: {url}");
-            return null;
-        }
-        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
-        {
-            Debug.WriteLine($"[ApiService] POST timeout: {url}. {ex.Message}");
-            return null;
-        }
-        catch (HttpRequestException ex)
-        {
-            Debug.WriteLine($"[ApiService] POST network error: {url}. {ex.Message}");
-            return null;
-        }
-        catch (JsonException ex)
-        {
-            Debug.WriteLine($"[ApiService] POST JSON parse error: {url}. {ex.Message}");
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ApiService] POST error: {url}. {ex.Message}");
-            return null;
-        }
+    }
+
+    internal async Task PostPresencePingAsync(string sid, object value, CancellationToken none)
+    {
+        throw new NotImplementedException();
     }
 }

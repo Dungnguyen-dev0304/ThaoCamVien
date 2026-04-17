@@ -125,6 +125,7 @@ namespace AppThaoCamVien.Services
         public async Task SyncDataFromApiAsync()
         {
             LastSyncError = null;
+            RefreshApiBaseUrl();
 
             // Không có internet -> vẫn dùng cache/sideseed offline
             if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
@@ -137,6 +138,7 @@ namespace AppThaoCamVien.Services
             try
             {
                 var url = $"{_apiBase}/Pois?lang={CurrentLanguage}";
+                Debug.WriteLine($"[DB] SyncDataFromApiAsync url={url}");
 
                 // Polly pipeline: Retry(2x) + CircuitBreaker + Timeout(15s)
                 var pois = await _pipeline.ExecuteAsync(async ct =>
@@ -219,7 +221,7 @@ namespace AppThaoCamVien.Services
 
         private static async Task SeedOfflinePoisAsync(SQLiteAsyncConnection db)
         {
-            // Seed 5 POI thật với hình ảnh local để app luôn hiển thị đẹp dù mất mạng.
+            // Seed 5 POI với đủ nhóm danh mục để UI luôn có bộ lọc tối thiểu khi offline.
             // Dữ liệu sẽ được thay thế khi SyncDataFromApiAsync gọi thành công.
             var seed = new List<Poi>
             {
@@ -239,17 +241,17 @@ namespace AppThaoCamVien.Services
                 },
                 new Poi
                 {
-                    PoiId = 3, CategoryId = 2, Name = "Hươu cao cổ",
-                    Description = "Hươu cao cổ là loài động vật có vú cao nhất thế giới.",
+                    PoiId = 3, CategoryId = 3, Name = "Nhà hoa lan kiểng",
+                    Description = "Khu thực vật với nhiều giống lan và cây kiểng đặc trưng.",
                     Latitude = 10.7882m, Longitude = 106.7060m, Radius = 25, Priority = 8,
-                    ImageThumbnail = "giraffe.jpg", IsActive = true
+                    ImageThumbnail = "nha_hoa_lan_kieng.jpg", IsActive = true
                 },
                 new Poi
                 {
-                    PoiId = 4, CategoryId = 2, Name = "Gấu Ngựa",
-                    Description = "Gấu ngựa có lông đen tuyền với vệt trắng hình chữ V trên ngực.",
+                    PoiId = 4, CategoryId = 1, Name = "Đền Hùng",
+                    Description = "Điểm di tích văn hóa trong khuôn viên Thảo Cầm Viên.",
                     Latitude = 10.7870m, Longitude = 106.7055m, Radius = 25, Priority = 7,
-                    ImageThumbnail = "gau.jpg", IsActive = true
+                    ImageThumbnail = "den_hung.jpg", IsActive = true
                 },
                 new Poi
                 {

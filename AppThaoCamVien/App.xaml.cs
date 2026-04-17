@@ -18,7 +18,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// MAUI 10: CreateWindow thay thế MainPage setter (đã obsolete).
+    /// MAUI 10: CreateWindow thay th? MainPage setter (?� obsolete).
     /// </summary>
     protected override Window CreateWindow(IActivationState? activationState)
     {
@@ -34,26 +34,44 @@ public partial class App : Application
         }
         else
         {
-            root = new AppShell(_sp);
+            var mustConfigureApi =
+#if ANDROID
+                DeviceInfo.DeviceType == DeviceType.Physical && ApiService.NeedsConfiguration;
+#else
+                ApiService.NeedsConfiguration;
+#endif
+            if (mustConfigureApi)
+            {
+                var apiConfig = _sp.GetRequiredService<OnboardingApiConfigPage>();
+                root = new NavigationPage(apiConfig)
+                {
+                    BarBackgroundColor = Color.FromArgb("#1B5E3A"),
+                    BarTextColor = Colors.White
+                };
+            }
+            else
+            {
+                root = new AppShell(_sp);
+            }
         }
 
         return new Window(root);
     }
 
     /// <summary>
-    /// Global Exception Guards — bắt TẤT CẢ unhandled exceptions.
+    /// Global Exception Guards � b?t T?T C? unhandled exceptions.
     ///
-    /// 3 tầng bảo vệ:
-    ///   1. AppDomain.UnhandledException — crash cấp process
-    ///   2. TaskScheduler.UnobservedTaskException — async void / fire-and-forget
-    ///   3. MauiExceptions.UnhandledException — MAUI-specific (UI thread crashes)
+    /// 3 t?ng b?o v?:
+    ///   1. AppDomain.UnhandledException � crash c?p process
+    ///   2. TaskScheduler.UnobservedTaskException � async void / fire-and-forget
+    ///   3. MauiExceptions.UnhandledException � MAUI-specific (UI thread crashes)
     ///
-    /// Mục đích: KHÔNG BAO GIỜ để app crash trắng màn hình.
-    /// Thay vào đó: log lỗi và hiển thị alert thân thiện.
+    /// M?c ?�ch: KH�NG BAO GI? ?? app crash tr?ng m�n h�nh.
+    /// Thay v�o ?�: log l?i v� hi?n th? alert th�n thi?n.
     /// </summary>
     private static void ConfigureGlobalExceptionGuards()
     {
-        // ── Tầng 1: Process-level crashes ───────────────────────────────
+        // ?? T?ng 1: Process-level crashes ???????????????????????????????
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             try
@@ -62,37 +80,37 @@ public partial class App : Application
                 System.Diagnostics.Debug.WriteLine($"[FATAL] AppDomain: {ex?.Message ?? e.ExceptionObject}");
                 LogCrash("AppDomain", ex);
             }
-            catch { /* Không throw trong exception handler */ }
+            catch { /* Kh�ng throw trong exception handler */ }
         };
 
-        // ── Tầng 2: Fire-and-forget task exceptions ─────────────────────
-        // Khi dùng `_ = SomeAsyncMethod()` mà method throw,
-        // exception sẽ bị nuốt → app chạy sai trạng thái.
-        // SetObserved() ngăn runtime ném lại exception khi GC finalize task.
+        // ?? T?ng 2: Fire-and-forget task exceptions ?????????????????????
+        // Khi d�ng `_ = SomeAsyncMethod()` m� method throw,
+        // exception s? b? nu?t ? app ch?y sai tr?ng th�i.
+        // SetObserved() ng?n runtime n�m l?i exception khi GC finalize task.
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine($"[UNOBSERVED] {e.Exception}");
                 LogCrash("UnobservedTask", e.Exception);
-                e.SetObserved(); // Ngăn crash khi GC collect
+                e.SetObserved(); // Ng?n crash khi GC collect
             }
             catch { }
         };
 
-        // ── Tầng 3: MAUI UI thread exceptions ──────────────────────────
-        // MauiExceptions đã bị loại bỏ trong .NET MAUI 10.
-        // Android: đã có AndroidEnvironment.UnhandledExceptionRaiser trong MainActivity.cs.
-        // Dùng FirstChanceException để log crash sớm nhất (tất cả platform).
+        // ?? T?ng 3: MAUI UI thread exceptions ??????????????????????????
+        // MauiExceptions ?� b? lo?i b? trong .NET MAUI 10.
+        // Android: ?� c� AndroidEnvironment.UnhandledExceptionRaiser trong MainActivity.cs.
+        // D�ng FirstChanceException ?? log crash s?m nh?t (t?t c? platform).
         AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
         {
-            // Chỉ log, KHÔNG swallow — để exception propagate bình thường.
-            // Mục đích: debug log cho crash khó tái hiện.
+            // Ch? log, KH�NG swallow � ?? exception propagate b�nh th??ng.
+            // M?c ?�ch: debug log cho crash kh� t�i hi?n.
             try
             {
                 var ex = e.Exception;
                 if (ex is TaskCanceledException or OperationCanceledException)
-                    return; // Bỏ qua cancel — quá nhiều noise
+                    return; // B? qua cancel � qu� nhi?u noise
 
                 System.Diagnostics.Debug.WriteLine(
                     $"[FIRST-CHANCE] {ex.GetType().Name}: {Truncate(ex.Message, 120)}");
@@ -102,7 +120,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Ghi crash log vào file local để debug sau.
+    /// Ghi crash log v�o file local ?? debug sau.
     /// File: {AppData}/crash_log.txt (append mode).
     /// </summary>
     private static void LogCrash(string source, Exception? ex)
@@ -115,12 +133,12 @@ public partial class App : Application
                         $"  StackTrace: {Truncate(ex?.StackTrace, 500)}\n\n";
             File.AppendAllText(logPath, entry);
         }
-        catch { /* File I/O fail → bỏ qua */ }
+        catch { /* File I/O fail ? b? qua */ }
     }
 
     private static string Truncate(string? s, int max)
     {
         if (string.IsNullOrEmpty(s)) return "(null)";
-        return s.Length <= max ? s : s[..max] + "…";
+        return s.Length <= max ? s : s[..max] + "�";
     }
 }

@@ -38,6 +38,7 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<NarrationEngine>();
             builder.Services.AddSingleton<AutoTranslateService>();
             builder.Services.AddSingleton<ApiService>();
+            builder.Services.AddSingleton<AppPresenceService>();
             builder.Services.AddSingleton<DirectionsService>();
 
             // ── Pages ─────────────────────────────────────────────────────
@@ -61,11 +62,8 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<AnimalsViewModel>();
             builder.Services.AddTransient<OnboardingWelcomePage>();
             builder.Services.AddTransient<OnboardingPermissionsPage>();
+            builder.Services.AddTransient<OnboardingApiConfigPage>();
             builder.Services.AddTransient<OnboardingOfflineDownloadPage>();
-
-            // IServiceProvider được tự động inject bởi MAUI DI container
-            // Không cần đăng ký thủ công
-
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
@@ -74,3 +72,6 @@ namespace AppThaoCamVien
         }
     }
 }
+
+            // IServiceProvider được tự động inject bởi MAUI DI container
+            // Không cần đă

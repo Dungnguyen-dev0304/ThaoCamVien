@@ -121,6 +121,7 @@ public partial class OnboardingApiConfigPage : ContentPage
 
         // Cập nhật ApiService singleton đang chạy
         _api.BaseUrl = baseUrl;
+        _sp.GetService<DatabaseService>()?.RefreshApiBaseUrl();
     }
 
     /// <summary>

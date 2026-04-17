@@ -10,6 +10,8 @@ namespace WebThaoCamVien.ViewModels
         public int TotalUsers { get; set; }
         public int AvgListenDuration { get; set; }
 
+        public int ActiveAppSessionsNow { get; set; }
+
         // ── BIỂU ĐỒ 7 NGÀY ─────────────────────────
         public List<DayVisitData> Last7Days { get; set; } = new();
 

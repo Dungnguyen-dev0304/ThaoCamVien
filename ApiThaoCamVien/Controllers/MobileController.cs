@@ -346,6 +346,38 @@ public sealed class MobileController : ControllerBase
         return Ok(dto);
     }
 
+    /// <summary>
+    /// POST /api/mobile/presence — heartbeat from the app when online (admin live user count).
+    /// </summary>
+    [HttpPost("presence")]
+    public async Task<IActionResult> PostPresence([FromBody] PresencePingBody? body)
+    {
+        var sessionId = body?.SessionId?.Trim() ?? "";
+        if (sessionId.Length is < 8 or > 64)
+            return BadRequest(new { message = "Invalid sessionId" });
+
+        var now = DateTime.UtcNow;
+        var row = await _ctx.AppClientPresences.FindAsync(new object[] { sessionId }, HttpContext.RequestAborted);
+        if (row == null)
+        {
+            _ctx.AppClientPresences.Add(new AppClientPresence
+            {
+                SessionId = sessionId,
+                LastSeenUtc = now,
+                CurrentPoiId = body?.CurrentPoiId
+            });
+        }
+        else
+        {
+            row.LastSeenUtc = now;
+            if (body?.CurrentPoiId is int poiId && poiId > 0)
+                row.CurrentPoiId = poiId;
+        }
+
+        await _ctx.SaveChangesAsync(HttpContext.RequestAborted);
+        return Ok(new PresencePingResponse { Ok = true, ServerUtc = now });
+    }
+
     /// <summary>GET /api/mobile/about/sections</summary>
     [HttpGet("about/sections")]
     public Task<IActionResult> GetAboutSections([FromQuery] string? lang = null)
@@ -463,6 +495,18 @@ internal sealed class LyricLineResponse
 public sealed class QrLookupRequestBody
 {
     public string Code { get; set; } = "";
+}
+
+public sealed class PresencePingBody
+{
+    public string SessionId { get; set; } = "";
+    public int? CurrentPoiId { get; set; }
+}
+
+public sealed class PresencePingResponse
+{
+    public bool Ok { get; set; }
+    public DateTime ServerUtc { get; set; }
 }
 
 internal sealed class AboutSectionResponse

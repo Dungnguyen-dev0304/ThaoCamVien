@@ -153,12 +153,18 @@ namespace WebThaoCamVien.Controllers
 
             var allPois = await _context.Pois.OrderBy(p => p.Name).ToListAsync();
 
+            var activeSince = DateTime.UtcNow.AddSeconds(-90);
+            var activeAppSessions = await _context.AppClientPresences
+                .AsNoTracking()
+                .CountAsync(p => p.LastSeenUtc >= activeSince);
+
             var viewModel = new IndexViewModel
             {
                 TotalVisits = totalVisits,
                 TodayVisits = todayVisits,
                 TotalUsers = totalUsers,
                 AvgListenDuration = avgListen,
+                ActiveAppSessionsNow = activeAppSessions,
                 Last7Days = last7Days,
                 TopPois = topPois,
                 RecentVisits = recentVisits,
@@ -170,6 +176,17 @@ namespace WebThaoCamVien.Controllers
             };
 
             return View(viewModel);
+        }
+
+        /// <summary>JSON for dashboard polling: app sessions seen recently (devices need internet to ping API).</summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveAppSessionsJson([FromQuery] int staleSeconds = 90)
+        {
+            staleSeconds = Math.Clamp(staleSeconds, 30, 600);
+            var since = DateTime.UtcNow.AddSeconds(-staleSeconds);
+            var count = await _context.AppClientPresences.AsNoTracking()
+                .CountAsync(p => p.LastSeenUtc >= since);
+            return Json(new { activeCount = count, staleSeconds, updatedAtUtc = DateTime.UtcNow });
         }
 
         // GET: /Admin/PoiList

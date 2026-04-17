@@ -29,6 +29,7 @@ public partial class WebContext : DbContext
 
     public virtual DbSet<PoiTranslation> PoiTranslations { get; set; }
     public DbSet<PoiAudio> PoiAudios { get; set; }
+    public virtual DbSet<AppClientPresence> AppClientPresences { get; set; }
 
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //    => optionsBuilder.UseSqlServer("Server=.;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
@@ -188,6 +189,15 @@ public partial class WebContext : DbContext
                 .WithMany(p => p.PoiAudios)
                 .HasForeignKey(d => d.PoiId)
                 .HasConstraintName("FK_PoiAudios_Pois");
+        });
+
+        modelBuilder.Entity<AppClientPresence>(entity =>
+        {
+            entity.HasKey(e => e.SessionId).HasName("PK_app_client_presence");
+            entity.ToTable("app_client_presence");
+            entity.Property(e => e.SessionId).HasMaxLength(64).HasColumnName("session_id");
+            entity.Property(e => e.LastSeenUtc).HasColumnType("datetime").HasColumnName("last_seen_utc");
+            entity.Property(e => e.CurrentPoiId).HasColumnName("current_poi_id");
         });
 
         // Thêm vào cấu hình cho bảng POI_TRANSLATIONS

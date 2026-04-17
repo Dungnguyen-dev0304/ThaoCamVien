@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             xmlns:zxingCore="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI"
              xmlns:controls="clr-namespace:AppThaoCamVien.Controls"
              x:Class="AppThaoCamVien.Pages.QrPage"
              BackgroundColor="#1C1C1E"
@@ -14,7 +15,7 @@
             BarcodesDetected="OnBarcodesDetected"
             HorizontalOptions="Fill" VerticalOptions="Fill">
             <zxing:CameraBarcodeReaderView.Options>
-                <zxing:BarcodeReaderOptions
+                <zxingCore:BarcodeReaderOptions
                     Formats="QrCode"
                     AutoRotate="True"
                     Multiple="False"
@@ -22,7 +23,7 @@
             </zxing:CameraBarcodeReaderView.Options>
         </zxing:CameraBarcodeReaderView>
 
-       <!-- <BoxView Color="#1C1C1E" Opacity="0.6" HorizontalOptions="Fill" VerticalOptions="Fill"/> -->
+
 
         <!-- Header -->
         <Grid VerticalOptions="Start" Padding="20,50,20,0" ColumnDefinitions="Auto, *, Auto">
