@@ -1,5 +1,6 @@
 ﻿using ApiThaoCamVien.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,6 +56,23 @@ if (app.Environment.IsDevelopment())
 
 // QUAN TRỌNG: UseCors() phải TRƯỚC UseAuthorization() và MapControllers()
 app.UseCors();
+
+// Phục vụ ảnh POI từ cùng thư mục mà Web admin upload (WebThaoCamVien/wwwroot).
+// Khi deploy tách server, hãy copy wwwroot hoặc cấu hình reverse proxy tới static.
+var webWwwRoot = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "WebThaoCamVien", "wwwroot"));
+if (Directory.Exists(webWwwRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(webWwwRoot),
+        RequestPath = ""
+    });
+    app.Logger.LogInformation("Static files: serving wwwroot from {Path}", webWwwRoot);
+}
+else
+{
+    app.Logger.LogWarning("Static files: Web wwwroot not found at {Path}. /images/pois/* may 404.", webWwwRoot);
+}
 
 // KHÔNG dùng UseHttpsRedirection() khi test với emulator Android
 // vì emulator không trust self-signed cert

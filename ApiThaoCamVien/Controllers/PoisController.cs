@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SharedThaoCamVien.Models;
 using ApiThaoCamVien.Models;
+using ApiThaoCamVien;
 
 namespace ApiThaoCamVien.Controllers
 {
@@ -96,6 +97,9 @@ namespace ApiThaoCamVien.Controllers
                     }
                 }
 
+                foreach (var poi in pois)
+                    poi.ImageThumbnail = PoiMediaUrls.ResolveThumbnail(Request, poi.ImageThumbnail);
+
                 return Ok(pois);
             }
             catch (Exception ex)
@@ -128,6 +132,7 @@ namespace ApiThaoCamVien.Controllers
                 catch { /* translations table may not exist */ }
             }
 
+            poi.ImageThumbnail = PoiMediaUrls.ResolveThumbnail(Request, poi.ImageThumbnail);
             return Ok(poi);
         }
 

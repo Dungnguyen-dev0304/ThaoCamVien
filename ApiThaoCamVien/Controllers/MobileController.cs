@@ -1,6 +1,7 @@
 using ApiThaoCamVien.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ApiThaoCamVien;
 using SharedThaoCamVien.Models;
 
 namespace ApiThaoCamVien.Controllers;
@@ -58,7 +59,7 @@ public sealed class MobileController : ControllerBase
             Id = p.PoiId,
             Title = p.Name ?? "",
             Subtitle = Truncate(p.Description, 80),
-            ThumbnailUrl = string.IsNullOrWhiteSpace(p.ImageThumbnail) ? "" : p.ImageThumbnail!
+            ThumbnailUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail)
         }).ToList();
 
         var mid = (cards.Count + 1) / 2;
@@ -141,7 +142,7 @@ public sealed class MobileController : ControllerBase
                 {
                     PoiId = p.PoiId,
                     Name = p.Name ?? "",
-                    ThumbnailUrl = p.ImageThumbnail ?? "",
+                    ThumbnailUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail),
                     DistanceMeters = d,
                     DistanceLabel = $"{Math.Round(d):0}m",
                     LocationHint = d <= 60
@@ -151,6 +152,23 @@ public sealed class MobileController : ControllerBase
             }
         }
         list = list.OrderBy(x => x.DistanceMeters).ToList();
+
+        // Không có POI trong bán kính (GPS ngoài vườn / tọa độ DB) → vẫn trả 5 điểm nổi bật cho màn Home.
+        if (list.Count == 0)
+        {
+            var hint = lang == "en" ? "Saigon Zoo" : "Thảo Cầm Viên";
+            var label = lang == "en" ? "FEATURED" : "NỔI BẬT";
+            list = pois.Take(5).Select(p => new NearbyPoiResponse
+            {
+                PoiId = p.PoiId,
+                Name = p.Name ?? "",
+                ThumbnailUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail),
+                DistanceMeters = 0,
+                DistanceLabel = label,
+                LocationHint = hint
+            }).ToList();
+        }
+
         return Ok(list);
     }
 
@@ -198,7 +216,7 @@ public sealed class MobileController : ControllerBase
         {
             Id = p.PoiId,
             Name = p.Name ?? "",
-            ImageUrl = p.ImageThumbnail ?? "",
+            ImageUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail),
             Category = p.CategoryId.HasValue && catLookup.TryGetValue(p.CategoryId.Value, out var cn) && !string.IsNullOrWhiteSpace(cn)
                 ? cn : "Khác",
             ConservationStatus = lang == "en" ? statusEn(p.Priority) : statusVi(p.Priority),
@@ -298,7 +316,7 @@ public sealed class MobileController : ControllerBase
         {
             PoiId = poi.PoiId,
             Name = poi.Name ?? "",
-            ThumbnailUrl = poi.ImageThumbnail ?? "",
+            ThumbnailUrl = PoiMediaUrls.ResolveThumbnail(Request, poi.ImageThumbnail),
             DistanceMeters = 0
         };
         return Ok(dto);

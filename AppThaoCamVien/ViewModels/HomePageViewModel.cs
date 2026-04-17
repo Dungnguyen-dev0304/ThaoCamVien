@@ -1,6 +1,7 @@
 using AppThaoCamVien.Services;
 using AppThaoCamVien.Services.Api;
 using AppThaoCamVien.ViewModels.Core;
+using Microsoft.Maui.ApplicationModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
@@ -173,19 +174,32 @@ public sealed class HomePageViewModel : BaseViewModel
         try { await LoadContinueListeningAsync(); }
         catch (Exception ex) { Debug.WriteLine($"[HomeVM] Continue error (ignored): {ex.Message}"); }
 
-        try { await LoadNearbyPlacesAsync(lang); }
+        int featuredCount = 0;
+        try { featuredCount = await LoadNearbyPlacesAsync(lang); }
         catch (Exception ex) { Debug.WriteLine($"[HomeVM] Nearby error (ignored): {ex.Message}"); }
 
         // Safety net: luôn đảm bảo có 5 con vật hiển thị dù bất kỳ lỗi gì
-        if (NearbyPlaces.Count == 0)
+        if (featuredCount == 0)
         {
-            try { await LoadFallbackDataAsync(lang); }
-            catch { }
+            try
+            {
+                var fb = await BuildOfflineFeaturedCardsAsync(lang);
+                if (fb.Count > 0)
+                {
+                    await ReplaceNearbyPlacesAsync(fb);
+                    featuredCount = fb.Count;
+                }
+            }
+            catch { /* ignored */ }
         }
-        if (NearbyPlaces.Count == 0)
-            LoadHardcodedAnimals(lang);
+        if (featuredCount == 0)
+        {
+            var hc = BuildHardcodedFeaturedCards(lang);
+            await ReplaceNearbyPlacesAsync(hc);
+            featuredCount = hc.Count;
+        }
 
-        State = (ContinueListening.PoiId == 0 && NearbyPlaces.Count == 0 && feed == null)
+        State = (ContinueListening.PoiId == 0 && featuredCount == 0 && feed == null)
             ? UiState.Empty
             : UiState.Success;
     }
@@ -248,7 +262,8 @@ public sealed class HomePageViewModel : BaseViewModel
         };
     }
 
-    private async Task LoadNearbyPlacesAsync(string lang)
+    /// <returns>Số thẻ đã nạp (0 nếu không có dữ liệu hợp lệ).</returns>
+    private async Task<int> LoadNearbyPlacesAsync(string lang)
     {
         try
         {
@@ -259,57 +274,68 @@ public sealed class HomePageViewModel : BaseViewModel
             var url = $"{ApiEndpoints.NearbyAnimals}?lat={lat}&lng={lng}&radius=5000&lang={lang}";
             var nearby = await _api.GetAsync<List<NearbyPoiDto>>(url);
 
-            NearbyPlaces.Clear();
-
+            List<NearbyPlaceCard> cards;
             if (nearby is { Count: > 0 })
             {
-                foreach (var n in nearby.OrderBy(x => x.DistanceMeters).Take(5))
-                {
-                    NearbyPlaces.Add(new NearbyPlaceCard(
+                cards = nearby.OrderBy(x => x.DistanceMeters).Take(5)
+                    .Select(n => new NearbyPlaceCard(
                         PoiId: n.PoiId,
                         Title: n.Name,
                         DistanceLabel: n.DistanceLabel,
                         LocationHint: n.LocationHint,
-                        ImageUrl: n.ThumbnailUrl));
-                }
+                        ImageUrl: n.ThumbnailUrl))
+                    .ToList();
             }
             else
             {
-                await LoadFallbackDataAsync(lang);
+                cards = await BuildOfflineFeaturedCardsAsync(lang);
             }
+
+            await ReplaceNearbyPlacesAsync(cards);
+            return cards.Count;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[HomeVM] Nearby API error: {ex.Message}");
-            await LoadFallbackDataAsync(lang);
+            var c = await BuildOfflineFeaturedCardsAsync(lang);
+            await ReplaceNearbyPlacesAsync(c);
+            return c.Count;
         }
     }
 
+    /// <summary>Cập nhật ObservableCollection trên UI thread (tránh CollectionView trống trên một số nền tảng).</summary>
+    private async Task ReplaceNearbyPlacesAsync(IReadOnlyList<NearbyPlaceCard> cards)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            NearbyPlaces.Clear();
+            foreach (var c in cards)
+                NearbyPlaces.Add(c);
+        });
+    }
+
     /// <summary>
-    /// Fallback: tải top 5 POI từ SQLite local khi API không khả dụng.
-    /// Nếu SQLite cũng trống → dùng dữ liệu hardcoded đảm bảo luôn có nội dung.
+    /// Fallback: top 5 POI từ SQLite khi API nearby rỗng/lỗi.
+    /// SQLite trống → hardcoded (ảnh bundled trong app).
     /// </summary>
-    private async Task LoadFallbackDataAsync(string lang)
+    private async Task<List<NearbyPlaceCard>> BuildOfflineFeaturedCardsAsync(string lang)
     {
         try
         {
-            if (NearbyPlaces.Count > 0) return;
-
             var localPois = await _db.GetAllPoisAsync();
             var top5 = localPois.OrderByDescending(p => p.Priority).Take(5).ToList();
 
             var label = lang == "en" ? "ANIMAL" : "THÚ";
             var hint = lang == "en" ? "Saigon Zoo" : "Thảo Cầm Viên";
 
-            NearbyPlaces.Clear();
+            var cards = new List<NearbyPlaceCard>();
             foreach (var p in top5)
             {
                 var name = p.Name ?? "---";
-                // Dịch tên nếu đang ở chế độ EN
                 if (lang == "en" && NameTranslations.TryGetValue(name, out var en))
                     name = en;
 
-                NearbyPlaces.Add(new NearbyPlaceCard(
+                cards.Add(new NearbyPlaceCard(
                     PoiId: p.PoiId,
                     Title: name,
                     DistanceLabel: label,
@@ -317,23 +343,23 @@ public sealed class HomePageViewModel : BaseViewModel
                     ImageUrl: p.ImageThumbnail ?? ""));
             }
 
-            // Last-resort: nếu SQLite cũng trống thì dùng hardcoded data
-            if (NearbyPlaces.Count == 0)
+            if (cards.Count == 0)
             {
                 Debug.WriteLine("[HomeVM] SQLite empty → using hardcoded animals.");
-                LoadHardcodedAnimals(lang);
+                return BuildHardcodedFeaturedCards(lang);
             }
+
+            return cards;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[HomeVM] Fallback error: {ex.Message} → hardcoded.");
-            if (NearbyPlaces.Count == 0)
-                LoadHardcodedAnimals(lang);
+            return BuildHardcodedFeaturedCards(lang);
         }
     }
 
     /// <summary>Dữ liệu hardcoded đảm bảo Home luôn có 5 con vật hiển thị.</summary>
-    private void LoadHardcodedAnimals(string lang)
+    private static List<NearbyPlaceCard> BuildHardcodedFeaturedCards(string lang)
     {
         var hint = lang == "en" ? "Saigon Zoo" : "Thảo Cầm Viên";
         var label = lang == "en" ? "ANIMAL" : "THÚ";
@@ -350,14 +376,16 @@ public sealed class HomePageViewModel : BaseViewModel
                       (4, "Gấu Ngựa",      "gau.jpg"),
                       (5, "Hà Mã",         "ha_ma.jpg") };
 
-        NearbyPlaces.Clear();
+        var list = new List<NearbyPlaceCard>();
         foreach (var (id, name, img) in animals)
         {
-            NearbyPlaces.Add(new NearbyPlaceCard(
+            list.Add(new NearbyPlaceCard(
                 PoiId: id, Title: name,
                 DistanceLabel: label, LocationHint: hint,
                 ImageUrl: img));
         }
+
+        return list;
     }
 
     private static string FormatTime(double seconds)
