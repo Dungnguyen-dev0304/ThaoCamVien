@@ -62,17 +62,6 @@
 
         <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
             <div class="flex items-center justify-between mb-4">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Người dùng</span>
-                <div class="w-9 h-9 bg-purple-500 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-people-fill text-white text-sm"></i>
-                </div>
-            </div>
-            <p class="text-3xl font-black text-slate-800">@Model.TotalUsers.ToString("N0")</p>
-            <p class="text-[11px] text-slate-400 mt-1 font-medium">Đã đăng ký</p>
-        </div>
-
-        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thời gian nghe</span>
                 <div class="w-9 h-9 bg-orange-400 rounded-xl flex items-center justify-center">
                     <i class="bi bi-headphones text-white text-sm"></i>
@@ -190,7 +179,6 @@
                 <thead>
                     <tr class="bg-slate-50">
                         <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Thời gian</th>
-                        <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Người dùng</th>
                         <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Địa điểm</th>
                         <th class="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Danh mục</th>
                         <th class="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 py-3">Thời gian nghe</th>
@@ -200,7 +188,7 @@
                     @if (!Model.RecentVisits.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-12 text-slate-300">
+                            <td colspan="4" class="text-center py-12 text-slate-300">
                                 <i class="bi bi-clock-history text-4xl block mb-2"></i>
                                 <span class="text-sm font-bold">Chưa có dữ liệu</span>
                             </td>
@@ -214,17 +202,6 @@
                             <td class="px-6 py-4">
                                 <p class="text-xs font-bold text-slate-700">@visit.VisitTime?.ToString("HH:mm")</p>
                                 <p class="text-[10px] text-slate-400">@visit.VisitTime?.ToString("dd/MM/yyyy")</p>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 bg-gradient-custom rounded-lg flex items-center justify-center text-white text-[10px] font-black">
-                                        @(visit.DisplayName?.Length > 0 ? visit.DisplayName[0].ToString().ToUpper() : "?")
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-bold text-slate-700">@(visit.DisplayName ?? "Ẩn danh")</p>
-                                        <p class="text-[10px] text-slate-400">@(visit.Email ?? "")</p>
-                                    </div>
-                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="text-xs font-bold text-slate-700">@(visit.PoiName ?? "Không rõ")</p>
