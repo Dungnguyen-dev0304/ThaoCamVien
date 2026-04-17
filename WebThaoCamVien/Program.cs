@@ -39,7 +39,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // ?i?u h??ng m?c ??nh
-//app.MapGet("/", context => {
+//app.MapGet("/", context =>
+//{
 //    context.Response.Redirect("/Account/Login");
 //    return System.Threading.Tasks.Task.CompletedTask;
 //});

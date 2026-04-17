@@ -34,7 +34,25 @@ public partial class App : Application
         }
         else
         {
-            root = new AppShell(_sp);
+            var mustConfigureApi =
+#if ANDROID
+                DeviceInfo.DeviceType == DeviceType.Physical && ApiService.NeedsConfiguration;
+#else
+                ApiService.NeedsConfiguration;
+#endif
+            if (mustConfigureApi)
+            {
+                var apiConfig = _sp.GetRequiredService<OnboardingApiConfigPage>();
+                root = new NavigationPage(apiConfig)
+                {
+                    BarBackgroundColor = Color.FromArgb("#1B5E3A"),
+                    BarTextColor = Colors.White
+                };
+            }
+            else
+            {
+                root = new AppShell(_sp);
+            }
         }
 
         return new Window(root);

@@ -1,4 +1,4 @@
-﻿@model WebThaoCamVien.ViewModels.IndexViewModel
+@model WebThaoCamVien.ViewModels.IndexViewModel
 @{
     Layout = "_adminlayout";
     ViewData["Active"] = "index";
@@ -17,6 +17,23 @@
 </style>
 
 <div class="space-y-6 pb-8">
+
+    <div class="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-emerald-100 bg-gradient-to-r from-emerald-50 to-lime-50 px-6 py-4 shadow-sm">
+        <div class="flex items-center gap-3 min-w-[200px]">
+            <span class="relative flex h-3 w-3 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-emerald-800">Đang dùng app (có mạng)</p>
+                <p class="text-xs text-slate-600 mt-0.5">Mỗi thiết bị gửi tín hiệu khoảng 45 giây một lần khi có Internet và ứng dụng đang chạy.</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <p id="live-active-app-count" class="text-4xl font-black text-emerald-900 tabular-nums leading-none">@Model.ActiveAppSessionsNow</p>
+            <p id="live-active-app-updated" class="text-[10px] text-slate-500 font-medium mt-1">Tự làm mới sau vài giây…</p>
+        </div>
+    </div>
 
     @*START CHART*@
     <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -253,3 +270,26 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    var countEl = document.getElementById('live-active-app-count');
+    var timeEl = document.getElementById('live-active-app-updated');
+    if (!countEl) return;
+    var url = '@Url.Action("ActiveAppSessionsJson", "Admin")' + '?staleSeconds=90';
+    function tick() {
+        fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (j) {
+                if (typeof j.activeCount === 'number') countEl.textContent = j.activeCount;
+                if (timeEl && j.updatedAtUtc) {
+                    var d = new Date(j.updatedAtUtc);
+                    if (!isNaN(d.getTime())) timeEl.textContent = 'Cập nhật: ' + d.toLocaleTimeString();
+                }
+            })
+            .catch(function () { });
+    }
+    tick();
+    setInterval(tick, 5000);
+})();
+</script>

@@ -38,6 +38,7 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<NarrationEngine>();
             builder.Services.AddSingleton<AutoTranslateService>();
             builder.Services.AddSingleton<ApiService>();
+            builder.Services.AddSingleton<AppPresenceService>();
             builder.Services.AddSingleton<DirectionsService>();
 
             // ── Pages ─────────────────────────────────────────────────────

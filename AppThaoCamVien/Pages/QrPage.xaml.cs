@@ -30,19 +30,7 @@ public partial class QrPage : ContentPage
 
         if (_cameraPermissionGranted)
         {
-            // Workaround cho ZXing.Net.Maui: toggle IsDetecting để force
-            // camera handler re-initialize khi quay lại trang.
-            // Nếu không, camera preview sẽ đen/trắng sau khi navigate back.
-            try
-            {
-                BarcodeReader.IsDetecting = false;
-                await Task.Delay(150); // Cho handler thời gian release camera
-                BarcodeReader.IsDetecting = true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[QrPage] Camera restart error: {ex.Message}");
-            }
+            await RestartCameraPreviewAsync();
         }
 
         _ = _vm.SafeReloadAsync();
@@ -62,6 +50,29 @@ public partial class QrPage : ContentPage
             try { BarcodeReader.IsTorchOn = false; } catch { }
         }
         _animCts?.Cancel();
+    }
+
+    private async Task RestartCameraPreviewAsync()
+    {
+        // Một số máy thật mở camera thành công nhưng preview đen.
+        // Sequence này ép reattach view + restart detector.
+        try
+        {
+            BarcodeReader.IsTorchOn = false;
+            BarcodeReader.IsDetecting = false;
+            await Task.Delay(120);
+
+            BarcodeReader.IsVisible = false;
+            await Task.Delay(80);
+            BarcodeReader.IsVisible = true;
+            await Task.Delay(180);
+
+            BarcodeReader.IsDetecting = true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QrPage] RestartCameraPreviewAsync error: {ex.Message}");
+        }
     }
     private async Task EnsureCameraPermissionAsync()
     {

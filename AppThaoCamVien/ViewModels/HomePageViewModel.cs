@@ -164,6 +164,8 @@ public sealed class HomePageViewModel : BaseViewModel
     {
         var lang = LanguageManager.Current;
         _db.CurrentLanguage = lang;
+        _api.RefreshBaseUrlFromPreferences();
+        _db.RefreshApiBaseUrl();
 
         try { await _db.SyncDataFromApiAsync(); }
         catch (Exception ex) { Debug.WriteLine($"[HomeVM] Sync error (ignored): {ex.Message}"); }

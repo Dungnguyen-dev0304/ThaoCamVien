@@ -79,6 +79,8 @@ public sealed class QrPageViewModel : BaseViewModel
 
             var lang = LanguageManager.Current;
             _db.CurrentLanguage = lang;
+            _api.RefreshBaseUrlFromPreferences();
+            _db.RefreshApiBaseUrl();
 
             // ── Bước 1: Parse mã QR → POI ID (local, instant) ──────────
             var match = QrPoiIdRegex.Match(LastCode);

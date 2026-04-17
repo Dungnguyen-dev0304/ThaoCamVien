@@ -153,6 +153,8 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
             HasError = false;
             ErrorMessage = string.Empty;
 
+            _api.RefreshBaseUrlFromPreferences();
+            _db.RefreshApiBaseUrl();
             await _db.SyncDataFromApiAsync();
 
             var lang = LanguageManager.Current;
@@ -165,25 +167,6 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
             if (dto?.Animals != null && dto.Animals.Count > 0)
             {
                 // ── API có dữ liệu → dùng trực tiếp, dịch nếu cần ──
-                AnimalFilterChip? first = null;
-                foreach (var f in dto.Filters)
-                {
-                    AnimalFilterChip? localChip = null;
-                    var translatedTitle = TranslateCategory(f.Title, lang);
-                    // Category phải dịch đồng bộ với Animal.Category để ApplyFilters so sánh khớp
-                    var translatedCategory = string.IsNullOrWhiteSpace(f.Category)
-                        ? null
-                        : TranslateCategory(f.Category, lang);
-                    localChip = new AnimalFilterChip(
-                        title: translatedTitle,
-                        category: translatedCategory,
-                        selectCommand: new Command(() => SelectedFilter = localChip));
-
-                    Filters.Add(localChip);
-                    first ??= localChip;
-                }
-                SelectedFilter = first;
-
                 foreach (var a in dto.Animals)
                 {
                     AllAnimals.Add(new Animal(
@@ -194,6 +177,10 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
                         statusColorHex: a.StatusColorHex,
                         imageUrl: a.ImageUrl));
                 }
+
+                // Không phụ thuộc hoàn toàn dto.Filters từ backend:
+                // luôn dựng danh mục từ dữ liệu động vật thực tế để tránh trường hợp app chỉ hiện 1 chip.
+                BuildFiltersFromAnimals(lang, dto.Filters);
             }
             else
             {
@@ -248,6 +235,60 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
         3 => "Thực vật",
         _ => "Động vật"
     };
+
+    /// <summary>
+    /// Tạo filter chip từ dữ liệu động vật đang có.
+    /// Ưu tiên thứ tự từ backend (nếu có), sau đó thêm các category còn thiếu.
+    /// </summary>
+    private void BuildFiltersFromAnimals(string lang, IReadOnlyList<AnimalFilterDto>? backendFilters = null)
+    {
+        Filters.Clear();
+
+        var allTitle = lang == "en" ? "All" : "Tất cả";
+        AnimalFilterChip? allChip = null;
+        allChip = new AnimalFilterChip(
+            title: allTitle,
+            category: null,
+            selectCommand: new Command(() => SelectedFilter = allChip));
+        Filters.Add(allChip);
+
+        var categories = new List<string>();
+
+        // 1) Lấy thứ tự từ backend trước (nếu backend có trả)
+        if (backendFilters != null)
+        {
+            foreach (var f in backendFilters)
+            {
+                if (string.IsNullOrWhiteSpace(f.Category))
+                    continue;
+
+                var c = TranslateCategory(f.Category, lang);
+                if (!categories.Contains(c, StringComparer.OrdinalIgnoreCase))
+                    categories.Add(c);
+            }
+        }
+
+        // 2) Bổ sung các category có trong dữ liệu app nhưng backend filter thiếu
+        foreach (var c in AllAnimals.Select(a => a.Category)
+                     .Where(s => !string.IsNullOrWhiteSpace(s))
+                     .Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!categories.Contains(c, StringComparer.OrdinalIgnoreCase))
+                categories.Add(c);
+        }
+
+        foreach (var c in categories)
+        {
+            AnimalFilterChip? chip = null;
+            chip = new AnimalFilterChip(
+                title: c,
+                category: c,
+                selectCommand: new Command(() => SelectedFilter = chip));
+            Filters.Add(chip);
+        }
+
+        SelectedFilter = allChip;
+    }
 
     /// <summary>
     /// Fallback: tải danh sách từ SQLite local khi API không khả dụng.

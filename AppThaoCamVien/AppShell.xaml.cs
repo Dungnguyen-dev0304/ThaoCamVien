@@ -23,6 +23,15 @@ public partial class AppShell : Shell
         _sp = sp;
         InitializeComponent();
 
+        try
+        {
+            _sp.GetRequiredService<AppPresenceService>().Start();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AppShell] AppPresenceService: {ex.Message}");
+        }
+
         // Đăng ký routes cho Navigation.PushAsync()
         Routing.RegisterRoute(nameof(StoryAudioPage), typeof(StoryAudioPage));
         Routing.RegisterRoute(nameof(MapPage), typeof(MapPage));
@@ -39,56 +48,57 @@ public partial class AppShell : Shell
 
     private void InitializeTabs()
     {
+        // Tách lỗi theo từng tab để tránh 1 tab lỗi làm sập toàn bộ app.
+        HomeContent.Content = SafeResolvePage<HomePage>("Home");
+        QrContent.Content = SafeResolvePage<QrPage>("QR");
+        NumpadContent.Content = SafeResolvePage<NumpadPage>("Numpad");
+        StoryContent.Content = SafeResolvePage<AnimalsPage>("Animals");
+        MapContent.Content = SafeResolvePage<MapPage>("Map");
+        AboutContent.Content = SafeResolvePage<AboutPage>("About");
+
+        System.Diagnostics.Debug.WriteLine("[AppShell] Tabs initialized");
+    }
+
+    private Page SafeResolvePage<TPage>(string tabName) where TPage : Page
+    {
         try
         {
-            // Tab 1: Home
-            HomeContent.Content = _sp.GetRequiredService<HomePage>();
-
-            // Tab 2: QR
-            QrContent.Content = _sp.GetRequiredService<QrPage>();
-
-            // Tab 3: Numpad
-            NumpadContent.Content = _sp.GetRequiredService<NumpadPage>();
-
-            // Tab 4: Explore/Animals (ưu tiên UX: page nhẹ, không phụ thuộc DB/network)
-            StoryContent.Content = _sp.GetRequiredService<AnimalsPage>();
-
-            // Tab 5: Map
-            MapContent.Content = _sp.GetRequiredService<MapPage>();
-
-            // Flyout: About
-            AboutContent.Content = _sp.GetRequiredService<AboutPage>();
-
-            System.Diagnostics.Debug.WriteLine("[AppShell] Tất cả tabs initialized thành công");
+            return _sp.GetRequiredService<TPage>();
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[AppShell] CRITICAL ERROR: {ex}");
-            // Hiển thị trang lỗi thay vì crash toàn bộ app
-            HomeContent.Content = new ContentPage
+            System.Diagnostics.Debug.WriteLine($"[AppShell] Tab '{tabName}' init error: {ex}");
+            return new ContentPage
             {
+                Title = tabName,
                 BackgroundColor = Color.FromArgb("#061F14"),
                 Content = new VerticalStackLayout
                 {
                     VerticalOptions = LayoutOptions.Center,
                     HorizontalOptions = LayoutOptions.Center,
-                    Spacing = 16,
+                    Spacing = 12,
                     Children =
                     {
                         new Label
                         {
-                            Text = "⚠️ Lỗi khởi động",
+                            Text = "⚠️ Lỗi tải trang",
                             TextColor = Colors.White,
-                            FontSize = 20,
                             FontAttributes = FontAttributes.Bold,
+                            FontSize = 20,
+                            HorizontalOptions = LayoutOptions.Center
+                        },
+                        new Label
+                        {
+                            Text = $"Tab: {tabName}",
+                            TextColor = Color.FromArgb("#A0C8B4"),
+                            FontSize = 13,
                             HorizontalOptions = LayoutOptions.Center
                         },
                         new Label
                         {
                             Text = ex.Message,
                             TextColor = Color.FromArgb("#A0C8B4"),
-                            FontSize = 13,
-                            HorizontalOptions = LayoutOptions.Center,
+                            FontSize = 12,
                             HorizontalTextAlignment = TextAlignment.Center,
                             Margin = new Thickness(20, 0)
                         }
