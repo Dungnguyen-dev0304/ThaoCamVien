@@ -1,8 +1,8 @@
-﻿namespace ApiThaoCamVien.Models
+namespace ApiThaoCamVien.Models
 {
     public class VisitRequest
     {
-        public int? UserId { get; set; }         // null nếu chưa đăng nhập
+        // UserId đã bỏ — app không còn gắn lịch sử thăm với user.
         public int? ListenDuration { get; set; } // số giây đã nghe audio
     }
 }

@@ -1,32 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+// ┌────────────────────────────────────────────────────────────────────┐
+// │ DEPRECATED — class User đã bị bỏ khỏi project.                     │
+// │ Bảng `users` đã bị drop trong migration DropUsersAndUserId.        │
+// │ Admin giờ đăng nhập qua config (appsettings.json -> Admin).        │
+// │ File này giữ lại rỗng để tránh lỗi build nếu còn file khác tham   │
+// │ chiếu namespace cũ. Có thể xoá thủ công trong Solution Explorer   │
+// │ nếu chắc chắn không còn chỗ nào dùng class này.                   │
+// └────────────────────────────────────────────────────────────────────┘
 
 namespace SharedThaoCamVien.Models;
 
-public partial class User
-{
-    public int UserId { get; set; }
-
-    [Required]
-    public string Email { get; set; } = string.Empty;
-
-    [Required]
-    public string DisplayName { get; set; } = string.Empty;
-
-    [Required]
-    public DateTime CreatedAt { get; set; }
-
-    [StringLength(50)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 0 = Admin, 1 = User
-    /// </summary>
-    [Required]
-    public int Role { get; set; } = 1; // Mặc định là User
-
-    public virtual ICollection<PoiVisitHistory> PoiVisitHistories { get; set; } = new List<PoiVisitHistory>();
-
-    public virtual ICollection<UserLocationLog> UserLocationLogs { get; set; } = new List<UserLocationLog>();
-}
+// Không còn class User. Đã migrate qua hard-code admin config.

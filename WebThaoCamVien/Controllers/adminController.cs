@@ -91,7 +91,6 @@ namespace WebThaoCamVien.Controllers
 
             var query = _context.PoiVisitHistories
                 .Include(v => v.Poi)
-                .Include(v => v.User)
                 .AsQueryable();
 
             if (poiId.HasValue)
@@ -108,7 +107,8 @@ namespace WebThaoCamVien.Controllers
 
             int totalVisits = await query.CountAsync();
             int todayVisits = allVisits.Count(v => v.VisitTime?.Date == today);
-            int totalUsers = await _context.Users.CountAsync();
+            // Bảng Users đã bị bỏ — giữ field trong ViewModel cho tương thích view cũ.
+            int totalUsers = 0;
             int avgListen = allVisits.Any(v => v.ListenDuration.HasValue)
                                 ? (int)allVisits.Where(v => v.ListenDuration.HasValue).Average(v => v.ListenDuration!.Value)
                                 : 0;
@@ -143,8 +143,8 @@ namespace WebThaoCamVien.Controllers
                 .Select(v => new VisitRowData
                 {
                     VisitTime = v.VisitTime,
-                    DisplayName = v.User != null ? v.User.DisplayName : null,
-                    Email = v.User != null ? v.User.Email : null,
+                    DisplayName = null, // Bỏ — không còn liên kết user
+                    Email = null,        // Bỏ — không còn liên kết user
                     PoiName = v.Poi != null ? v.Poi.Name : null,
                     CategoryId = v.Poi != null ? v.Poi.CategoryId : null,
                     ListenDuration = v.ListenDuration
@@ -187,6 +187,92 @@ namespace WebThaoCamVien.Controllers
             var count = await _context.AppClientPresences.AsNoTracking()
                 .CountAsync(p => p.LastSeenUtc >= since);
             return Json(new { activeCount = count, staleSeconds, updatedAtUtc = DateTime.UtcNow });
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // HEATMAP: bản đồ nhiệt mật độ thăm quan POI
+        // Nguồn dữ liệu:
+        //   • poi_visit_history JOIN pois — mỗi POI là 1 điểm, trọng số = số lượt thăm
+        //     trong khoảng [now - days, now]
+        //   • (Tuỳ chọn) user_location_log — điểm GPS thô của thiết bị (chưa có
+        //     controller nào đang ghi vào bảng này, sẽ rỗng cho tới khi bạn
+        //     thêm endpoint thu log vị trí từ app)
+        // ─────────────────────────────────────────────────────────────────
+        public IActionResult Heatmap()
+        {
+            SetViewData("heatmap", "Bản đồ nhiệt", "Mật độ thăm quan");
+            return View();
+        }
+
+        /// <summary>JSON cho heatmap: [{ lat, lng, weight, name }, ...]</summary>
+        [HttpGet]
+        public async Task<IActionResult> HeatmapDataJson(
+            [FromQuery] int days = 30,
+            [FromQuery] string source = "visit")
+        {
+            days = Math.Clamp(days, 1, 365);
+            var fromDate = DateTime.Now.AddDays(-days);
+
+            if (string.Equals(source, "location", StringComparison.OrdinalIgnoreCase))
+            {
+                // Nguồn: user_location_log (toạ độ GPS thô từ app)
+                var raw = await _context.UserLocationLogs.AsNoTracking()
+                    .Where(l => l.Latitude != null && l.Longitude != null
+                                && l.RecordedAt != null && l.RecordedAt >= fromDate)
+                    .Select(l => new { l.Latitude, l.Longitude })
+                    .ToListAsync();
+
+                var logs = raw.Select(l => new
+                {
+                    lat = (double)l.Latitude!.Value,
+                    lng = (double)l.Longitude!.Value,
+                    weight = 1.0,
+                    name = (string?)null
+                }).ToList();
+
+                return Json(new
+                {
+                    source = "location",
+                    days,
+                    totalPoints = logs.Count,
+                    totalWeight = logs.Count,
+                    points = logs
+                });
+            }
+
+            // Mặc định: poi_visit_history (số lượt xem / nghe theo từng POI)
+            // GroupBy PoiId ở SQL rồi JOIN client-side với Pois để lấy lat/lng/name
+            // (tránh EF cố translate cast sang double trong GroupBy).
+            var visitGroups = await _context.PoiVisitHistories.AsNoTracking()
+                .Where(v => v.VisitTime != null && v.VisitTime >= fromDate && v.PoiId != null)
+                .GroupBy(v => v.PoiId!.Value)
+                .Select(g => new { PoiId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var poiIds = visitGroups.Select(g => g.PoiId).ToList();
+            var poiLookup = await _context.Pois.AsNoTracking()
+                .Where(p => poiIds.Contains(p.PoiId))
+                .Select(p => new { p.PoiId, p.Name, p.Latitude, p.Longitude })
+                .ToListAsync();
+
+            var points = visitGroups
+                .Join(poiLookup, g => g.PoiId, p => p.PoiId, (g, p) => new
+                {
+                    lat = (double)p.Latitude,
+                    lng = (double)p.Longitude,
+                    weight = (double)g.Count,
+                    name = p.Name
+                })
+                .ToList();
+
+            return Json(new
+            {
+                source = "visit",
+                days,
+                totalPoints = points.Count,
+                totalWeight = points.Sum(x => x.weight),
+                points
+            });
         }
 
         // GET: /Admin/PoiList

@@ -1,11 +1,7 @@
-﻿using ApiThaoCamVien.Models; // Chứa WebContext
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Configuration;
-using SharedThaoCamVien.Models; // Chứa User model
 using System.Security.Claims;
 
 namespace WebThaoCamVien.Controllers
@@ -13,11 +9,13 @@ namespace WebThaoCamVien.Controllers
     [Authorize]
     public class AccountController : Controller
     {
-        private readonly WebContext _context;
+        // Bảng Users đã bị bỏ — admin giờ đọc từ appsettings.json:
+        //   "Admin": { "Email": "...", "Password": "...", "DisplayName": "..." }
+        private readonly IConfiguration _config;
 
-        public AccountController(WebContext context)
+        public AccountController(IConfiguration config)
         {
-            _context = context;
+            _config = config;
         }
 
         // GET: /Account/Login
@@ -25,8 +23,7 @@ namespace WebThaoCamVien.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            // Nếu đã đăng nhập thì vào thẳng Admin
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 return RedirectToAction("Index", "Admin");
             }
@@ -45,21 +42,27 @@ namespace WebThaoCamVien.Controllers
                 return View();
             }
 
+            var adminEmail = _config["Admin:Email"];
+            var adminPassword = _config["Admin:Password"];
+            var adminDisplayName = _config["Admin:DisplayName"] ?? "Quản trị viên";
 
-            var checkEmail = email; // Đặt breakpoint ở đây (bấm F9)
-            var allUsers = _context.Users.ToList(); // Ép Entity Framework lôi hết user ra
+            if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
+            {
+                ViewBag.Error = "Chưa cấu hình tài khoản admin trong appsettings.json.";
+                return View();
+            }
 
-            // Tìm user trong database (So sánh trực tiếp password)
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
+            // So sánh thẳng (demo). Production nên hash password.
+            var isMatch = string.Equals(email, adminEmail, StringComparison.OrdinalIgnoreCase)
+                          && string.Equals(password, adminPassword, StringComparison.Ordinal);
 
-            if (user != null)
+            if (isMatch)
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Name, user.DisplayName),
+                    new Claim(ClaimTypes.NameIdentifier, "admin"),
+                    new Claim(ClaimTypes.Email, adminEmail),
+                    new Claim(ClaimTypes.Name, adminDisplayName),
                     new Claim(ClaimTypes.Role, "Admin")
                 };
 
@@ -75,7 +78,6 @@ namespace WebThaoCamVien.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                // Chuyển hướng về trang Index trong folder Admin
                 return RedirectToAction("Index", "Admin");
             }
 

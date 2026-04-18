@@ -371,10 +371,11 @@ namespace AppThaoCamVien.Services
         }
 
         // ─── VISIT LOG ────────────────────────────────────────────────────
+        // Param userId giữ lại để không phá signature cũ của caller, nhưng không còn dùng.
         public async Task<long> LogVisitAsync(int poiId, int? userId = null)
         {
             var db = await GetDbAsync();
-            var v = new PoiVisitHistory { PoiId = poiId, UserId = userId, VisitTime = DateTime.Now };
+            var v = new PoiVisitHistory { PoiId = poiId, VisitTime = DateTime.Now };
             await db.InsertAsync(v);
             return v.VisitId;
         }

@@ -65,7 +65,6 @@ namespace ApiThaoCamVien.Controllers
                 var visit = new PoiVisitHistory
                 {
                     PoiId = id,
-                    UserId = request.UserId,
                     VisitTime = DateTime.Now,
                     ListenDuration = request.ListenDuration
                 };
@@ -74,8 +73,8 @@ namespace ApiThaoCamVien.Controllers
                 await _ctx.SaveChangesAsync();
 
                 _logger.LogInformation(
-                    "Visit recorded: POI #{PoiId}, User #{UserId}, Duration {Duration}s",
-                    id, request.UserId, request.ListenDuration);
+                    "Visit recorded: POI #{PoiId}, Duration {Duration}s",
+                    id, request.ListenDuration);
 
                 return Ok(new { message = "Đã ghi nhận lượt thăm", visitId = visit.VisitId });
             }

@@ -188,8 +188,33 @@ public sealed class ApiService
         }
     }
 
-    internal async Task PostPresencePingAsync(string sid, object value, CancellationToken none)
+    /// <summary>
+    /// Gửi heartbeat "tôi đang online" lên API. Dùng cho dashboard Admin đếm số
+    /// thiết bị đang dùng app. KHÔNG ném exception ra ngoài — AppPresenceService
+    /// chạy loop im lặng, lỗi mạng thì thôi, lần sau ping tiếp.
+    /// </summary>
+    internal async Task PostPresencePingAsync(string sessionId, object? extra, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(sessionId)) return;
+
+        var url = BuildUrl("/api/mobile/presence");
+        try
+        {
+            ApplyLanguageHeader();
+            using var response = await _httpClient.PostAsJsonAsync(
+                url,
+                new { sessionId },
+                ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Debug.WriteLine($"[ApiService] presence ping status={(int)response.StatusCode} url={url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // offline / DNS fail / server sleep — bỏ qua, lần kế tiếp ping tiếp.
+            Debug.WriteLine($"[ApiService] presence ping fail: {ex.Message}");
+        }
     }
 }

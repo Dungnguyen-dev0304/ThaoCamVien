@@ -24,7 +24,6 @@ public partial class WebContext : DbContext
     public virtual DbSet<QrCode> QrCodes { get; set; }
     public virtual DbSet<Tour> Tours { get; set; }
     public virtual DbSet<TourPoi> TourPois { get; set; }
-    public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UserLocationLog> UserLocationLogs { get; set; }
 
     public virtual DbSet<PoiTranslation> PoiTranslations { get; set; }
@@ -121,32 +120,26 @@ public partial class WebContext : DbContext
             entity.HasOne(d => d.Tour).WithMany(p => p.TourPois).HasForeignKey(d => d.TourId).HasConstraintName("FK_tourpoi_tour");
         });
 
-        // 6. Cấu hình USER
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.UserId).HasName("PK__users__B9BE370F89EDFDDA");
-            entity.ToTable("users");
-        });
+        // 6. (Đã xoá) Bảng USERS — drop trong migration DropUsersAndUserId.
+        //    Admin đăng nhập qua appsettings.json -> Admin section.
 
-        // 7. Cấu hình POI_VISIT_HISTORY
+        // 7. Cấu hình POI_VISIT_HISTORY (đã bỏ cột user_id + FK)
         modelBuilder.Entity<PoiVisitHistory>(entity =>
         {
             entity.HasKey(e => e.VisitId).HasName("PK__poi_visi__375A75E1DEEE7CA0");
             entity.ToTable("poi_visit_history");
             entity.HasOne(d => d.Poi).WithMany().HasForeignKey(d => d.PoiId).HasConstraintName("FK_visit_poi");
-            entity.HasOne(d => d.User).WithMany(p => p.PoiVisitHistories).HasForeignKey(d => d.UserId).HasConstraintName("FK_visit_user");
         });
 
-        // 8. Cấu hình USER_LOCATION_LOG (Đã sửa lỗi Warning Decimal)
+        // 8. Cấu hình USER_LOCATION_LOG (đã bỏ cột user_id + FK_location_user).
+        //    Bảng giờ chỉ ghi lat/lng + timestamp, không còn gắn với user.
         modelBuilder.Entity<UserLocationLog>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__user_loc__3213E83F20760A9F");
             entity.ToTable("user_location_log");
 
-            // Giữ lại định nghĩa ID
             entity.Property(e => e.Id).HasColumnName("id");
 
-            // Giữ tọa độ chính xác cao (Bạn làm rất tốt chỗ này)
             entity.Property(e => e.Latitude)
                 .HasColumnType("decimal(11, 8)")
                 .HasColumnName("latitude");
@@ -155,18 +148,10 @@ public partial class WebContext : DbContext
                 .HasColumnType("decimal(11, 8)")
                 .HasColumnName("longitude");
 
-            // PHẢI GIỮ DÒNG NÀY: Để DB tự động lưu thời gian khi người dùng di chuyển
             entity.Property(e => e.RecordedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("recorded_at");
-
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            // Khóa ngoại trỏ về bảng User
-            entity.HasOne(d => d.User).WithMany(p => p.UserLocationLogs)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_location_user");
         });
 
         // 9. Cấu hình bảng PoiAudios
