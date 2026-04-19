@@ -14,11 +14,17 @@ public partial class App : Application
         _sp = sp;
         InitializeComponent();
         ConfigureGlobalExceptionGuards();
+
+        // Xo√° preference URL server c≈© (t·ª´ l·∫ßn test tr∆∞·ªõc) n·∫øu kh√¥ng kh·ªõp
+        // AppConfig.LanIp / emulator hi·ªán t·∫°i ‚Äî ph·∫£i ch·∫°y TR∆Ø·ªöC khi b·∫•t k·ª≥
+        // service n√†o (ApiService, DatabaseService‚Ä¶) ƒë·ªçc Preferences.
+        AppConfig.EnsureFreshPreferences();
+
         LanguageManager.Load();
     }
 
     /// <summary>
-    /// MAUI 10: CreateWindow thay th? MainPage setter (?„ obsolete).
+    /// MAUI 10: CreateWindow thay th? MainPage setter (?ÔøΩ obsolete).
     /// </summary>
     protected override Window CreateWindow(IActivationState? activationState)
     {
@@ -59,15 +65,15 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Global Exception Guards ó b?t T?T C? unhandled exceptions.
+    /// Global Exception Guards ÔøΩ b?t T?T C? unhandled exceptions.
     ///
     /// 3 t?ng b?o v?:
-    ///   1. AppDomain.UnhandledException ó crash c?p process
-    ///   2. TaskScheduler.UnobservedTaskException ó async void / fire-and-forget
-    ///   3. MauiExceptions.UnhandledException ó MAUI-specific (UI thread crashes)
+    ///   1. AppDomain.UnhandledException ÔøΩ crash c?p process
+    ///   2. TaskScheduler.UnobservedTaskException ÔøΩ async void / fire-and-forget
+    ///   3. MauiExceptions.UnhandledException ÔøΩ MAUI-specific (UI thread crashes)
     ///
-    /// M?c ?Ìch: KH‘NG BAO GI? ?? app crash tr?ng m‡n hÏnh.
-    /// Thay v‡o ?Û: log l?i v‡ hi?n th? alert th‚n thi?n.
+    /// M?c ?ÔøΩch: KHÔøΩNG BAO GI? ?? app crash tr?ng mÔøΩn hÔøΩnh.
+    /// Thay vÔøΩo ?ÔøΩ: log l?i vÔøΩ hi?n th? alert thÔøΩn thi?n.
     /// </summary>
     private static void ConfigureGlobalExceptionGuards()
     {
@@ -80,13 +86,13 @@ public partial class App : Application
                 System.Diagnostics.Debug.WriteLine($"[FATAL] AppDomain: {ex?.Message ?? e.ExceptionObject}");
                 LogCrash("AppDomain", ex);
             }
-            catch { /* KhÙng throw trong exception handler */ }
+            catch { /* KhÔøΩng throw trong exception handler */ }
         };
 
         // ?? T?ng 2: Fire-and-forget task exceptions ?????????????????????
-        // Khi d˘ng `_ = SomeAsyncMethod()` m‡ method throw,
-        // exception s? b? nu?t ? app ch?y sai tr?ng th·i.
-        // SetObserved() ng?n runtime nÈm l?i exception khi GC finalize task.
+        // Khi dÔøΩng `_ = SomeAsyncMethod()` mÔøΩ method throw,
+        // exception s? b? nu?t ? app ch?y sai tr?ng thÔøΩi.
+        // SetObserved() ng?n runtime nÔøΩm l?i exception khi GC finalize task.
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             try
@@ -99,18 +105,18 @@ public partial class App : Application
         };
 
         // ?? T?ng 3: MAUI UI thread exceptions ??????????????????????????
-        // MauiExceptions ?„ b? lo?i b? trong .NET MAUI 10.
-        // Android: ?„ cÛ AndroidEnvironment.UnhandledExceptionRaiser trong MainActivity.cs.
-        // D˘ng FirstChanceException ?? log crash s?m nh?t (t?t c? platform).
+        // MauiExceptions ?ÔøΩ b? lo?i b? trong .NET MAUI 10.
+        // Android: ?ÔøΩ cÔøΩ AndroidEnvironment.UnhandledExceptionRaiser trong MainActivity.cs.
+        // DÔøΩng FirstChanceException ?? log crash s?m nh?t (t?t c? platform).
         AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
         {
-            // Ch? log, KH‘NG swallow ó ?? exception propagate bÏnh th??ng.
-            // M?c ?Ìch: debug log cho crash khÛ t·i hi?n.
+            // Ch? log, KHÔøΩNG swallow ÔøΩ ?? exception propagate bÔøΩnh th??ng.
+            // M?c ?ÔøΩch: debug log cho crash khÔøΩ tÔøΩi hi?n.
             try
             {
                 var ex = e.Exception;
                 if (ex is TaskCanceledException or OperationCanceledException)
-                    return; // B? qua cancel ó qu· nhi?u noise
+                    return; // B? qua cancel ÔøΩ quÔøΩ nhi?u noise
 
                 System.Diagnostics.Debug.WriteLine(
                     $"[FIRST-CHANCE] {ex.GetType().Name}: {Truncate(ex.Message, 120)}");
@@ -120,7 +126,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Ghi crash log v‡o file local ?? debug sau.
+    /// Ghi crash log vÔøΩo file local ?? debug sau.
     /// File: {AppData}/crash_log.txt (append mode).
     /// </summary>
     private static void LogCrash(string source, Exception? ex)
@@ -139,6 +145,6 @@ public partial class App : Application
     private static string Truncate(string? s, int max)
     {
         if (string.IsNullOrEmpty(s)) return "(null)";
-        return s.Length <= max ? s : s[..max] + "Ö";
+        return s.Length <= max ? s : s[..max] + "ÔøΩ";
     }
 }

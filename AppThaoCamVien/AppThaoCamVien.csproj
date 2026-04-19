@@ -130,6 +130,9 @@
 		<MauiXaml Update="Pages\OnboardingOfflineDownloadPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\SettingsPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Controls\SkeletonBlock.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

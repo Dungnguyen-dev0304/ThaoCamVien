@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Thêm d?ch v? c?n thi?t
+// 1. Thï¿½m d?ch v? c?n thi?t
 builder.Services.AddControllersWithViews();
 
 // 2. K?t n?i Database SQL Server
@@ -12,7 +12,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<WebContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 3. C?u hình xác th?c Cookie (M?I THÊM)
+// 3. C?u hï¿½nh xï¿½c th?c Cookie (M?I THï¿½M)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -23,18 +23,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
-// Pipeline c?u hình
+// Pipeline c?u hï¿½nh
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
+// Static files PH?I tr??c Authentication ?? /audio/pois/*.mp3
+// khï¿½ng b? ch?n b?i authorization
 app.UseStaticFiles();
 app.UseRouting();
 
-// 4. Kích ho?t Authentication (PH?I n?m tr??c Authorization)
+// 4. Kï¿½ch ho?t Authentication (PH?I n?m tr??c Authorization)
 app.UseAuthentication();
 app.UseAuthorization();
 

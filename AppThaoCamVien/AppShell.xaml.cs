@@ -55,6 +55,7 @@ public partial class AppShell : Shell
         StoryContent.Content = SafeResolvePage<AnimalsPage>("Animals");
         MapContent.Content = SafeResolvePage<MapPage>("Map");
         AboutContent.Content = SafeResolvePage<AboutPage>("About");
+        SettingsContent.Content = SafeResolvePage<SettingsPage>("Settings");
 
         System.Diagnostics.Debug.WriteLine("[AppShell] Tabs initialized");
     }

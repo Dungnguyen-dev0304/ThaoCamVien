@@ -56,29 +56,33 @@ public sealed class ApiService
     }
 
     /// <summary>
-    /// Chọn URL mặc định theo loại thiết bị. Không hardcode IP cá nhân.
+    /// Chọn URL mặc định theo loại thiết bị.
     /// Emulator → 10.0.2.2 (alias localhost của host).
-    /// Thiết bị thật → placeholder, sẽ được ghi đè bởi prompt nhập IP ở App.xaml.cs.
+    /// Máy thật → lấy IP LAN từ <see cref="AppConfig.LanIp"/> — đổi 1 chỗ duy nhất.
+    /// Dev vẫn có thể override qua Preferences["ApiBaseUrl"] (OnboardingApiConfigPage).
     /// </summary>
     internal static string ResolveDefaultApiUrl()
     {
 #if ANDROID
         return DeviceInfo.DeviceType == DeviceType.Virtual
-            ? "http://10.0.2.2:5281"
-            : "http://172.20.10.3:5281";
+            ? AppConfig.EmulatorApiUrl
+            : AppConfig.RealDeviceApiUrl;
 #elif IOS
         return DeviceInfo.DeviceType == DeviceType.Virtual
-            ? "http://localhost:5281"
-            : "http://172.20.10.3:5281";
+            ? $"http://localhost:{AppConfig.ApiPort}"
+            : AppConfig.RealDeviceApiUrl;
 #else
-        return "http://localhost:5281";
+        return $"http://localhost:{AppConfig.ApiPort}";
 #endif
     }
 
-    /// <summary>Kiểm tra xem dev đã cấu hình IP chưa.</summary>
+    /// <summary>
+    /// Kiểm tra xem dev đã cấu hình IP chưa. Dùng để bật onboarding prompt.
+    /// Nếu AppConfig.LanIp còn là placeholder cũ thì coi như chưa config.
+    /// </summary>
     public static bool NeedsConfiguration
         => !Preferences.Default.ContainsKey("ApiBaseUrl")
-           && ResolveDefaultApiUrl().Contains("172.20.10.3");
+           && string.IsNullOrWhiteSpace(AppConfig.LanIp);
 
     private string BuildUrl(string endpoint)
         => $"{BaseUrl.TrimEnd('/')}/{endpoint.TrimStart('/')}";
@@ -185,6 +189,83 @@ public sealed class ApiService
         {
             Debug.WriteLine($"[ApiService] POST circuit open (fail-fast): {url}");
             return null;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // POI VISIT TRACKING (phương án C)
+    //   • StartPoiVisitAsync: POST /api/Pois/{id}/visit → trả về visitId từ server
+    //   • UpdatePoiVisitDurationAsync: PATCH /api/Pois/visit/{visitId}/duration
+    //
+    // Cả 2 đều fire-safe (không ném exception), trả về -1 / không làm gì
+    // khi mạng rớt. Không đi qua Polly pipeline để tránh retry stale.
+    // ──────────────────────────────────────────────────────────────────
+
+    private sealed class VisitCreatedResponse
+    {
+        public string? message { get; set; }
+        public long visitId { get; set; }
+    }
+
+    /// <summary>
+    /// Tạo record visit trên server khi user bấm Play. Trả về visitId để sau
+    /// này gọi PATCH duration. Trả -1 nếu fail (offline, 4xx, 5xx…).
+    /// </summary>
+    public async Task<long> StartPoiVisitAsync(int poiId, int? initialSeconds = 0, CancellationToken ct = default)
+    {
+        var url = BuildUrl($"/api/Pois/{poiId}/visit");
+        try
+        {
+            ApplyLanguageHeader();
+            using var response = await _httpClient.PostAsJsonAsync(
+                url,
+                new { listenDuration = initialSeconds },
+                ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Debug.WriteLine($"[ApiService] visit start status={(int)response.StatusCode} url={url}");
+                return -1;
+            }
+
+            var body = await response.Content
+                .ReadFromJsonAsync<VisitCreatedResponse>(cancellationToken: ct)
+                .ConfigureAwait(false);
+            return body?.visitId ?? -1;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ApiService] visit start fail: {ex.Message}");
+            return -1;
+        }
+    }
+
+    /// <summary>
+    /// Cập nhật ListenDuration khi user Stop audio. Fire-and-forget an toàn —
+    /// silent fail nếu visitId ≤ 0 hoặc mạng rớt.
+    /// </summary>
+    public async Task UpdatePoiVisitDurationAsync(long visitId, int seconds, CancellationToken ct = default)
+    {
+        if (visitId <= 0) return;
+        if (seconds < 0) seconds = 0;
+
+        var url = BuildUrl($"/api/Pois/visit/{visitId}/duration");
+        try
+        {
+            ApplyLanguageHeader();
+            using var response = await _httpClient.PatchAsJsonAsync(
+                url,
+                new { seconds },
+                ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Debug.WriteLine($"[ApiService] visit duration status={(int)response.StatusCode} url={url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ApiService] visit duration fail: {ex.Message}");
         }
     }
 

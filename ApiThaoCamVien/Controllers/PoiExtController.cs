@@ -86,6 +86,106 @@ namespace ApiThaoCamVien.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
+        // PATCH /api/Pois/visit/{visitId}/duration
+        // App gọi khi user dừng / đóng audio để cập nhật tổng số giây đã nghe.
+        // Body JSON: { "seconds": 42 }
+        // Phương án C: Start tạo record → Stop PATCH cập nhật duration.
+        // ─────────────────────────────────────────────────────────
+        [HttpPatch("visit/{visitId:long}/duration")]
+        public async Task<IActionResult> UpdateVisitDuration(long visitId, [FromBody] UpdateDurationRequest request)
+        {
+            try
+            {
+                if (request == null || request.Seconds < 0)
+                    return BadRequest(new { message = "seconds phải >= 0" });
+
+                var visit = await _ctx.PoiVisitHistories.FirstOrDefaultAsync(v => v.VisitId == visitId);
+                if (visit == null)
+                    return NotFound(new { message = $"Visit #{visitId} không tồn tại" });
+
+                visit.ListenDuration = request.Seconds;
+                await _ctx.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Visit duration updated: #{VisitId} = {Seconds}s",
+                    visitId, request.Seconds);
+
+                return Ok(new { message = "Đã cập nhật thời gian nghe", visitId, seconds = request.Seconds });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in UpdateVisitDuration");
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────
+        // GET /api/Pois/media?type=audio
+        // App mobile gọi để sync metadata audio xuống SQLite local.
+        //
+        // Nguồn thật sự: bảng poi_audios (admin upload qua AudioController).
+        // Ở đây project sang shape của PoiMedium để app không phải sửa:
+        //   AudioId       → MediaId
+        //   PoiId         → PoiId
+        //   "audio"       → MediaType
+        //   FilePath      → MediaUrl (vd "/audio/pois/tiger.mp3")
+        //   LanguageCode  → Language
+        // MediaUrl là đường dẫn tương đối; app ghép host qua
+        // MediaUrlResolver (port 5181 của Web) khi phát.
+        // ─────────────────────────────────────────────────────────
+        [HttpGet("media")]
+        public async Task<IActionResult> GetAllMedia([FromQuery] string? type = null)
+        {
+            try
+            {
+                // Hiện admin chỉ upload audio qua /Audio/Manage, nên không
+                // phân biệt image ở đây. Param `type` để tương lai mở rộng.
+                if (!string.IsNullOrWhiteSpace(type)
+                    && !type.Equals("audio", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Ok(Array.Empty<object>());
+                }
+
+                // Lấy bản ghi thuần — chưa format chuỗi để EF Core dịch ra SQL được.
+                var raw = await _ctx.PoiAudios.AsNoTracking()
+                    .Where(a => a.FilePath != null && a.FilePath != "")
+                    .Select(a => new
+                    {
+                        a.AudioId,
+                        a.PoiId,
+                        a.FilePath,
+                        a.LanguageCode,
+                        a.UpdatedAt
+                    })
+                    .ToListAsync();
+
+                // Nhúng UpdatedAt vào MediaUrl dưới dạng query string `?v=...`
+                // để app mobile coi file mới upload là URL khác ⇒ cache miss ⇒ tải lại.
+                // Static-file middleware của ASP.NET Core tự bỏ qua query string khi
+                // phục vụ file nên URL này vẫn trỏ đúng đến file vật lý.
+                var list = raw.Select(a => new
+                {
+                    MediaId = a.AudioId,
+                    PoiId = a.PoiId,
+                    MediaType = "audio",
+                    MediaUrl = $"{a.FilePath}?v={a.UpdatedAt:yyyyMMddHHmmss}",
+                    Language = a.LanguageCode
+                }).ToList();
+
+                _logger.LogInformation(
+                    "GetAllMedia returned {Count} audio rows (from poi_audios, versioned by UpdatedAt)",
+                    list.Count);
+
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetAllMedia");
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────
         // GET /api/Pois/nearby?lat=10.787&lng=106.706
         // Tìm POI trong bán kính GPS hiện tại của người dùng
         // App gọi liên tục khi user di chuyển trong vườn

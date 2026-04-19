@@ -46,10 +46,6 @@
             <i class="bi bi-fire"></i> Heatmap mật độ
         </span>
         <h3 class="text-xl font-extrabold text-slate-800 mt-3">Bản đồ nhiệt thăm quan Thảo Cầm Viên</h3>
-        <p class="text-sm text-slate-500 mt-1">
-            Dữ liệu lấy từ bảng <code class="bg-slate-100 px-2 py-0.5 rounded text-[12px]">poi_visit_history</code>
-            &mdash; mỗi POI là 1 điểm, trọng số = số lượt thăm trong khoảng thời gian đã chọn.
-        </p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
         <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider mr-2">Khoảng thời gian</span>
@@ -58,6 +54,14 @@
         <button class="hm-btn active" data-days="30">30 ngày</button>
         <button class="hm-btn" data-days="90">90 ngày</button>
         <button class="hm-btn" data-days="365">1 năm</button>
+        <span class="w-px h-6 bg-slate-200 mx-2"></span>
+        <button id="hm-refresh-now" class="hm-btn" title="Tải lại ngay">
+            <i class="bi bi-arrow-clockwise"></i> Làm mới
+        </button>
+        <label class="flex items-center gap-2 ml-2 text-[11px] font-bold text-slate-500 select-none">
+            <input id="hm-auto" type="checkbox" checked class="accent-emerald-500 w-4 h-4">
+            Tự làm mới 15s
+        </label>
     </div>
 </div>
 
@@ -241,7 +245,39 @@
             });
         });
 
-        // Auto-load 30 ngày mặc định
+        // Nút "Làm mới" — fetch lại dữ liệu cho filter hiện tại
+        document.getElementById('hm-refresh-now')?.addEventListener('click', () => {
+            loadData(currentDays);
+        });
+
+        // ── AUTO-REFRESH POLL mỗi 15 giây ────────────────────────────────
+        // Để admin demo (hoặc giáo viên) bấm Play trên điện thoại là thấy
+        // lượt thăm hiện ra ngay mà không phải F5 trang.
+        // Tắt khi tab không visible để tiết kiệm bandwidth.
+        let autoTimer = null;
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            autoTimer = setInterval(() => {
+                if (document.hidden) return;              // tab ẩn → skip
+                if (!document.getElementById('hm-auto').checked) return;
+                loadData(currentDays);
+            }, 15000);
+        }
+        function stopAutoRefresh() {
+            if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+        }
+        document.getElementById('hm-auto').addEventListener('change', (e) => {
+            if (e.target.checked) startAutoRefresh(); else stopAutoRefresh();
+        });
+        document.addEventListener('visibilitychange', () => {
+            // Fetch ngay khi quay lại tab, để không bị stale
+            if (!document.hidden && document.getElementById('hm-auto').checked) {
+                loadData(currentDays);
+            }
+        });
+
+        // Auto-load 30 ngày mặc định + khởi động polling
         loadData(30);
+        startAutoRefresh();
     </script>
 }

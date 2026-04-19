@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppThaoCamVien.Pages.SettingsPage"
+             Title="Cài đặt"
+             BackgroundColor="#FFFFFF">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24,20,40" Spacing="18">
+
+            <Label Text="⚙️ Cài đặt &amp; Bảo trì"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   TextColor="#1B5E3A"/>
+
+            <!-- ─── Section 1 ────────────────────────────────────────── -->
+            <Border Stroke="#DDE3DC" StrokeThickness="1" StrokeShape="RoundRectangle 12"
+                    BackgroundColor="#F7FBF7" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Tải lại dữ liệu từ server"
+                           FontSize="16" FontAttributes="Bold" TextColor="#0a2e1f"/>
+                    <Label TextColor="#4a5a52" FontSize="13"
+                           Text="Đồng bộ lại danh sách POI + bảng audio. Dùng khi admin vừa thêm/sửa dữ liệu trên web."/>
+                    <Button x:Name="ReloadButton"
+                            Text="↻ Tải lại ngay"
+                            BackgroundColor="#1B5E3A"
+                            TextColor="White"
+                            HeightRequest="46"
+                            CornerRadius="10"
+                            Clicked="OnReloadClicked"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Section 2 ────────────────────────────────────────── -->
+            <Border Stroke="#DDE3DC" StrokeThickness="1" StrokeShape="RoundRectangle 12"
+                    BackgroundColor="#FFF8F0" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Xoá cache audio"
+                           FontSize="16" FontAttributes="Bold" TextColor="#6F3B00"/>
+                    <Label TextColor="#5A4436" FontSize="13"
+                           Text="Xoá toàn bộ file audio đã tải về máy. Lần phát tiếp theo sẽ tải lại bản mới nhất từ server."/>
+                    <Button x:Name="ClearCacheButton"
+                            Text="🗑 Xoá cache audio"
+                            BackgroundColor="#C77B2A"
+                            TextColor="White"
+                            HeightRequest="46"
+                            CornerRadius="10"
+                            Clicked="OnClearCacheClicked"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Section 3: thông tin server ─────────────────────── -->
+            <Border Stroke="#DDE3DC" StrokeThickness="1" StrokeShape="RoundRectangle 12"
+                    BackgroundColor="#F3F6FA" Padding="16">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Thông tin kết nối (debug)"
+                           FontSize="14" FontAttributes="Bold" TextColor="#2C3E50"/>
+                    <Label x:Name="ApiUrlLabel" FontSize="12" TextColor="#34495E"/>
+                    <Label x:Name="WebUrlLabel" FontSize="12" TextColor="#34495E"/>
+                    <Label x:Name="DeviceTypeLabel" FontSize="12" TextColor="#34495E"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Trạng thái ──────────────────────────────────────── -->
+            <ActivityIndicator x:Name="LoadingBar"
+                               IsVisible="False"
+                               IsRunning="False"
+                               Color="#1B5E3A"/>
+            <Label x:Name="StatusLabel"
+                   Text=""
+                   HorizontalOptions="Center"
+                   FontSize="14"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

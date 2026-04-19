@@ -52,6 +52,7 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
             builder.Services.AddTransient<AnimalsPage>();
+            builder.Services.AddTransient<SettingsPage>();
 
             builder.Services.AddSingleton<OfflineBundleDownloadService>();
             builder.Services.AddTransient<HomePageViewModel>();

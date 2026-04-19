@@ -45,7 +45,7 @@
                     <i class="bi bi-eye-fill text-white text-sm"></i>
                 </div>
             </div>
-            <p class="text-3xl font-black text-slate-800">@Model.TotalVisits.ToString("N0")</p>
+            <p id="live-total-visits" class="text-3xl font-black text-slate-800 tabular-nums">@Model.TotalVisits.ToString("N0")</p>
             <p class="text-[11px] text-slate-400 mt-1 font-medium">Tất cả thời gian</p>
         </div>
 
@@ -56,7 +56,7 @@
                     <i class="bi bi-calendar-day-fill text-white text-sm"></i>
                 </div>
             </div>
-            <p class="text-3xl font-black text-slate-800">@Model.TodayVisits.ToString("N0")</p>
+            <p id="live-today-visits" class="text-3xl font-black text-slate-800 tabular-nums">@Model.TodayVisits.ToString("N0")</p>
             <p class="text-[11px] text-slate-400 mt-1 font-medium">@DateTime.Now.ToString("dd/MM/yyyy")</p>
         </div>
 
@@ -67,7 +67,7 @@
                     <i class="bi bi-headphones text-white text-sm"></i>
                 </div>
             </div>
-            <p class="text-3xl font-black text-slate-800">@Model.AvgListenDuration<span class="text-lg text-slate-400">s</span></p>
+            <p class="text-3xl font-black text-slate-800"><span id="live-avg-listen" class="tabular-nums">@Model.AvgListenDuration</span><span class="text-lg text-slate-400">s</span></p>
             <p class="text-[11px] text-slate-400 mt-1 font-medium">Trung bình mỗi lượt</p>
         </div>
 
@@ -250,23 +250,79 @@
 
 <script>
 (function () {
+    // ── 1. Live active app sessions ───────────────────────────
     var countEl = document.getElementById('live-active-app-count');
     var timeEl = document.getElementById('live-active-app-updated');
-    if (!countEl) return;
-    var url = '@Url.Action("ActiveAppSessionsJson", "Admin")' + '?staleSeconds=90';
-    function tick() {
-        fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
-            .then(function (r) { return r.json(); })
-            .then(function (j) {
-                if (typeof j.activeCount === 'number') countEl.textContent = j.activeCount;
-                if (timeEl && j.updatedAtUtc) {
-                    var d = new Date(j.updatedAtUtc);
-                    if (!isNaN(d.getTime())) timeEl.textContent = 'Cập nhật: ' + d.toLocaleTimeString();
-                }
-            })
-            .catch(function () { });
+    if (countEl) {
+        var url = '@Url.Action("ActiveAppSessionsJson", "Admin")' + '?staleSeconds=90';
+        function tick() {
+            fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (j) {
+                    if (typeof j.activeCount === 'number') countEl.textContent = j.activeCount;
+                    if (timeEl && j.updatedAtUtc) {
+                        var d = new Date(j.updatedAtUtc);
+                        if (!isNaN(d.getTime())) timeEl.textContent = 'Cập nhật: ' + d.toLocaleTimeString();
+                    }
+                })
+                .catch(function () { });
+        }
+        tick();
+        setInterval(tick, 5000);
     }
-    tick();
-    setInterval(tick, 5000);
+
+    // ── 2. Live visit stats (Tổng lượt thăm / Hôm nay / Avg listen) ──
+    // Mobile bấm Play → /api/Pois/{id}/visit → DB insert.
+    // Poll mỗi 10s để admin thấy ngay không phải F5.
+    var totalEl = document.getElementById('live-total-visits');
+    var todayEl = document.getElementById('live-today-visits');
+    var avgEl = document.getElementById('live-avg-listen');
+    if (totalEl || todayEl || avgEl) {
+        var filterPoi = '@(Model.FilterPoiId?.ToString() ?? "")';
+        var filterDays = '@Model.FilterDays';
+        var statsUrl = '@Url.Action("VisitStatsJson", "Admin")'
+                     + '?days=' + encodeURIComponent(filterDays)
+                     + (filterPoi ? '&poiId=' + encodeURIComponent(filterPoi) : '');
+
+        function fmtNum(n) {
+            try { return (n || 0).toLocaleString('vi-VN'); }
+            catch (e) { return String(n); }
+        }
+        function pulse(el) {
+            if (!el) return;
+            el.style.transition = 'color .4s';
+            el.style.color = '#16a34a';
+            setTimeout(function () { el.style.color = ''; }, 600);
+        }
+        function pollStats() {
+            if (document.hidden) return;
+            fetch(statsUrl, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (j) {
+                    if (totalEl && typeof j.totalVisits === 'number'
+                        && totalEl.textContent !== fmtNum(j.totalVisits)) {
+                        totalEl.textContent = fmtNum(j.totalVisits);
+                        pulse(totalEl);
+                    }
+                    if (todayEl && typeof j.todayVisits === 'number'
+                        && todayEl.textContent !== fmtNum(j.todayVisits)) {
+                        todayEl.textContent = fmtNum(j.todayVisits);
+                        pulse(todayEl);
+                    }
+                    if (avgEl && typeof j.avgListen === 'number'
+                        && avgEl.textContent !== String(j.avgListen)) {
+                        avgEl.textContent = j.avgListen;
+                        pulse(avgEl);
+                    }
+                })
+                .catch(function () { });
+        }
+        pollStats();
+        setInterval(pollStats, 10000);
+        // Làm mới ngay khi quay lại tab sau khi đã khuất
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) pollStats();
+        });
+    }
 })();
 </script>

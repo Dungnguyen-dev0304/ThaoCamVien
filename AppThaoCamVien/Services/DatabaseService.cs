@@ -157,6 +157,11 @@ namespace AppThaoCamVien.Services
                         await db.InsertOrReplaceAsync(poi);
                     }
                     Debug.WriteLine($"[DB] API sync OK: {pois.Count} POIs (InsertOrReplace)");
+
+                    // Sync luôn bảng poi_media để NarrationEngine có metadata
+                    // tìm MP3. Không chặn kết quả — lỗi sync media sẽ rơi sang
+                    // TTS fallback một cách graceful.
+                    await SyncMediaFromApiAsync();
                     return;
                 }
 
@@ -195,6 +200,60 @@ namespace AppThaoCamVien.Services
             }
 
             await EnsureOfflineDataAsync();
+        }
+
+        /// <summary>
+        /// Sync bảng poi_media (audio/image metadata) từ API xuống SQLite local.
+        /// NarrationEngine cần metadata này để biết POI nào có MP3 trên server,
+        /// bài nào thì fallback TTS. Không ném exception ra ngoài — lỗi mạng
+        /// thì bỏ qua, app vẫn hoạt động bằng dữ liệu media cũ (nếu có).
+        /// </summary>
+        public async Task SyncMediaFromApiAsync()
+        {
+            if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+            {
+                Debug.WriteLine("[DB] SyncMedia skipped: no internet");
+                return;
+            }
+
+            try
+            {
+                var url = $"{_apiBase}/Pois/media";
+                Debug.WriteLine($"[DB] SyncMedia url={url}");
+
+                var list = await _pipeline.ExecuteAsync(async ct =>
+                    await _httpClient.GetFromJsonAsync<List<PoiMedium>>(url, ct),
+                    CancellationToken.None);
+
+                if (list == null)
+                {
+                    Debug.WriteLine("[DB] SyncMedia: API trả null");
+                    return;
+                }
+
+                SQLiteAsyncConnection db;
+                try
+                {
+                    db = await GetDbAsync();
+                    await db.DeleteAllAsync<PoiMedium>();
+                }
+                catch (Exception ex) when (IsUnknownTypeError(ex)
+                                      || ex.Message.Contains("no such table", StringComparison.OrdinalIgnoreCase))
+                {
+                    db = await ReopenDbAsync();
+                    try { await db.DeleteAllAsync<PoiMedium>(); } catch { }
+                }
+
+                foreach (var m in list)
+                {
+                    await db.InsertOrReplaceAsync(m);
+                }
+                Debug.WriteLine($"[DB] Media sync OK: {list.Count} records");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[DB] SyncMedia fail: {ex.Message}");
+            }
         }
 
         // ─── API-FIRST fallback: nếu SQLite rỗng thì seed offline tối thiểu ─────────────────────

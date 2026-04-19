@@ -190,6 +190,48 @@ namespace WebThaoCamVien.Controllers
         }
 
         // ─────────────────────────────────────────────────────────────────
+        // JSON cho trang /Admin/Index polling: các số Tổng lượt thăm / Hôm
+        // nay / Thời gian nghe trung bình cập nhật mỗi vài giây mà không
+        // phải F5. Mobile POST visit → endpoint này đọc ngay từ DB.
+        // ─────────────────────────────────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> VisitStatsJson([FromQuery] int? poiId, [FromQuery] int days = 7)
+        {
+            days = Math.Clamp(days, 0, 365);
+
+            var query = _context.PoiVisitHistories.AsNoTracking().AsQueryable();
+            if (poiId.HasValue) query = query.Where(v => v.PoiId == poiId);
+            if (days > 0)
+            {
+                var from = DateTime.Now.AddDays(-days);
+                query = query.Where(v => v.VisitTime >= from);
+            }
+
+            var totalVisits = await query.CountAsync();
+
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var todayVisits = await _context.PoiVisitHistories.AsNoTracking()
+                .CountAsync(v => v.VisitTime != null
+                                 && v.VisitTime >= today
+                                 && v.VisitTime < tomorrow);
+
+            var withDuration = _context.PoiVisitHistories.AsNoTracking()
+                .Where(v => v.ListenDuration != null);
+            var avgListen = await withDuration.AnyAsync()
+                ? (int)await withDuration.AverageAsync(v => v.ListenDuration!.Value)
+                : 0;
+
+            return Json(new
+            {
+                totalVisits,
+                todayVisits,
+                avgListen,
+                updatedAt = DateTime.Now.ToString("HH:mm:ss")
+            });
+        }
+
+        // ─────────────────────────────────────────────────────────────────
         // HEATMAP: bản đồ nhiệt mật độ thăm quan POI
         // Nguồn dữ liệu:
         //   • poi_visit_history JOIN pois — mỗi POI là 1 điểm, trọng số = số lượt thăm
@@ -448,15 +490,80 @@ namespace WebThaoCamVien.Controllers
             var poi = await _context.Pois.FindAsync(PoiId);
             if (poi == null) return NotFound();
 
-            if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+            // Gói tất cả trong 1 transaction — hoặc xoá hết, hoặc rollback
+            // về nguyên trạng. Tránh tình trạng xoá nửa chừng (mất visit
+            // history nhưng POI vẫn còn, hay ngược lại).
+            using var tx = await _context.Database.BeginTransactionAsync();
+            try
             {
-                string imagePath = Path.Combine(_env.WebRootPath, "images", "pois", poi.ImageThumbnail);
-                if (System.IO.File.Exists(imagePath))
-                    System.IO.File.Delete(imagePath);
+                // 1. Lịch sử thăm quan  (bảng khoá ngoại gây lỗi FK_visit_poi)
+                var visits = _context.PoiVisitHistories.Where(v => v.PoiId == PoiId);
+                _context.PoiVisitHistories.RemoveRange(visits);
+
+                // 2. Bản dịch đa ngôn ngữ
+                var translations = _context.PoiTranslations.Where(t => t.PoiId == PoiId);
+                _context.PoiTranslations.RemoveRange(translations);
+
+                // 3. QR code gắn với POI
+                var qrs = _context.QrCodes.Where(q => q.PoiId == PoiId);
+                _context.QrCodes.RemoveRange(qrs);
+
+                // 4. Tour ↔ POI (bảng trung gian) — xoá row mapping, giữ tour gốc
+                var tourLinks = _context.TourPois.Where(tp => tp.PoiId == PoiId);
+                _context.TourPois.RemoveRange(tourLinks);
+
+                // 5. Audio files — xoá cả DB row lẫn file vật lý trên đĩa
+                var audios = await _context.PoiAudios
+                    .Where(a => a.PoiId == PoiId)
+                    .ToListAsync();
+
+                string audioDir = Path.Combine(_env.WebRootPath, "audio", "pois");
+                foreach (var a in audios)
+                {
+                    if (!string.IsNullOrEmpty(a.FileName))
+                    {
+                        try
+                        {
+                            var audioPath = Path.Combine(audioDir, a.FileName);
+                            if (System.IO.File.Exists(audioPath))
+                                System.IO.File.Delete(audioPath);
+                        }
+                        catch { /* file I/O fail không được chặn delete transaction */ }
+                    }
+                }
+                _context.PoiAudios.RemoveRange(audios);
+
+                // 6. (nếu có) PoiMedia cũ — một số dự án còn giữ bảng này song song
+                var media = _context.PoiMedia.Where(m => m.PoiId == PoiId);
+                _context.PoiMedia.RemoveRange(media);
+
+                // 7. Ảnh thumbnail của POI trên đĩa
+                if (!string.IsNullOrEmpty(poi.ImageThumbnail))
+                {
+                    try
+                    {
+                        string imagePath = Path.Combine(_env.WebRootPath, "images", "pois", poi.ImageThumbnail);
+                        if (System.IO.File.Exists(imagePath))
+                            System.IO.File.Delete(imagePath);
+                    }
+                    catch { /* bỏ qua, không chặn việc xoá POI */ }
+                }
+
+                // 8. Cuối cùng: xoá chính POI
+                _context.Pois.Remove(poi);
+
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                TempData["Success"] = $"Đã xoá POI '{poi.Name}' cùng {audios.Count} audio và lịch sử liên quan.";
+            }
+            catch (Exception ex)
+            {
+                await tx.RollbackAsync();
+                TempData["Error"] = $"Không xoá được POI: {ex.Message}";
+                return RedirectToAction("PoiList");
             }
 
-            _context.Pois.Remove(poi);
-            await _context.SaveChangesAsync();
             return RedirectToAction("PoiList");
         }
 

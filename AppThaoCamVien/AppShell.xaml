@@ -50,4 +50,22 @@
         <ShellContent x:Name="AboutContent" Title="{DynamicResource TabAbout}"/>
     </FlyoutItem>
 
+    <FlyoutItem Title="Cài đặt" Icon="about_white.png" x:Name="SettingsItem">
+        <Shell.ItemTemplate>
+            <DataTemplate>
+                <Grid ColumnDefinitions="0.25*,0.75*" Padding="20">
+                    <Label Text="⚙️" FontSize="32"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{Binding Title}" TextColor="White"
+                               FontSize="Medium" FontAttributes="Bold"/>
+                        <Label Text="Tải lại / xoá cache"
+                               TextColor="#a5d6a7" FontSize="Small"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </DataTemplate>
+        </Shell.ItemTemplate>
+        <ShellContent x:Name="SettingsContent" Title="Cài đặt"/>
+    </FlyoutItem>
+
 </Shell>

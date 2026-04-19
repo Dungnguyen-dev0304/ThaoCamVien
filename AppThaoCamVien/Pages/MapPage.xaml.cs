@@ -302,6 +302,13 @@ public partial class MapPage : ContentPage
                         {
                             var n = result.ApproachingPois.OrderBy(x => x.dist).First();
                             ShowNearPoiPanel(n.poi, n.dist, false);
+
+                            // ✅ Prefetch audio nền: user đang tiếp cận → tải trước
+                            //    để khi bước vào bán kính là phát ngay, không lag.
+                            //    NarrationEngine dedupe theo {poiId}_{lang} nên gọi
+                            //    nhiều lần vô hại.
+                            foreach (var (poi, _) in result.ApproachingPois)
+                                _narration.PrefetchAudio(poi.PoiId);
                         }
                         else
                         {

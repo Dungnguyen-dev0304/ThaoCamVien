@@ -47,20 +47,21 @@ public static class MediaUrlResolver
 
     /// <summary>
     /// URL mặc định cho Web theo loại thiết bị — song song với
-    /// <see cref="ApiService.ResolveDefaultApiUrl"/>.
+    /// <see cref="ApiService.ResolveDefaultApiUrl"/>. IP LAN lấy từ
+    /// <see cref="AppConfig.LanIp"/> để chỉ cần đổi 1 chỗ duy nhất.
     /// </summary>
     internal static string ResolveDefaultWebUrl()
     {
 #if ANDROID
         return DeviceInfo.DeviceType == DeviceType.Virtual
-            ? "http://10.0.2.2:5181"
-            : "http://192.168.0.101:5181";
+            ? AppConfig.EmulatorWebUrl
+            : AppConfig.RealDeviceWebUrl;
 #elif IOS
         return DeviceInfo.DeviceType == DeviceType.Virtual
-            ? "http://localhost:5181"
-            : "http://192.168.0.101:5181";
+            ? $"http://localhost:{AppConfig.WebPort}"
+            : AppConfig.RealDeviceWebUrl;
 #else
-        return "http://localhost:5181";
+        return $"http://localhost:{AppConfig.WebPort}";
 #endif
     }
 
