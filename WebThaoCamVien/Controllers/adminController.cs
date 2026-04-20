@@ -83,14 +83,18 @@ namespace WebThaoCamVien.Controllers
         }
 
         // GET: /admin/index
+        // Trang Lịch sử chi tiết — chỉ bảng + filter + pagination.
+        // Toàn bộ phần biểu đồ/KPI/top POI đã chuyển qua /Admin/Monitoring
+        // nên action này đã được tinh gọn, chỉ tính đúng những gì view cần.
         public async Task<IActionResult> Index(int? poiId, int days = 7, int page = 1)
         {
-            SetViewData("index", "Tổng quan", "Lịch sử sử dụng");
+            SetViewData("index", "Lịch sử chi tiết", "Lịch sử thăm quan");
 
             const int pageSize = 20;
 
             var query = _context.PoiVisitHistories
                 .Include(v => v.Poi)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (poiId.HasValue)
@@ -102,40 +106,9 @@ namespace WebThaoCamVien.Controllers
                 query = query.Where(v => v.VisitTime >= from);
             }
 
-            var today = DateTime.Today;
-            var allVisits = await _context.PoiVisitHistories.ToListAsync();
-
             int totalVisits = await query.CountAsync();
-            int todayVisits = allVisits.Count(v => v.VisitTime?.Date == today);
-            // Bảng Users đã bị bỏ — giữ field trong ViewModel cho tương thích view cũ.
-            int totalUsers = 0;
-            int avgListen = allVisits.Any(v => v.ListenDuration.HasValue)
-                                ? (int)allVisits.Where(v => v.ListenDuration.HasValue).Average(v => v.ListenDuration!.Value)
-                                : 0;
-
-            var last7Days = new List<DayVisitData>();
-            for (int i = 6; i >= 0; i--)
-            {
-                var date = DateTime.Today.AddDays(-i);
-                var count = allVisits.Count(v => v.VisitTime?.Date == date);
-                last7Days.Add(new DayVisitData { Date = date, Count = count });
-            }
-
-            var topPois = await _context.PoiVisitHistories
-                .Include(v => v.Poi)
-                .Where(v => v.Poi != null)
-                .GroupBy(v => new { v.PoiId, v.Poi!.Name, v.Poi.CategoryId })
-                .Select(g => new TopPoiData
-                {
-                    PoiName = g.Key.Name,
-                    CategoryId = g.Key.CategoryId,
-                    VisitCount = g.Count()
-                })
-                .OrderByDescending(x => x.VisitCount)
-                .Take(5)
-                .ToListAsync();
-
             int totalPages = (int)Math.Ceiling(totalVisits / (double)pageSize);
+
             var recentVisits = await query
                 .OrderByDescending(v => v.VisitTime)
                 .Skip((page - 1) * pageSize)
@@ -151,22 +124,22 @@ namespace WebThaoCamVien.Controllers
                 })
                 .ToListAsync();
 
-            var allPois = await _context.Pois.OrderBy(p => p.Name).ToListAsync();
+            var allPois = await _context.Pois.AsNoTracking()
+                .OrderBy(p => p.Name)
+                .ToListAsync();
 
-            var activeSince = DateTime.UtcNow.AddSeconds(-90);
-            var activeAppSessions = await _context.AppClientPresences
-                .AsNoTracking()
-                .CountAsync(p => p.LastSeenUtc >= activeSince);
-
+            // Các field dưới đây đã không còn hiển thị trong view Index
+            // (chuyển qua Monitoring). Giữ giá trị mặc định cho ViewModel
+            // để khỏi phải sửa class IndexViewModel – zero-cost computation.
             var viewModel = new IndexViewModel
             {
                 TotalVisits = totalVisits,
-                TodayVisits = todayVisits,
-                TotalUsers = totalUsers,
-                AvgListenDuration = avgListen,
-                ActiveAppSessionsNow = activeAppSessions,
-                Last7Days = last7Days,
-                TopPois = topPois,
+                TodayVisits = 0,
+                TotalUsers = 0,
+                AvgListenDuration = 0,
+                ActiveAppSessionsNow = 0,
+                Last7Days = new List<DayVisitData>(),
+                TopPois = new List<TopPoiData>(),
                 RecentVisits = recentVisits,
                 AllPois = allPois,
                 FilterPoiId = poiId,
@@ -228,6 +201,221 @@ namespace WebThaoCamVien.Controllers
                 todayVisits,
                 avgListen,
                 updatedAt = DateTime.Now.ToString("HH:mm:ss")
+            });
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // MONITORING: giám sát hành vi user theo thời gian thực
+        // Trang /Admin/Monitoring — cards KPI + Chart.js (top POI, hourly,
+        // daily trend, completion rate, recent visits, active devices).
+        // Dùng chung nguồn dữ liệu poi_visit_history + poi_audios + app_client_presence.
+        // ─────────────────────────────────────────────────────────────────
+        public IActionResult Monitoring()
+        {
+            SetViewData("monitoring", "Giám sát", "Giám sát hoạt động người dùng");
+            return View();
+        }
+
+        /// <summary>
+        /// JSON tổng hợp cho trang Monitoring. Gộp hết các metric vào 1 request
+        /// để view chỉ cần 1 fetch mỗi chu kỳ (15s). Param days để filter.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> MonitoringDataJson([FromQuery] int days = 7)
+        {
+            days = Math.Clamp(days, 1, 365);
+            var fromDate = DateTime.Now.AddDays(-days);
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            // ── 1. KPI HIGH-LEVEL ─────────────────────────────────────────
+            var totalVisits = await _context.PoiVisitHistories.AsNoTracking()
+                .CountAsync(v => v.VisitTime != null && v.VisitTime >= fromDate);
+
+            var visitsToday = await _context.PoiVisitHistories.AsNoTracking()
+                .CountAsync(v => v.VisitTime != null
+                                 && v.VisitTime >= today
+                                 && v.VisitTime < tomorrow);
+
+            var listens = _context.PoiVisitHistories.AsNoTracking()
+                .Where(v => v.VisitTime != null && v.VisitTime >= fromDate
+                            && v.ListenDuration != null && v.ListenDuration > 0);
+
+            var avgListen = await listens.AnyAsync()
+                ? (int)await listens.AverageAsync(v => v.ListenDuration!.Value)
+                : 0;
+
+            var totalListenSec = await listens.SumAsync(v => (long?)v.ListenDuration) ?? 0L;
+
+            var activeSince = DateTime.UtcNow.AddSeconds(-90);
+            var activeDevices = await _context.AppClientPresences.AsNoTracking()
+                .CountAsync(p => p.LastSeenUtc >= activeSince);
+
+            // ── 2. TOP 10 POI theo lượt thăm ──────────────────────────────
+            // Lấy count ở SQL, tính avgDuration client-side cho chắc chắn EF Core dịch được.
+            var topCountsRaw = await _context.PoiVisitHistories.AsNoTracking()
+                .Where(v => v.VisitTime != null && v.VisitTime >= fromDate && v.PoiId != null)
+                .GroupBy(v => v.PoiId!.Value)
+                .Select(g => new { PoiId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var topPoiIds = topCountsRaw.Select(x => x.PoiId).ToList();
+
+            // Avg duration cho các POI này — 1 query nhỏ
+            var avgDurMap = (await _context.PoiVisitHistories.AsNoTracking()
+                .Where(v => v.VisitTime != null && v.VisitTime >= fromDate
+                            && v.PoiId != null && topPoiIds.Contains(v.PoiId.Value)
+                            && v.ListenDuration != null && v.ListenDuration > 0)
+                .GroupBy(v => v.PoiId!.Value)
+                .Select(g => new { PoiId = g.Key, Avg = g.Average(x => (double)x.ListenDuration!.Value) })
+                .ToListAsync())
+                .ToDictionary(x => x.PoiId, x => (int)Math.Round(x.Avg));
+
+            var poiNames = await _context.Pois.AsNoTracking()
+                .Where(p => topPoiIds.Contains(p.PoiId))
+                .Select(p => new { p.PoiId, p.Name, p.CategoryId })
+                .ToListAsync();
+
+            var topPois = topCountsRaw.Select(x =>
+            {
+                var p = poiNames.FirstOrDefault(pn => pn.PoiId == x.PoiId);
+                return new
+                {
+                    poiId = x.PoiId,
+                    name = p?.Name ?? $"POI #{x.PoiId}",
+                    categoryId = p?.CategoryId,
+                    count = x.Count,
+                    avgDuration = avgDurMap.TryGetValue(x.PoiId, out var a) ? a : 0
+                };
+            }).ToList();
+
+            // ── 3. HOURLY DISTRIBUTION (0..23) — trung bình theo giờ/ngày ─
+            // GroupBy hour-of-day để xem giờ nào user nghe nhiều nhất.
+            var visitsInRange = await _context.PoiVisitHistories.AsNoTracking()
+                .Where(v => v.VisitTime != null && v.VisitTime >= fromDate)
+                .Select(v => new { v.VisitTime, v.ListenDuration, v.PoiId })
+                .ToListAsync();
+
+            var hourly = Enumerable.Range(0, 24)
+                .Select(h => new
+                {
+                    hour = h,
+                    count = visitsInRange.Count(v => v.VisitTime!.Value.Hour == h)
+                })
+                .ToList();
+
+            // ── 4. DAILY TREND (N ngày gần nhất) ──────────────────────────
+            var daily = new List<object>();
+            int trendDays = Math.Min(days, 30);
+            for (int i = trendDays - 1; i >= 0; i--)
+            {
+                var d = DateTime.Today.AddDays(-i);
+                var dNext = d.AddDays(1);
+                var c = visitsInRange.Count(v => v.VisitTime >= d && v.VisitTime < dNext);
+                daily.Add(new
+                {
+                    date = d.ToString("dd/MM"),
+                    count = c
+                });
+            }
+
+            // ── 5. COMPLETION RATE trung bình ─────────────────────────────
+            // % = avg(ListenDuration / audio.DurationSeconds). Chỉ tính với POI
+            // có audio upload + người dùng nghe ≥ 1 giây.
+            var audioDurations = await _context.PoiAudios.AsNoTracking()
+                .Where(a => a.DurationSeconds != null && a.DurationSeconds > 0)
+                .GroupBy(a => a.PoiId)
+                .Select(g => new { PoiId = g.Key, Dur = g.Max(x => x.DurationSeconds!.Value) })
+                .ToListAsync();
+
+            double completionRate = 0;
+            int completionSample = 0;
+            if (audioDurations.Count > 0)
+            {
+                var durMap = audioDurations.ToDictionary(x => x.PoiId, x => (double)x.Dur);
+                var ratios = visitsInRange
+                    .Where(v => v.PoiId != null
+                                && v.ListenDuration != null && v.ListenDuration > 0
+                                && durMap.ContainsKey(v.PoiId.Value))
+                    .Select(v => Math.Min(1.0, v.ListenDuration!.Value / durMap[v.PoiId!.Value]))
+                    .ToList();
+                completionSample = ratios.Count;
+                completionRate = ratios.Count > 0 ? ratios.Average() * 100.0 : 0;
+            }
+
+            // ── 6. RECENT VISITS (20 gần nhất) ────────────────────────────
+            var recentRaw = await _context.PoiVisitHistories.AsNoTracking()
+                .Include(v => v.Poi)
+                .Where(v => v.VisitTime != null)
+                .OrderByDescending(v => v.VisitTime)
+                .Take(20)
+                .Select(v => new
+                {
+                    visitId = v.VisitId,
+                    poiId = v.PoiId,
+                    poiName = v.Poi != null ? v.Poi.Name : null,
+                    categoryId = v.Poi != null ? v.Poi.CategoryId : (int?)null,
+                    visitTime = v.VisitTime,
+                    listenDuration = v.ListenDuration
+                })
+                .ToListAsync();
+
+            var recent = recentRaw.Select(r => new
+            {
+                r.visitId,
+                r.poiId,
+                poiName = r.poiName ?? $"POI #{r.poiId}",
+                r.categoryId,
+                visitTime = r.visitTime?.ToString("HH:mm:ss dd/MM"),
+                listenDuration = r.listenDuration ?? 0
+            }).ToList();
+
+            // ── 7. ACTIVE DEVICES (live) ──────────────────────────────────
+            var devicesRaw = await _context.AppClientPresences.AsNoTracking()
+                .Where(p => p.LastSeenUtc >= activeSince)
+                .OrderByDescending(p => p.LastSeenUtc)
+                .Take(20)
+                .ToListAsync();
+
+            var currentPoiIds = devicesRaw.Where(d => d.CurrentPoiId != null)
+                                          .Select(d => d.CurrentPoiId!.Value).Distinct().ToList();
+            var currentPoiNames = await _context.Pois.AsNoTracking()
+                .Where(p => currentPoiIds.Contains(p.PoiId))
+                .Select(p => new { p.PoiId, p.Name })
+                .ToListAsync();
+
+            var devices = devicesRaw.Select(d => new
+            {
+                sessionId = string.IsNullOrEmpty(d.SessionId) ? "—" :
+                    (d.SessionId.Length > 10 ? d.SessionId.Substring(0, 10) + "…" : d.SessionId),
+                lastSeen = d.LastSeenUtc.ToLocalTime().ToString("HH:mm:ss"),
+                secondsAgo = (int)(DateTime.UtcNow - d.LastSeenUtc).TotalSeconds,
+                currentPoi = d.CurrentPoiId.HasValue
+                    ? (currentPoiNames.FirstOrDefault(x => x.PoiId == d.CurrentPoiId.Value)?.Name ?? $"POI #{d.CurrentPoiId}")
+                    : null
+            }).ToList();
+
+            return Json(new
+            {
+                days,
+                generatedAt = DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"),
+                kpi = new
+                {
+                    totalVisits,
+                    visitsToday,
+                    avgListen,
+                    totalListenSec,
+                    activeDevices,
+                    completionRate = Math.Round(completionRate, 1),
+                    completionSample
+                },
+                topPois,
+                hourly,
+                daily,
+                recent,
+                devices
             });
         }
 

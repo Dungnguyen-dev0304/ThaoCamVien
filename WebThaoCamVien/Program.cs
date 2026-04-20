@@ -51,8 +51,9 @@ app.UseAuthorization();
 //    name: "default",
 //    pattern: "{controller=Account}/{action=Login}/{id?}");
 
+// Giám sát là trang mặc định — admin vào "/" → /admin/monitoring
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=admin}/{action=index}/{id?}");
+    pattern: "{controller=admin}/{action=monitoring}/{id?}");
 
 app.Run();

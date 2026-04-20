@@ -1,0 +1,439 @@
+@{
+    Layout = "_adminlayout";
+    ViewData["Title"] = "Giám sát";
+}
+
+<style>
+    .mon-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 20px 22px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+        border: 1px solid #f1f5f9;
+    }
+    .mon-kpi { border-left: 4px solid #89d957; }
+    .mon-kpi.blue   { border-left-color: #3b82f6; }
+    .mon-kpi.orange { border-left-color: #f59e0b; }
+    .mon-kpi.purple { border-left-color: #8b5cf6; }
+    .mon-kpi.pink   { border-left-color: #ec4899; }
+    .mon-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 14px; border-radius: 999px;
+        font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+        background: #eefbe3; color: #3d7e1a;
+    }
+    .mon-btn {
+        padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 13px;
+        border: 1px solid #e2e8f0; background: #fff; color: #475569; transition: all .2s;
+        cursor: pointer;
+    }
+    .mon-btn:hover { border-color: #89d957; color: #1b4332; }
+    .mon-btn.active { background: #89d957; border-color: #89d957; color: #fff; box-shadow: 0 4px 12px rgba(137,217,87,0.35); }
+
+    .live-dot {
+        display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+        background: #22c55e;
+    }
+
+    /* Chart containers — khóa chiều cao để canvas không giãn vô tận */
+    .chart-wrap      { position: relative; height: 240px; }
+    .chart-wrap.tall { height: 280px; }
+
+    .cat-1 { background:#fff4ec; color:#e67e22; }
+    .cat-2 { background:#edfff0; color:#27ae60; }
+    .cat-3 { background:#f5eeff; color:#8e44ad; }
+    .cat-x { background:#f1f5f9; color:#475569; }
+
+    .mini-bar {
+        height: 6px; border-radius: 999px; background: #f1f5f9; overflow: hidden;
+    }
+    .mini-bar > div { height: 100%; background: linear-gradient(90deg,#89d957,#f59e0b); }
+
+    table.mon-table { width:100%; border-collapse: separate; border-spacing: 0; }
+    table.mon-table th {
+        text-align:left; font-size:10px; font-weight:800; color:#94a3b8;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        padding: 10px 12px; border-bottom: 1px solid #e2e8f0;
+    }
+    table.mon-table td {
+        padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9;
+    }
+    table.mon-table tr:last-child td { border-bottom: none; }
+</style>
+
+<div class="mb-6 flex items-start justify-between flex-wrap gap-4">
+    <div>
+        <span class="mon-pill">
+            <span class="live-dot"></span> Giám sát real-time
+        </span>
+        <h3 class="text-xl font-extrabold text-slate-800 mt-3">Giám sát hoạt động người dùng</h3>
+        <p class="text-sm text-slate-500 mt-1">
+            Các chỉ số cập nhật tự động mỗi <b>15 giây</b>. Nguồn: <code class="bg-slate-100 px-2 py-0.5 rounded text-[12px]">poi_visit_history</code>,
+            <code class="bg-slate-100 px-2 py-0.5 rounded text-[12px]">poi_audios</code>, <code class="bg-slate-100 px-2 py-0.5 rounded text-[12px]">app_client_presence</code>.
+        </p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider mr-2">Khoảng</span>
+        <button class="mon-btn" data-days="1">24 giờ</button>
+        <button class="mon-btn active" data-days="7">7 ngày</button>
+        <button class="mon-btn" data-days="30">30 ngày</button>
+        <button class="mon-btn" data-days="90">90 ngày</button>
+        <span class="w-px h-6 bg-slate-200 mx-2"></span>
+        <button id="mon-refresh" class="mon-btn" title="Tải lại ngay"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+        <label class="flex items-center gap-2 ml-2 text-[11px] font-bold text-slate-500 select-none">
+            <input id="mon-auto" type="checkbox" class="accent-emerald-500 w-4 h-4">
+            Tự làm mới 30s
+        </label>
+    </div>
+</div>
+
+@* ───────── KPI CARDS ───────── *@
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="mon-card mon-kpi">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Tổng lượt thăm</p>
+        <p id="k-total" class="text-3xl font-extrabold text-slate-800 mt-1 tabular-nums">—</p>
+        <p class="text-[11px] text-slate-400 font-medium mt-1" id="k-total-sub">—</p>
+    </div>
+    <div class="mon-card mon-kpi blue">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Hôm nay</p>
+        <p id="k-today" class="text-3xl font-extrabold text-slate-800 mt-1 tabular-nums">—</p>
+        <p class="text-[11px] text-slate-400 font-medium mt-1">Tính từ 00:00</p>
+    </div>
+    <div class="mon-card mon-kpi orange">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Thời gian nghe TB</p>
+        <p class="text-3xl font-extrabold text-slate-800 mt-1">
+            <span id="k-avg" class="tabular-nums">—</span><span class="text-base text-slate-400">s</span>
+        </p>
+        <p class="text-[11px] text-slate-400 font-medium mt-1">Mỗi lượt nghe</p>
+    </div>
+    <div class="mon-card mon-kpi purple">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Tỉ lệ hoàn thành</p>
+        <p class="text-3xl font-extrabold text-slate-800 mt-1">
+            <span id="k-completion" class="tabular-nums">—</span><span class="text-base text-slate-400">%</span>
+        </p>
+        <p class="text-[11px] text-slate-400 font-medium mt-1" id="k-completion-sub">— mẫu</p>
+    </div>
+    <div class="mon-card mon-kpi pink">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Thiết bị online</p>
+        <p id="k-devices" class="text-3xl font-extrabold text-slate-800 mt-1 tabular-nums">—</p>
+        <p class="text-[11px] text-slate-400 font-medium mt-1">Gửi ping ≤ 90s</p>
+    </div>
+</div>
+
+@* ───────── CHART ROW 1: Daily trend + Hourly heatmap ───────── *@
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+    <div class="mon-card xl:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Xu hướng theo ngày</p>
+                <h4 class="text-base font-extrabold text-slate-800 mt-1">Lượt thăm các ngày gần nhất</h4>
+            </div>
+            <span class="text-xs text-slate-400" id="daily-hint">—</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
+    </div>
+    <div class="mon-card">
+        <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Phân bố theo giờ</p>
+        <h4 class="text-base font-extrabold text-slate-800 mt-1 mb-3">Giờ nào user nghe nhiều nhất</h4>
+        <div class="chart-wrap"><canvas id="chart-hourly"></canvas></div>
+    </div>
+</div>
+
+@* ───────── CHART ROW 2: Top POIs ───────── *@
+<div class="mon-card mb-6">
+    <div class="flex items-center justify-between mb-3">
+        <div>
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Top 10 POI</p>
+            <h4 class="text-base font-extrabold text-slate-800 mt-1">Địa điểm được nghe nhiều nhất</h4>
+        </div>
+        <span class="text-xs text-slate-400" id="top-hint">—</span>
+    </div>
+    <div id="top-list" class="space-y-2">
+        <p class="text-slate-400 text-sm">Đang tải…</p>
+    </div>
+</div>
+
+@* ───────── ROW 3: Recent visits + Active devices ───────── *@
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+    <div class="mon-card">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Dòng thời gian</p>
+                <h4 class="text-base font-extrabold text-slate-800 mt-1">20 lượt nghe gần nhất</h4>
+            </div>
+            <span class="mon-pill"><span class="live-dot"></span> Live</span>
+        </div>
+        <div class="overflow-auto max-h-[420px]">
+            <table class="mon-table">
+                <thead><tr>
+                    <th>Thời gian</th>
+                    <th>POI</th>
+                    <th style="text-align:right">Nghe (giây)</th>
+                </tr></thead>
+                <tbody id="recent-body">
+                    <tr><td colspan="3" class="text-slate-400 text-sm text-center">Đang tải…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="mon-card">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Thiết bị đang dùng app</p>
+                <h4 class="text-base font-extrabold text-slate-800 mt-1">Phiên online & POI đang nghe</h4>
+            </div>
+            <span class="mon-pill"><span class="live-dot"></span> Live</span>
+        </div>
+        <div class="overflow-auto max-h-[420px]">
+            <table class="mon-table">
+                <thead><tr>
+                    <th>Session</th>
+                    <th>Lần cuối</th>
+                    <th>Đang nghe</th>
+                </tr></thead>
+                <tbody id="devices-body">
+                    <tr><td colspan="3" class="text-slate-400 text-sm text-center">Đang tải…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<p class="text-[11px] text-slate-400 text-right mt-2">
+    Cập nhật lần cuối: <span id="updated-at">—</span>
+</p>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // ─── state ────────────────────────────────────────────────
+        let currentDays = 7;
+        let dailyChart = null;
+        let hourlyChart = null;
+        let autoTimer = null;
+
+        const fmt = (n) => {
+            try { return (n || 0).toLocaleString('vi-VN'); }
+            catch (e) { return String(n); }
+        };
+
+        function setValue(id, val) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const s = typeof val === 'number' ? fmt(val) : String(val);
+            if (el.textContent !== s) el.textContent = s;
+        }
+        function catClass(c) {
+            if (c === 1) return 'cat-1'; if (c === 2) return 'cat-2'; if (c === 3) return 'cat-3'; return 'cat-x';
+        }
+        function escapeHtml(s) {
+            return (s + '').replace(/[&<>"']/g, c => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+            }[c]));
+        }
+
+        // ─── charts ──────────────────────────────────────────────
+        function buildDailyChart(daily) {
+            const labels = daily.map(d => d.date);
+            const data   = daily.map(d => d.count);
+            if (dailyChart) {
+                dailyChart.data.labels = labels;
+                dailyChart.data.datasets[0].data = data;
+                dailyChart.update('none'); // không animate lại khi refresh
+                return;
+            }
+            const ctx = document.getElementById('chart-daily').getContext('2d');
+            const grad = ctx.createLinearGradient(0,0,0,220);
+            grad.addColorStop(0, 'rgba(137,217,87,0.55)');
+            grad.addColorStop(1, 'rgba(137,217,87,0.02)');
+            dailyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Lượt thăm',
+                        data,
+                        fill: true,
+                        backgroundColor: grad,
+                        borderColor: '#3d7e1a',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#3d7e1a',
+                        pointRadius: 3,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color:'#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function buildHourlyChart(hourly) {
+            const labels = hourly.map(h => String(h.hour).padStart(2,'0'));
+            const data   = hourly.map(h => h.count);
+            if (hourlyChart) {
+                hourlyChart.data.labels = labels;
+                hourlyChart.data.datasets[0].data = data;
+                hourlyChart.update('none');
+                return;
+            }
+            const ctx = document.getElementById('chart-hourly').getContext('2d');
+            hourlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Lượt',
+                        data,
+                        backgroundColor: '#89d957',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color:'#f1f5f9' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderTopPois(top) {
+            const el = document.getElementById('top-list');
+            if (!top || top.length === 0) {
+                el.innerHTML = '<p class="text-slate-400 text-sm"><i class="bi bi-inbox"></i> Chưa có lượt nghe nào.</p>';
+                return;
+            }
+            const maxW = Math.max(...top.map(x => x.count));
+            el.innerHTML = top.map((p, i) => `
+                <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-[11px] text-white"
+                         style="background:${i===0?'#ef4444':i===1?'#f59e0b':i===2?'#eab308':'#89d957'}">${i+1}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <p class="text-sm font-bold text-slate-700 truncate">${escapeHtml(p.name)}</p>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${catClass(p.categoryId)}">
+                                ${p.categoryId === 1 ? 'Động vật' : p.categoryId === 2 ? 'Thực vật' : p.categoryId === 3 ? 'Di tích' : '—'}
+                            </span>
+                        </div>
+                        <div class="mini-bar mt-1"><div style="width:${(p.count/maxW)*100}%"></div></div>
+                    </div>
+                    <div class="text-right min-w-[90px]">
+                        <p class="text-sm font-black text-slate-800 tabular-nums">${fmt(p.count)}</p>
+                        <p class="text-[10px] text-slate-400">TB ${p.avgDuration}s</p>
+                    </div>
+                </div>`).join('');
+        }
+
+        function renderRecent(rows) {
+            const tb = document.getElementById('recent-body');
+            if (!rows || rows.length === 0) {
+                tb.innerHTML = '<tr><td colspan="3" class="text-slate-400 text-sm text-center">Chưa có dữ liệu.</td></tr>';
+                return;
+            }
+            tb.innerHTML = rows.map(r => `
+                <tr>
+                    <td class="text-slate-500 tabular-nums">${escapeHtml(r.visitTime || '—')}</td>
+                    <td>
+                        <span class="font-bold text-slate-700">${escapeHtml(r.poiName)}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ml-1 ${catClass(r.categoryId)}">
+                            ${r.categoryId === 1 ? 'ĐV' : r.categoryId === 2 ? 'TV' : r.categoryId === 3 ? 'DT' : '—'}
+                        </span>
+                    </td>
+                    <td class="text-right font-bold text-slate-600 tabular-nums">${r.listenDuration}</td>
+                </tr>`).join('');
+        }
+
+        function renderDevices(rows) {
+            const tb = document.getElementById('devices-body');
+            if (!rows || rows.length === 0) {
+                tb.innerHTML = '<tr><td colspan="3" class="text-slate-400 text-sm text-center">Không có thiết bị online.</td></tr>';
+                return;
+            }
+            tb.innerHTML = rows.map(r => `
+                <tr>
+                    <td class="font-mono text-[11px] text-slate-600">${escapeHtml(r.sessionId)}</td>
+                    <td class="text-slate-500">${escapeHtml(r.lastSeen)} <span class="text-[10px] text-slate-400">(${r.secondsAgo}s)</span></td>
+                    <td>${r.currentPoi ? '<span class="font-bold text-emerald-600"><i class="bi bi-volume-up-fill"></i> '+escapeHtml(r.currentPoi)+'</span>' : '<span class="text-slate-400 text-xs">—</span>'}</td>
+                </tr>`).join('');
+        }
+
+        // ─── fetch ────────────────────────────────────────────────
+        async function loadData(days) {
+            currentDays = days;
+            try {
+                const res = await fetch(`/Admin/MonitoringDataJson?days=${days}`, { credentials: 'same-origin' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const d = await res.json();
+
+                // KPI
+                setValue('k-total',      d.kpi.totalVisits);
+                setValue('k-today',      d.kpi.visitsToday);
+                setValue('k-avg',        d.kpi.avgListen);
+                setValue('k-completion', d.kpi.completionRate);
+                setValue('k-devices',    d.kpi.activeDevices);
+                const totalMin = Math.round((d.kpi.totalListenSec || 0) / 60);
+                document.getElementById('k-total-sub').textContent =
+                    `Tổng ${fmt(totalMin)} phút nghe`;
+                document.getElementById('k-completion-sub').textContent =
+                    `${fmt(d.kpi.completionSample)} lượt có duration`;
+
+                // charts
+                buildDailyChart(d.daily || []);
+                buildHourlyChart(d.hourly || []);
+
+                // top
+                renderTopPois(d.topPois || []);
+                document.getElementById('top-hint').textContent = `Khoảng ${d.days} ngày`;
+                document.getElementById('daily-hint').textContent = `Khoảng ${d.days} ngày`;
+
+                // recent + devices
+                renderRecent(d.recent || []);
+                renderDevices(d.devices || []);
+
+                document.getElementById('updated-at').textContent = d.generatedAt || new Date().toLocaleTimeString('vi-VN');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('updated-at').textContent = 'Lỗi: ' + err.message;
+            }
+        }
+
+        // ─── filter buttons ───────────────────────────────────────
+        document.querySelectorAll('.mon-btn[data-days]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mon-btn[data-days]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadData(parseInt(btn.dataset.days, 10));
+            });
+        });
+
+        document.getElementById('mon-refresh').addEventListener('click', () => loadData(currentDays));
+
+        // ─── auto-refresh 30s (MẶC ĐỊNH TẮT — user tự bật khi cần) ───
+        // Bật tự refresh chỉ gây nhiễu khi demo: charts animate lại, bảng
+        // nhảy. Thay vì bật sẵn, cho user nút "Làm mới" thủ công để chủ động.
+        function startAuto() {
+            stopAuto();
+            autoTimer = setInterval(() => {
+                if (document.hidden) return;
+                if (!document.getElementById('mon-auto').checked) return;
+                loadData(currentDays);
+            }, 30000);
+        }
+        function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+        document.getElementById('mon-auto').addEventListener('change', e => {
+            if (e.target.checked) startAuto(); else stopAuto();
+        });
+
+        // ─── boot ─────────────────────────────────────────────────
+        loadData(7);
+        // Không auto-start. User phải tick checkbox "Tự làm mới" mới chạy.
+    </script>
+}

@@ -2,15 +2,19 @@
 @{
     Layout = "_adminlayout";
     ViewData["Active"] = "index";
-    ViewData["Title"] = "Tổng quan";
-    ViewData["PageTitle"] = "Lịch sử sử dụng";
+    ViewData["Title"] = "Lịch sử chi tiết";
+    ViewData["PageTitle"] = "Lịch sử thăm quan";
 }
+
+@*
+    Trang này đã được rút gọn: mọi chart / KPI / top POI đã được chuyển sang
+    /Admin/Monitoring. Ở đây chỉ giữ chức năng duy nhất mà Monitoring không
+    có — BẢNG LỊCH SỬ CHI TIẾT có phân trang + filter theo từng POI cụ thể.
+    Admin dùng để drill-down "POI #7 con hổ đã có ai nghe trong 90 ngày qua".
+*@
 
 <style>
     .bg-gradient-custom { background: linear-gradient(90deg, #89d957 10%, #c9e265 100%); }
-    .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-    .bar { transition: height 0.6s cubic-bezier(.4,0,.2,1); }
     .badge-dong-vat { background: #fff4ec; color: #e67e22; }
     .badge-thuc-vat { background: #edfff0; color: #27ae60; }
     .badge-di-tich  { background: #f5eeff; color: #8e44ad; }
@@ -18,132 +22,31 @@
 
 <div class="space-y-6 pb-8">
 
-    <div class="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-emerald-100 bg-gradient-to-r from-emerald-50 to-lime-50 px-6 py-4 shadow-sm">
-        <div class="flex items-center gap-3 min-w-[200px]">
-            <span class="relative flex h-3 w-3 shrink-0">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-emerald-800">Đang dùng app (có mạng)</p>
-                <p class="text-xs text-slate-600 mt-0.5">Mỗi thiết bị gửi tín hiệu khoảng 45 giây một lần khi có Internet và ứng dụng đang chạy.</p>
-            </div>
+    @*Banner mô tả + link sang Giám sát *@
+    <div class="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-slate-100 bg-white px-6 py-4 shadow-sm">
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Drill-down</p>
+            <h3 class="text-base font-extrabold text-slate-800 mt-1">Lịch sử thăm quan theo từng POI</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Cần tổng quan biểu đồ?
+                <a href="/Admin/Monitoring" class="text-[#3d7e1a] font-bold hover:underline">
+                    <i class="bi bi-activity"></i> Xem trang Giám sát
+                </a>
+            </p>
         </div>
         <div class="text-right">
-            <p id="live-active-app-count" class="text-4xl font-black text-emerald-900 tabular-nums leading-none">@Model.ActiveAppSessionsNow</p>
-            <p id="live-active-app-updated" class="text-[10px] text-slate-500 font-medium mt-1">Tự làm mới sau vài giây…</p>
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Tổng lượt (đã lọc)</p>
+            <p class="text-2xl font-extrabold text-slate-800 tabular-nums">@Model.TotalVisits.ToString("N0")</p>
         </div>
     </div>
 
-    @*START CHART*@
-    <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
-
-        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng lượt thăm</span>
-                <div class="w-9 h-9 bg-gradient-custom rounded-xl flex items-center justify-center">
-                    <i class="bi bi-eye-fill text-white text-sm"></i>
-                </div>
-            </div>
-            <p id="live-total-visits" class="text-3xl font-black text-slate-800 tabular-nums">@Model.TotalVisits.ToString("N0")</p>
-            <p class="text-[11px] text-slate-400 mt-1 font-medium">Tất cả thời gian</p>
-        </div>
-
-        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hôm nay</span>
-                <div class="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-calendar-day-fill text-white text-sm"></i>
-                </div>
-            </div>
-            <p id="live-today-visits" class="text-3xl font-black text-slate-800 tabular-nums">@Model.TodayVisits.ToString("N0")</p>
-            <p class="text-[11px] text-slate-400 mt-1 font-medium">@DateTime.Now.ToString("dd/MM/yyyy")</p>
-        </div>
-
-        <div class="stat-card bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thời gian nghe</span>
-                <div class="w-9 h-9 bg-orange-400 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-headphones text-white text-sm"></i>
-                </div>
-            </div>
-            <p class="text-3xl font-black text-slate-800"><span id="live-avg-listen" class="tabular-nums">@Model.AvgListenDuration</span><span class="text-lg text-slate-400">s</span></p>
-            <p class="text-[11px] text-slate-400 mt-1 font-medium">Trung bình mỗi lượt</p>
-        </div>
-
-    </div>
-
-    @*CHART + BIỂU ĐỒ*@
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
-
-        @*BIỂU ĐỒ 7 NGÀY*@
-        <div class="xl:col-span-8 bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">Lượt thăm 7 ngày qua</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Cập nhật theo ngày</p>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-gradient-custom inline-block"></span>
-                    <span class="text-[11px] text-slate-400 font-bold">Lượt thăm</span>
-                </div>
-            </div>
-
-            @*BAR CHART*@
-            <div class="flex items-end gap-3 h-40">
-                @{
-                    var maxVal = Model.Last7Days.Any() ? Model.Last7Days.Max(d => d.Count) : 1;
-                    if (maxVal == 0) maxVal = 1;
-                }
-                @foreach (var day in Model.Last7Days)
-                {
-                    var heightPct = (int)((double)day.Count / maxVal * 100);
-                    var isToday = day.Date.Date == DateTime.Today;
-                    <div class="flex-1 flex flex-col items-center gap-1">
-                        <span class="text-[10px] font-black text-slate-500">@day.Count</span>
-                        <div class="w-full rounded-t-lg @(isToday ? "bg-gradient-custom" : "bg-slate-100") bar"
-                             style="height: @(Math.Max(heightPct, 4))%">
-                        </div>
-                        <span class="text-[9px] font-bold text-slate-400 @(isToday ? "text-[#89d957]" : "")">
-                            @(isToday ? "Hôm nay" : day.Date.ToString("dd/MM"))
-                        </span>
-                    </div>
-                }
-            </div>
-        </div>
-
-        @*TOP 5 POI*@
-        <div class="xl:col-span-4 bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide mb-4">Top POI phổ biến</h3>
-            <div class="space-y-3">
-                @{int rank = 1;}
-                @foreach (var poi in Model.TopPois)
-                {
-                    var badgeClass = poi.CategoryId == 1 ? "badge-dong-vat" : poi.CategoryId == 2 ? "badge-thuc-vat" : "badge-di-tich";
-                    var catName = poi.CategoryId == 1 ? "Động vật" : poi.CategoryId == 2 ? "Thực vật" : "Di tích";
-                    <div class="flex items-center gap-3">
-                        <span class="w-6 h-6 rounded-lg @(rank == 1 ? "bg-yellow-400" : rank == 2 ? "bg-slate-300" : rank == 3 ? "bg-orange-300" : "bg-slate-100") flex items-center justify-center text-[10px] font-black @(rank <= 3 ? "text-white" : "text-slate-400")">
-                            @rank
-                        </span>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-black text-slate-700 truncate">@poi.PoiName</p>
-                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full @badgeClass">@catName</span>
-                        </div>
-                        <span class="text-xs font-black text-slate-500">@poi.VisitCount</span>
-                    </div>
-                    rank++;
-                }
-            </div>
-        </div>
-
-    </div>
-
-   @*Bảng lịch sử*@
+    @*Bảng lịch sử*@
     <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
         <div class="p-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100">
             <div>
-                <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">Lịch sử chi tiết</h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">@Model.TotalVisits lượt thăm</p>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">Bảng lịch sử</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                    Trang @Model.CurrentPage / @Model.TotalPages — lọc theo POI hoặc thời gian
+                </p>
             </div>
 
             @*Bo loc*@
@@ -247,82 +150,3 @@
     </div>
 
 </div>
-
-<script>
-(function () {
-    // ── 1. Live active app sessions ───────────────────────────
-    var countEl = document.getElementById('live-active-app-count');
-    var timeEl = document.getElementById('live-active-app-updated');
-    if (countEl) {
-        var url = '@Url.Action("ActiveAppSessionsJson", "Admin")' + '?staleSeconds=90';
-        function tick() {
-            fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
-                .then(function (r) { return r.json(); })
-                .then(function (j) {
-                    if (typeof j.activeCount === 'number') countEl.textContent = j.activeCount;
-                    if (timeEl && j.updatedAtUtc) {
-                        var d = new Date(j.updatedAtUtc);
-                        if (!isNaN(d.getTime())) timeEl.textContent = 'Cập nhật: ' + d.toLocaleTimeString();
-                    }
-                })
-                .catch(function () { });
-        }
-        tick();
-        setInterval(tick, 5000);
-    }
-
-    // ── 2. Live visit stats (Tổng lượt thăm / Hôm nay / Avg listen) ──
-    // Mobile bấm Play → /api/Pois/{id}/visit → DB insert.
-    // Poll mỗi 10s để admin thấy ngay không phải F5.
-    var totalEl = document.getElementById('live-total-visits');
-    var todayEl = document.getElementById('live-today-visits');
-    var avgEl = document.getElementById('live-avg-listen');
-    if (totalEl || todayEl || avgEl) {
-        var filterPoi = '@(Model.FilterPoiId?.ToString() ?? "")';
-        var filterDays = '@Model.FilterDays';
-        var statsUrl = '@Url.Action("VisitStatsJson", "Admin")'
-                     + '?days=' + encodeURIComponent(filterDays)
-                     + (filterPoi ? '&poiId=' + encodeURIComponent(filterPoi) : '');
-
-        function fmtNum(n) {
-            try { return (n || 0).toLocaleString('vi-VN'); }
-            catch (e) { return String(n); }
-        }
-        function pulse(el) {
-            if (!el) return;
-            el.style.transition = 'color .4s';
-            el.style.color = '#16a34a';
-            setTimeout(function () { el.style.color = ''; }, 600);
-        }
-        function pollStats() {
-            if (document.hidden) return;
-            fetch(statsUrl, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
-                .then(function (r) { return r.json(); })
-                .then(function (j) {
-                    if (totalEl && typeof j.totalVisits === 'number'
-                        && totalEl.textContent !== fmtNum(j.totalVisits)) {
-                        totalEl.textContent = fmtNum(j.totalVisits);
-                        pulse(totalEl);
-                    }
-                    if (todayEl && typeof j.todayVisits === 'number'
-                        && todayEl.textContent !== fmtNum(j.todayVisits)) {
-                        todayEl.textContent = fmtNum(j.todayVisits);
-                        pulse(todayEl);
-                    }
-                    if (avgEl && typeof j.avgListen === 'number'
-                        && avgEl.textContent !== String(j.avgListen)) {
-                        avgEl.textContent = j.avgListen;
-                        pulse(avgEl);
-                    }
-                })
-                .catch(function () { });
-        }
-        pollStats();
-        setInterval(pollStats, 10000);
-        // Làm mới ngay khi quay lại tab sau khi đã khuất
-        document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) pollStats();
-        });
-    }
-})();
-</script>
