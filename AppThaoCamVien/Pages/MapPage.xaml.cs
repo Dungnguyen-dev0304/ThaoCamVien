@@ -47,6 +47,12 @@ public partial class MapPage : ContentPage
         _directions = directions; _sp = sp;
         _vm = vm;
         BindingContext = _vm;
+
+#if DEBUG
+        // Nút demo queue chỉ hiện trong build dev/debug — build Release (APK thật
+        // giao cho thầy cô) sẽ KHÔNG thấy nút này.
+        DemoQueueBtn.IsVisible = true;
+#endif
     }
 
     // ── Setup Map ────────────────────────────────────────────────────────
@@ -126,6 +132,10 @@ public partial class MapPage : ContentPage
         // Subscribe events
         _gps.LocationUpdated += OnLocation;
         _gps.StatusChanged += OnGpsStatus;
+        _narration.QueueChanged += OnNarrationQueueChanged;
+
+        // Cập nhật panel queue lần đầu (có thể đang có audio phát từ trang trước)
+        UpdateQueueUI();
 
         StartDotBlink();
 
@@ -146,6 +156,7 @@ public partial class MapPage : ContentPage
         base.OnDisappearing();
         _gps.LocationUpdated -= OnLocation;
         _gps.StatusChanged -= OnGpsStatus;
+        _narration.QueueChanged -= OnNarrationQueueChanged;
         _gps.Stop();
         _dotCts?.Cancel();
         _ = _narration.StopAsync();
@@ -610,5 +621,184 @@ public partial class MapPage : ContentPage
         if (Application.Current?.Resources.TryGetValue(key, out var v) == true && v is string s)
             return s;
         return fallback;
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
+    // QUEUE UI — panel "Đang phát + Tiếp theo" + nút Skip / Stop / ✕ (remove)
+    // Lắng nghe NarrationEngine.QueueChanged, rebuild UI mỗi khi queue đổi.
+    // ═════════════════════════════════════════════════════════════════════
+
+    private void OnNarrationQueueChanged(object? sender, EventArgs e)
+    {
+        // Event có thể fire từ background thread (Task.Run trong drain loop),
+        // MainThread.BeginInvokeOnMainThread marshal về UI thread để update an toàn.
+        MainThread.BeginInvokeOnMainThread(UpdateQueueUI);
+    }
+
+    private void UpdateQueueUI()
+    {
+        try
+        {
+            var currentId = _narration.CurrentPoiId;
+            var queued = _narration.GetQueueSnapshot();
+
+            // Ẩn hoàn toàn panel nếu không đang phát gì và queue rỗng
+            if (currentId < 0 && queued.Count == 0)
+            {
+                QueuePanel.IsVisible = false;
+                return;
+            }
+
+            QueuePanel.IsVisible = true;
+
+            // Tên POI đang phát
+            if (currentId > 0)
+            {
+                var playing = _pois.FirstOrDefault(p => p.PoiId == currentId);
+                QueueNowPlayingLbl.Text = playing?.Name ?? $"POI #{currentId}";
+            }
+            else
+            {
+                QueueNowPlayingLbl.Text = "—";
+            }
+
+            // Rebuild chip list cho queue
+            QueueChipsContainer.Children.Clear();
+            foreach (var poi in queued)
+            {
+                QueueChipsContainer.Children.Add(BuildQueueChip(poi));
+            }
+            QueueListRow.IsVisible = queued.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Map] UpdateQueueUI error: {ex.Message}");
+        }
+    }
+
+    private Border BuildQueueChip(Poi poi)
+    {
+        // Chip: [Tên POI] [✕]
+        var nameLbl = new Label
+        {
+            Text = poi.Name ?? $"POI #{poi.PoiId}",
+            FontSize = 11,
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#1A1A1A"),
+            VerticalOptions = LayoutOptions.Center,
+            LineBreakMode = LineBreakMode.TailTruncation,
+            MaxLines = 1
+        };
+
+        var removeLbl = new Label
+        {
+            Text = "✕",
+            FontSize = 12,
+            TextColor = Color.FromArgb("#999999"),
+            FontAttributes = FontAttributes.Bold,
+            VerticalOptions = LayoutOptions.Center,
+            Padding = new Thickness(4, 0, 2, 0)
+        };
+        var tap = new TapGestureRecognizer();
+        var capturedPoiId = poi.PoiId;
+        tap.Tapped += (_, _) => OnQueueItemRemoveTapped(capturedPoiId);
+        removeLbl.GestureRecognizers.Add(tap);
+
+        var layout = new HorizontalStackLayout { Spacing = 4 };
+        layout.Children.Add(nameLbl);
+        layout.Children.Add(removeLbl);
+
+        return new Border
+        {
+            BackgroundColor = Color.FromArgb("#F0F9F4"),
+            Padding = new Thickness(10, 6),
+            StrokeThickness = 0,
+            StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle
+            {
+                CornerRadius = new CornerRadius(10)
+            },
+            Content = layout
+        };
+    }
+
+    private async void OnQueueSkipTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            await _narration.SkipAsync();
+            // UI tự cập nhật qua QueueChanged event sau khi drain loop advance.
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Map] Skip error: {ex.Message}");
+        }
+    }
+
+    private async void OnQueueStopTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            await _narration.StopAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Map] Stop error: {ex.Message}");
+        }
+    }
+
+    private void OnQueueItemRemoveTapped(int poiId)
+    {
+        try
+        {
+            _narration.RemoveFromQueue(poiId);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Map] RemoveFromQueue error: {ex.Message}");
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
+    // DEMO QUEUE — chỉ trong build DEBUG. Giả lập GPS approach 2 POI liên tiếp.
+    // Dùng để demo hàng đợi mà không cần đi bộ thật hoặc fake GPS app.
+    // ═════════════════════════════════════════════════════════════════════
+
+    private async void OnDemoQueueTapped(object sender, TappedEventArgs e)
+    {
+        try
+        {
+            if (_pois.Count < 2)
+            {
+                await DisplayAlert("Demo hàng đợi", "Cần ít nhất 2 POI trong danh sách để demo.", "OK");
+                return;
+            }
+
+            // Lấy 2 POI đầu danh sách. Reset cooldown để demo chạy lại được
+            // nhiều lần trong cùng 1 phiên (không thì lần 2 sẽ bị debounce).
+            var poiA = _pois[0];
+            var poiB = _pois[1];
+            _narration.ResetCooldown(poiA.PoiId);
+            _narration.ResetCooldown(poiB.PoiId);
+
+            Debug.WriteLine($"[Demo] simulate approach A='{poiA.Name}' then B='{poiB.Name}'");
+
+            // Bước 1: approach POI A → GPS sẽ gọi PlayAsync(poi, false).
+            // Ta gọi đúng như GPS — forcePlay=false, không ngắt gì.
+            _ = _narration.PlayAsync(poiA, forcePlay: false);
+
+            // Cho audio A kịp bắt đầu phát (tải MP3 / init TTS)
+            await Task.Delay(3000);
+
+            // Bước 2: approach POI B trong lúc A còn đang phát.
+            // forcePlay=false + lock đã bị drain loop của A giữ → B được enqueue.
+            Debug.WriteLine("[Demo] now approaching B (should enqueue)");
+            _ = _narration.PlayAsync(poiB, forcePlay: false);
+
+            // Panel "Tiếp theo: {B.Name}" sẽ tự xuất hiện nhờ QueueChanged event.
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Demo] OnDemoQueueTapped error: {ex.Message}");
+        }
     }
 }

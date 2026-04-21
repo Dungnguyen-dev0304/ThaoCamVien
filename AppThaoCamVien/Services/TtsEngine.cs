@@ -30,8 +30,11 @@ namespace AppThaoCamVien.Services
 
         public async Task SpeakPoiAsync(Poi poi, string lang)
         {
-            // Ngăn chặn nhiều lần gọi đồng thời
-            if (!await _lock.WaitAsync(100))
+            // Ngăn chặn nhiều lần gọi đồng thời.
+            // Timeout 3s (trước là 100ms → quá ngắn: khi chuyển giữa 2 POI trong
+            // hàng đợi, nếu có bất kỳ op nào giữ lock trong ~200ms là POI mới
+            // bị bỏ qua im lặng, không đọc được gì).
+            if (!await _lock.WaitAsync(3000))
             {
                 System.Diagnostics.Debug.WriteLine("[TTS] Đang bận, bỏ qua");
                 return;

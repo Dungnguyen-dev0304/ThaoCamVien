@@ -83,73 +83,10 @@ namespace WebThaoCamVien.Controllers
         }
 
         // GET: /admin/index
-        // Trang Lịch sử chi tiết — chỉ bảng + filter + pagination.
-        // Toàn bộ phần biểu đồ/KPI/top POI đã chuyển qua /Admin/Monitoring
-        // nên action này đã được tinh gọn, chỉ tính đúng những gì view cần.
-        public async Task<IActionResult> Index(int? poiId, int days = 7, int page = 1)
-        {
-            SetViewData("index", "Lịch sử chi tiết", "Lịch sử thăm quan");
-
-            const int pageSize = 20;
-
-            var query = _context.PoiVisitHistories
-                .Include(v => v.Poi)
-                .AsNoTracking()
-                .AsQueryable();
-
-            if (poiId.HasValue)
-                query = query.Where(v => v.PoiId == poiId);
-
-            if (days > 0)
-            {
-                var from = DateTime.Now.AddDays(-days);
-                query = query.Where(v => v.VisitTime >= from);
-            }
-
-            int totalVisits = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling(totalVisits / (double)pageSize);
-
-            var recentVisits = await query
-                .OrderByDescending(v => v.VisitTime)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(v => new VisitRowData
-                {
-                    VisitTime = v.VisitTime,
-                    DisplayName = null, // Bỏ — không còn liên kết user
-                    Email = null,        // Bỏ — không còn liên kết user
-                    PoiName = v.Poi != null ? v.Poi.Name : null,
-                    CategoryId = v.Poi != null ? v.Poi.CategoryId : null,
-                    ListenDuration = v.ListenDuration
-                })
-                .ToListAsync();
-
-            var allPois = await _context.Pois.AsNoTracking()
-                .OrderBy(p => p.Name)
-                .ToListAsync();
-
-            // Các field dưới đây đã không còn hiển thị trong view Index
-            // (chuyển qua Monitoring). Giữ giá trị mặc định cho ViewModel
-            // để khỏi phải sửa class IndexViewModel – zero-cost computation.
-            var viewModel = new IndexViewModel
-            {
-                TotalVisits = totalVisits,
-                TodayVisits = 0,
-                TotalUsers = 0,
-                AvgListenDuration = 0,
-                ActiveAppSessionsNow = 0,
-                Last7Days = new List<DayVisitData>(),
-                TopPois = new List<TopPoiData>(),
-                RecentVisits = recentVisits,
-                AllPois = allPois,
-                FilterPoiId = poiId,
-                FilterDays = days,
-                CurrentPage = page,
-                TotalPages = Math.Max(totalPages, 1)
-            };
-
-            return View(viewModel);
-        }
+        // Trang "Lịch sử chi tiết" đã bị loại bỏ — mọi chức năng xem
+        // lịch sử đã gộp vào /Admin/Monitoring. Action này chỉ còn là
+        // shim redirect để bookmark cũ / link tĩnh không bị 404.
+        public IActionResult Index() => RedirectToAction(nameof(Monitoring));
 
         /// <summary>JSON for dashboard polling: app sessions seen recently (devices need internet to ping API).</summary>
         [HttpGet]
@@ -160,48 +97,6 @@ namespace WebThaoCamVien.Controllers
             var count = await _context.AppClientPresences.AsNoTracking()
                 .CountAsync(p => p.LastSeenUtc >= since);
             return Json(new { activeCount = count, staleSeconds, updatedAtUtc = DateTime.UtcNow });
-        }
-
-        // ─────────────────────────────────────────────────────────────────
-        // JSON cho trang /Admin/Index polling: các số Tổng lượt thăm / Hôm
-        // nay / Thời gian nghe trung bình cập nhật mỗi vài giây mà không
-        // phải F5. Mobile POST visit → endpoint này đọc ngay từ DB.
-        // ─────────────────────────────────────────────────────────────────
-        [HttpGet]
-        public async Task<IActionResult> VisitStatsJson([FromQuery] int? poiId, [FromQuery] int days = 7)
-        {
-            days = Math.Clamp(days, 0, 365);
-
-            var query = _context.PoiVisitHistories.AsNoTracking().AsQueryable();
-            if (poiId.HasValue) query = query.Where(v => v.PoiId == poiId);
-            if (days > 0)
-            {
-                var from = DateTime.Now.AddDays(-days);
-                query = query.Where(v => v.VisitTime >= from);
-            }
-
-            var totalVisits = await query.CountAsync();
-
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
-            var todayVisits = await _context.PoiVisitHistories.AsNoTracking()
-                .CountAsync(v => v.VisitTime != null
-                                 && v.VisitTime >= today
-                                 && v.VisitTime < tomorrow);
-
-            var withDuration = _context.PoiVisitHistories.AsNoTracking()
-                .Where(v => v.ListenDuration != null);
-            var avgListen = await withDuration.AnyAsync()
-                ? (int)await withDuration.AverageAsync(v => v.ListenDuration!.Value)
-                : 0;
-
-            return Json(new
-            {
-                totalVisits,
-                todayVisits,
-                avgListen,
-                updatedAt = DateTime.Now.ToString("HH:mm:ss")
-            });
         }
 
         // ─────────────────────────────────────────────────────────────────

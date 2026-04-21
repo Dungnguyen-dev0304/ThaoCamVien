@@ -79,12 +79,6 @@
                 <span>Bản đồ nhiệt</span>
             </a>
 
-            @* Lịch sử chi tiết (trang Index cũ) *@
-            <a href="/Admin/Index" class="nav-link @(ViewData["Active"]?.ToString() == "index" ? "active" : "")">
-                <i class="bi bi-list-check"></i>
-                <span>Lịch sử chi tiết</span>
-            </a>
-
             @* Quản lý địa điểm *@
             <a href="/Admin/PoiList" class="nav-link @(ViewData["Active"]?.ToString() == "poilist" ? "active" : "")">
                 <i class="bi bi-geo-alt-fill"></i>
