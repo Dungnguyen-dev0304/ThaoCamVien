@@ -64,6 +64,15 @@ namespace WebThaoCamVien.Controllers
         [HttpPost]
         public async Task<IActionResult> Save(int TranslationId, int PoiId, string LanguageCode, string Name, string Description)
         {
+            // Không cho chỉnh sửa bản dịch tiếng Việt (vi) từ màn quản trị.
+            // "vi" là nội dung gốc nằm ở bảng POI; bản dịch chỉ quản lý ngôn ngữ khác.
+            if (!string.IsNullOrWhiteSpace(LanguageCode)
+                && LanguageCode.Equals("vi", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Error"] = "Không thể chỉnh sửa bản dịch tiếng Việt tại đây. Vui lòng chỉnh nội dung gốc ở POI.";
+                return RedirectToAction("EditTranslations", new { poiId = PoiId });
+            }
+
             if (TranslationId == 0)
             {
                 // Kiểm tra trùng ngôn ngữ
@@ -90,6 +99,12 @@ namespace WebThaoCamVien.Controllers
                 var existing = await _context.PoiTranslations.FindAsync(TranslationId);
                 if (existing != null)
                 {
+                    if (existing.LanguageCode != null
+                        && existing.LanguageCode.Equals("vi", StringComparison.OrdinalIgnoreCase))
+                    {
+                        TempData["Error"] = "Không thể chỉnh sửa bản dịch tiếng Việt tại đây. Vui lòng chỉnh nội dung gốc ở POI.";
+                        return RedirectToAction("EditTranslations", new { poiId = PoiId });
+                    }
                     existing.Name = Name;
                     existing.Description = Description;
                 }
@@ -107,6 +122,14 @@ namespace WebThaoCamVien.Controllers
             var translation = await _context.PoiTranslations.FindAsync(TranslationId);
             if (translation != null)
             {
+                // Không cho xoá bản dịch tiếng Việt (vi) từ màn quản trị.
+                if (!string.IsNullOrWhiteSpace(translation.LanguageCode)
+                    && translation.LanguageCode.Equals("vi", StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["Error"] = "Không thể xoá bản dịch tiếng Việt tại đây.";
+                    return RedirectToAction("EditTranslations", new { poiId = PoiId });
+                }
+
                 _context.PoiTranslations.Remove(translation);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Đã xóa bản dịch.";

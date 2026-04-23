@@ -199,7 +199,7 @@ namespace AppThaoCamVien.Services
         // PLAY / PAUSE / RESUME / STOP
         // ──────────────────────────────────────────────────────────────
 
-        public async Task PlayPoiAudioAsync(int poiId, int? userId = null)
+        public async Task PlayPoiAudioAsync(int poiId, int? userId = null, CancellationToken ct = default)
         {
             try
             {
@@ -229,7 +229,7 @@ namespace AppThaoCamVien.Services
                 if (!hit)
                 {
                     System.Diagnostics.Debug.WriteLine($"[Audio] cache MISS → download {url}");
-                    await DownloadToCacheAsync(url, cachePath, CancellationToken.None)
+                    await DownloadToCacheAsync(url, cachePath, ct)
                         .ConfigureAwait(false);
                 }
                 else
@@ -242,6 +242,7 @@ namespace AppThaoCamVien.Services
                 _stream = File.Open(cachePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 _player = _am.CreatePlayer(_stream);
                 _player.PlaybackEnded += OnPlaybackEnded;
+                ct.ThrowIfCancellationRequested();
                 _player.Play();
 
                 _isPlaying = true;

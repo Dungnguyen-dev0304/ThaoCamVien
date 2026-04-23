@@ -34,6 +34,9 @@ namespace AppThaoCamVien.Services
         private readonly SemaphoreSlim _lock = new(1, 1);
         private int _currentPoiId = -1;
 
+        // CTS của lượt phát hiện tại (để forcePlay/skip/stop huỷ download MP3 đang chạy).
+        private CancellationTokenSource? _playCts;
+
         // ── Hàng đợi POI chờ phát ─────────────────────────────────────────
         // _queue KHÔNG chứa POI đang phát. Để biết cái đang phát dùng CurrentPoiId.
         private readonly Queue<Poi> _queue = new();
@@ -84,6 +87,7 @@ namespace AppThaoCamVien.Services
                 if (forcePlay)
                 {
                     ClearQueueInternal(raise: false);
+                    CancelCurrentPlayback();
                     // Dừng audio/tts để drain loop hiện tại (nếu có) thoát
                     try { await _audio.StopAsync(); } catch { }
                     try { await _tts.StopAsync(); } catch { }
@@ -96,17 +100,22 @@ namespace AppThaoCamVien.Services
                 }
                 else
                 {
-                    // ── TH2: GPS auto → check debounce/cooldown trước khi enqueue
-                    if (IsWithinCooldown(poi))
+                    // ── TH2: GPS auto ──────────────────────────────────────
+                    // Nếu đang có drain loop (đang phát) thì luôn enqueue POI mới
+                    // (dedupe theo PoiId) để UI có thể hiện "Tiếp theo" + nút Skip.
+                    // Không chặn bởi cooldown ở bước này vì user có thể teleport/fake GPS
+                    // trong demo; nếu POI đã có trong queue thì EnqueueIfRoom sẽ bỏ qua.
+                    if (!_lock.Wait(0))
                     {
-                        System.Diagnostics.Debug.WriteLine($"[Narration] debounce/cooldown skip {poi.Name}");
+                        EnqueueIfRoom(poi);
                         return;
                     }
 
-                    if (!_lock.Wait(0))
+                    // Không có gì đang phát → áp dụng debounce/cooldown để chống spam GPS.
+                    if (IsWithinCooldown(poi))
                     {
-                        // Drain loop đang chạy → enqueue thay vì skip
-                        EnqueueIfRoom(poi);
+                        System.Diagnostics.Debug.WriteLine($"[Narration] debounce/cooldown skip {poi.Name}");
+                        _lock.Release();
                         return;
                     }
                 }
@@ -135,6 +144,7 @@ namespace AppThaoCamVien.Services
                 }
                 finally
                 {
+                    CancelCurrentPlayback();
                     _currentPoiId = -1;
                     RaiseQueueChanged();
                     _lock.Release();
@@ -151,6 +161,7 @@ namespace AppThaoCamVien.Services
         public async Task SkipAsync()
         {
             System.Diagnostics.Debug.WriteLine("[Narration] ⏭ skip");
+            CancelCurrentPlayback();
             try { await _audio.StopAsync(); } catch { }
             try { await _tts.StopAsync(); } catch { }
             // Drain loop đang await _audio.PlaybackStateChanged sẽ kết thúc,
@@ -164,6 +175,7 @@ namespace AppThaoCamVien.Services
             try
             {
                 ClearQueueInternal(raise: false);
+                CancelCurrentPlayback();
                 await _audio.StopAsync();
                 await _tts.StopAsync();
                 RaiseQueueChanged();
@@ -172,6 +184,18 @@ namespace AppThaoCamVien.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[Narration] StopAsync error: {ex.Message}");
             }
+        }
+
+        private void CancelCurrentPlayback()
+        {
+            try
+            {
+                if (_playCts != null && !_playCts.IsCancellationRequested)
+                    _playCts.Cancel();
+            }
+            catch { }
+            try { _playCts?.Dispose(); } catch { }
+            _playCts = null;
         }
 
         // ═════════════════════════════════════════════════════════════════
@@ -275,6 +299,11 @@ namespace AppThaoCamVien.Services
         {
             System.Diagnostics.Debug.WriteLine($"[Narration] ▶ '{poi.Name}' [{lang}]");
 
+            // Tạo token cho lượt phát này, để forcePlay/skip có thể cancel ngay cả khi đang download MP3.
+            CancelCurrentPlayback();
+            _playCts = new CancellationTokenSource();
+            var ct = _playCts.Token;
+
             // ── VISIT TRACKING: fire TRƯỚC mọi logic phát, fire-and-forget.
             // Luôn ghi visit dù MP3 hay TTS, dù tải thành công hay không —
             // user đã BẤM Play = 1 lượt thăm.
@@ -332,7 +361,7 @@ namespace AppThaoCamVien.Services
                     try
                     {
                         System.Diagnostics.Debug.WriteLine($"[Narration] source=audio-file url={media.MediaUrl}");
-                        await _audio.PlayPoiAudioAsync(poi.PoiId);
+                        await _audio.PlayPoiAudioAsync(poi.PoiId, ct: ct);
                         System.Diagnostics.Debug.WriteLine("[Narration] 🎵 MP3 playing");
 
                         // Chờ MP3 kết thúc (max 15 phút) hoặc bị skip/stop
@@ -342,6 +371,11 @@ namespace AppThaoCamVien.Services
                         }
                         catch (TimeoutException) { }
                         return; // MP3 thành công (hoặc bị skip) — drain loop tự pull tiếp
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        System.Diagnostics.Debug.WriteLine("[Narration] MP3 cancelled");
+                        return;
                     }
                     catch (Exception ex)
                     {

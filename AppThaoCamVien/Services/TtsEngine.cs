@@ -105,10 +105,20 @@ namespace AppThaoCamVien.Services
         {
             try
             {
-                await StopInternalAsync();
-                // Đợi lock rảnh trước khi return
-                if (await _lock.WaitAsync(200))
-                    _lock.Release();
+                // Serialize stop với SpeakPoiAsync để tránh race:
+                // nếu StopAsync chạy đúng lúc POI mới vừa tạo _cts mới thì StopInternalAsync
+                // có thể cancel nhầm session mới, gây hiện tượng "đọc tên rồi ngắt".
+                if (await _lock.WaitAsync(3000))
+                {
+                    try
+                    {
+                        await StopInternalAsync();
+                    }
+                    finally
+                    {
+                        _lock.Release();
+                    }
+                }
             }
             catch { }
         }

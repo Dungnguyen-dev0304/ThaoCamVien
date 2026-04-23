@@ -47,12 +47,6 @@ public partial class MapPage : ContentPage
         _directions = directions; _sp = sp;
         _vm = vm;
         BindingContext = _vm;
-
-#if DEBUG
-        // Nút demo queue chỉ hiện trong build dev/debug — build Release (APK thật
-        // giao cho thầy cô) sẽ KHÔNG thấy nút này.
-        DemoQueueBtn.IsVisible = true;
-#endif
     }
 
     // ── Setup Map ────────────────────────────────────────────────────────
@@ -650,6 +644,8 @@ public partial class MapPage : ContentPage
             }
 
             QueuePanel.IsVisible = true;
+            // Chỉ hiện nút Skip khi có POI "tiếp theo" trong queue
+            QueueSkipBtn.IsVisible = queued.Count > 0;
 
             // Tên POI đang phát
             if (currentId > 0)

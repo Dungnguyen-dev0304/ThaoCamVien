@@ -145,6 +145,13 @@
             <div class="grid gap-4">
                 @foreach (var t in Model)
                 {
+                    if (string.Equals(t.LanguageCode, "vi", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Ẩn hoàn toàn bản dịch tiếng Việt trong trang quản lý bản dịch.
+                        // Tiếng Việt là nội dung gốc (bảng POI), không quản lý tại đây.
+                        continue;
+                    }
+                    var canEdit = string.Equals(t.LanguageCode, "en", StringComparison.OrdinalIgnoreCase);
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                         <div class="flex items-start justify-between gap-4">
 
@@ -196,11 +203,23 @@
 
                             @* ACTIONS *@
                             <div class="flex gap-2 flex-shrink-0">
-                                <button onclick='openEditModal(@t.TranslationId,@poi!.PoiId,"@t.LanguageCode",@Json.Serialize(t.Name),@Json.Serialize(t.Description))'
-                                        class="inline-flex items-center justify-center w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                        title="Chỉnh sửa">
-                                    <i class="bi bi-pencil-square text-lg"></i>
-                                </button>
+                                @if (canEdit)
+                                {
+                                    <button onclick='openEditModal(@t.TranslationId,@poi!.PoiId,"@t.LanguageCode",@Json.Serialize(t.Name),@Json.Serialize(t.Description))'
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                            title="Chỉnh sửa (chỉ English)">
+                                        <i class="bi bi-pencil-square text-lg"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button"
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-slate-100 text-slate-400 rounded-xl cursor-not-allowed shadow-sm"
+                                            title="Chỉ cho phép chỉnh sửa bản dịch English (en)"
+                                            disabled>
+                                        <i class="bi bi-lock-fill text-lg"></i>
+                                    </button>
+                                }
                                 <form method="post" action="/Translation/Delete"
                                       onsubmit="return confirm('Xóa bản dịch ngôn ngữ @t.LanguageCode?')">
                                     @Html.AntiForgeryToken()

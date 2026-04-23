@@ -26,7 +26,10 @@ public static class AppConfig
     /// </summary>
     //public const string LanIp = "192.168.1.10";
 
+    // dịa chi ip trong lop
     //public const string LanIp = "192.168.31.126";
+
+    // dia chi ip nhà dương
     public const string LanIp = "192.168.1.10";
 
 

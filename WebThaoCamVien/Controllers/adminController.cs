@@ -433,6 +433,16 @@ namespace WebThaoCamVien.Controllers
                 ModelState.AddModelError("", "Vui lòng chọn hình ảnh đại diện cho địa điểm.");
             }
 
+            // Bắt buộc nhập đầy đủ nội dung (server-side)
+            if (string.IsNullOrWhiteSpace(model.Name))
+                ModelState.AddModelError(nameof(model.Name), "Vui lòng nhập tên địa điểm.");
+            if (model.CategoryId == null)
+                ModelState.AddModelError(nameof(model.CategoryId), "Vui lòng chọn danh mục.");
+            if (model.Latitude == null || model.Longitude == null)
+                ModelState.AddModelError("", "Vui lòng chọn vị trí trên bản đồ (vĩ độ/kinh độ).");
+            if (string.IsNullOrWhiteSpace(model.Description))
+                ModelState.AddModelError(nameof(model.Description), "Vui lòng nhập mô tả.");
+
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -510,6 +520,16 @@ namespace WebThaoCamVien.Controllers
             var model = viewModel.Poi;
             ModelState.Remove("Poi.ImageThumbnail");
             SetViewData("poilist", "Chỉnh sửa POI", "Quản lý điểm tham quan");
+
+            // Bắt buộc nhập đầy đủ nội dung (server-side). Ảnh trong Edit giữ logic cũ: optional.
+            if (string.IsNullOrWhiteSpace(model.Name))
+                ModelState.AddModelError("Poi.Name", "Vui lòng nhập tên địa điểm.");
+            if (model.CategoryId == null)
+                ModelState.AddModelError("Poi.CategoryId", "Vui lòng chọn danh mục.");
+            if (model.Latitude == null || model.Longitude == null)
+                ModelState.AddModelError("", "Vui lòng chọn vị trí trên bản đồ (vĩ độ/kinh độ).");
+            if (string.IsNullOrWhiteSpace(model.Description))
+                ModelState.AddModelError("Poi.Description", "Vui lòng nhập mô tả.");
 
             if (!ModelState.IsValid)
             {
