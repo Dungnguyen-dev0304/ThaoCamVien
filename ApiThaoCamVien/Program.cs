@@ -48,6 +48,9 @@ builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<PoiLocalizationService>();
 
+// ─── 7. UDP server discovery (cho app mobile auto-detect IP LAN) ──────────────
+builder.Services.AddHostedService<UdpDiscoveryService>();
+
 var app = builder.Build();
 
 // ─── Middleware Pipeline ──────────────────────────────────────────────────────

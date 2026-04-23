@@ -40,6 +40,7 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<ApiService>();
             builder.Services.AddSingleton<AppPresenceService>();
             builder.Services.AddSingleton<DirectionsService>();
+            builder.Services.AddSingleton<ServerDiscoveryService>();
 
             // ── Pages ─────────────────────────────────────────────────────
             // QUAN TRỌNG: Dùng Transient cho tất cả Pages.

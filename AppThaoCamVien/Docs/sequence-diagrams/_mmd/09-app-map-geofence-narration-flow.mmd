@@ -26,6 +26,14 @@ sequenceDiagram
                 Map->>Geo: MarkTriggered(poiId)
                 Map->>Nar: PlayAsync(activePoi, forcePlay=false)
                 Nar-->>U: Tự phát audio/TTS theo POI
+                opt Trong lúc đang phát, user di chuyển sang POI khác
+                    Note over Map,Nar: Khi drain loop dang chay (dang phat POI A), PlayAsync(POI B, forcePlay=false) se enqueue B
+                    Map->>Nar: PlayAsync(nextPoi, forcePlay=false)
+                    Nar-->>Map: QueueChanged (UI co the hien "Tiep theo" + nut Skip)
+                    U->>Map: (Tuy chon) Bam Skip
+                    Map->>Nar: SkipAsync()
+                    Nar-->>U: Nhay sang POI tiep theo trong queue (B)
+                end
             else Chỉ đang tiếp cận hoặc ngoài vùng
                 Map-->>U: Cập nhật panel trạng thái khoảng cách
             end

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="640" viewBox="0 0 1180 640">
+  <defs>
+    <style>
+      .title{font:700 22px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .sub{font:500 13px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .sys{fill:#ffffff; stroke:#1f2937; stroke-width:2; rx:18; ry:18}
+      .uc{fill:#f8fafc; stroke:#cbd5e1; stroke-width:1.6}
+      .ucT{font:700 14px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .ucD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .actor{fill:#ffffff; stroke:#b45309; stroke-width:2}
+      .actorT{font:700 13px system-ui,Segoe UI,Roboto,Arial; fill:#7c2d12}
+      .link{stroke:#b45309; stroke-width:2; fill:none}
+      .small{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="640" fill="#ffffff"/>
+  <text x="32" y="44" class="title">Web  Use case: Monitoring</text>
+  <text x="32" y="70" class="sub">M�c ti�u: �m b�o h� th�ng �n �nh (Web/API/DB), ph�t hi�n s�m l�i �ng b� v� h� tr� truy v�t s� c� nhanh.</text>
+
+  <!-- system boundary -->
+  <rect x="300" y="110" width="850" height="480" class="sys"/>
+  <text x="320" y="140" class="ucT">WebThaoCamVien (Monitoring module)</text>
+
+  <!-- actor -->
+  <circle cx="140" cy="200" r="26" class="actor"/>
+  <line x1="140" y1="226" x2="140" y2="300" class="link"/>
+  <line x1="110" y1="252" x2="170" y2="252" class="link"/>
+  <line x1="140" y1="300" x2="112" y2="340" class="link"/>
+  <line x1="140" y1="300" x2="168" y2="340" class="link"/>
+  <text x="86" y="378" class="actorT">K� thu�t / V�n h�nh</text>
+
+  <!-- use cases -->
+  <ellipse cx="725" cy="220" rx="255" ry="72" class="uc"/>
+  <text x="615" y="215" class="ucT">Xem s�c kho� h� th�ng</text>
+  <text x="585" y="238" class="ucD">Uptime, health-check, latency, error rate theo kho�ng th�i gian</text>
+
+  <ellipse cx="725" cy="350" rx="255" ry="72" class="uc"/>
+  <text x="610" y="345" class="ucT">Xem log &amp; truy v�t l�i</text>
+  <text x="586" y="368" class="ucD">L�c theo endpoint/status code/th�i gian; drill-down stacktrace</text>
+
+  <ellipse cx="725" cy="480" rx="255" ry="72" class="uc"/>
+  <text x="590" y="475" class="ucT">Theo d�i �ng b� &amp; backlog</text>
+  <text x="575" y="498" class="ucD">Batch sync t� App, retry queue, t� l� th�t b�i, c�nh b�o ng��ng</text>
+
+  <!-- associations -->
+  <path d="M190 260 C 320 245, 430 235, 470 225" class="link"/>
+  <path d="M190 275 C 320 310, 430 335, 470 350" class="link"/>
+  <path d="M190 295 C 320 430, 430 465, 470 480" class="link"/>
+
+  <text x="320" y="560" class="small">G�i � AC: log kh�ng ch�a secret/token; ph�n quy�n ch�t; c� ng��ng c�nh b�o v� l�ch s� s� c� t�i thi�u 30 ng�y.</text>
+</svg>

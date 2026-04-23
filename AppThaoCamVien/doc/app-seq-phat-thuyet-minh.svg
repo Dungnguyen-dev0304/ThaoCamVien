@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="720" viewBox="0 0 1180 720">
+  <defs>
+    <style>
+      .title{font:700 22px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .sub{font:500 13px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .lane{fill:#f8fafc; stroke:#e5e7eb; stroke-width:1.5}
+      .laneTitle{font:700 14px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .box{fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; rx:12; ry:12}
+      .boxT{font:600 13px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .boxD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .arrow{stroke:#2563eb; stroke-width:2.2; fill:none; marker-end:url(#mEnd)}
+      .arrow2{stroke:#0ea5e9; stroke-width:2.2; fill:none; marker-end:url(#mEnd2)}
+      .warn{fill:#fff7ed; stroke:#fdba74; stroke-width:1.2; rx:10; ry:10}
+      .warnT{font:700 12px system-ui,Segoe UI,Roboto,Arial; fill:#7c2d12}
+      .warnD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#9a3412}
+    </style>
+    <marker id="mEnd" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="mEnd2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="720" fill="#ffffff"/>
+  <text x="32" y="44" class="title">App  Sequence: Ph�t thuy�t minh (Narration)</text>
+  <text x="32" y="70" class="sub">Bao g�m: t� �ng theo geofence (Map) + ch� �ng (StoryAudioPage). �u ti�n MP3 cache/server, fallback TTS.</text>
+
+  <!-- lanes -->
+  <rect x="32" y="96" width="270" height="592" class="lane"/>
+  <rect x="316" y="96" width="280" height="592" class="lane"/>
+  <rect x="610" y="96" width="280" height="592" class="lane"/>
+  <rect x="904" y="96" width="244" height="592" class="lane"/>
+
+  <text x="48" y="126" class="laneTitle">Ng��i d�ng / GPS</text>
+  <text x="332" y="126" class="laneTitle">MapPage / StoryAudioPage</text>
+  <text x="626" y="126" class="laneTitle">NarrationEngine</text>
+  <text x="920" y="126" class="laneTitle">AudioService / TtsEngine</text>
+
+  <!-- flow A: auto geofence -->
+  <rect x="52" y="160" width="230" height="76" class="box"/>
+  <text x="70" y="188" class="boxT">A1) Location update</text>
+  <text x="70" y="210" class="boxD">GPS c�p nh�t v� tr� � GeofencingEngine</text>
+
+  <rect x="336" y="160" width="240" height="98" class="box"/>
+  <text x="354" y="188" class="boxT">A2) X�c �nh Active POI</text>
+  <text x="354" y="210" class="boxD">N�u CanTrigger = true � g�i PlayAsync</text>
+  <text x="354" y="232" class="boxD">Approaching � PrefetchAudio(poiId)</text>
+
+  <rect x="630" y="166" width="250" height="120" class="box"/>
+  <text x="648" y="194" class="boxT">A3) PlayAsync(poi, forcePlay=false)</text>
+  <text x="648" y="216" class="boxD">N�u ang ph�t: enqueue POI (t�i a 5)</text>
+  <text x="648" y="238" class="boxD">N�u r�nh: ki�m tra cooldown/debounce</text>
+  <text x="648" y="260" class="boxD">Drain loop: ph�t current � dequeue next</text>
+
+  <!-- flow B: manual -->
+  <rect x="336" y="310" width="240" height="98" class="box"/>
+  <text x="354" y="338" class="boxT">B1) M� StoryAudioPage</text>
+  <text x="354" y="360" class="boxD">OnAppearing � StartNarrationSafeAsync</text>
+  <text x="354" y="382" class="boxD">forcePlay=true (�u ti�n cao)</text>
+
+  <rect x="630" y="318" width="250" height="120" class="box"/>
+  <text x="648" y="346" class="boxT">B2) forcePlay=true</text>
+  <text x="648" y="368" class="boxD">Clear queue + cancel playback hi�n t�i</text>
+  <text x="648" y="390" class="boxD">Stop audio/tts � lock � ph�t ngay POI</text>
+  <text x="648" y="412" class="boxD">Ghi visit tracking (Start + Patch duration)</text>
+
+  <!-- internal play -->
+  <rect x="920" y="170" width="210" height="110" class="box"/>
+  <text x="938" y="198" class="boxT">Try MP3 (AudioService)</text>
+  <text x="938" y="220" class="boxD">Cache HIT � play t�c th�</text>
+  <text x="938" y="242" class="boxD">MISS � download to cache � play</text>
+  <text x="938" y="264" class="boxD">PlaybackEnded � done</text>
+
+  <rect x="920" y="308" width="210" height="96" class="box"/>
+  <text x="938" y="336" class="boxT">Fallback TTS</text>
+  <text x="938" y="358" class="boxD">MP3 l�i/kh�ng c� � SpeakPoiAsync</text>
+  <text x="938" y="380" class="boxD">Kh�ng crash app (catch-all)</text>
+
+  <!-- arrows -->
+  <path d="M282 198 L336 206" class="arrow"/>
+  <path d="M576 214 L630 226" class="arrow"/>
+  <path d="M880 226 L920 226" class="arrow"/>
+  <path d="M456 358 L630 378" class="arrow2"/>
+  <path d="M880 386 L920 356" class="arrow2"/>
+
+  <!-- note -->
+  <rect x="52" y="456" width="524" height="110" class="warn"/>
+  <text x="72" y="484" class="warnT">Quy t�c h�nh vi ch�nh (t� code hi�n t�i)</text>
+  <text x="72" y="506" class="warnD">- GPS auto: n�u ang ph�t th� enqueue, kh�ng skip; queue t�i a 5 (1 ang ph�t + 4 ch�)</text>
+  <text x="72" y="528" class="warnD">- Manual forcePlay: clear queue, ng�t playback v� ph�t ngay POI ��c ch�n</text>
+  <text x="72" y="550" class="warnD">- Visit tracking ghi c� MP3 l�n TTS; duration PATCH � finally</text>
+</svg>

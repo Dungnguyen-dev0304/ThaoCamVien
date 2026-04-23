@@ -36,6 +36,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+		<UserSecretsId>3f364421-5af8-4183-a4ae-59177d5e1b21</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -63,6 +64,7 @@
 		<PackageReference Include="GTranslate" Version="2.3.1" />
 		<PackageReference Include="Mapsui.Maui" Version="5.0.2" />
 		<PackageReference Include="Mapsui.Nts" Version="5.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.6" />
 		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="10.0.51" />

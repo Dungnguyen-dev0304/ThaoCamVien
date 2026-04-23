@@ -8,7 +8,7 @@
         {
             InitializeComponent();
         }
-        
+
         //private void OnCounterClicked(object? sender, EventArgs e)
         //{
         //    count++;
@@ -20,6 +20,11 @@
 
         //    SemanticScreenReader.Announce(CounterBtn.Text);
         //}
-       
+        private void OnCounterClicked(object sender, EventArgs e)
+        {
+            // Code xử lý khi bấm nút ở đây
+            // Ví dụ: DisplayAlert("Thông báo", "Bạn đã bấm nút!", "OK");
+        }
+
     }
 }

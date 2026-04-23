@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <style>
+      .title{font:700 22px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .sub{font:500 13px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .lane{fill:#f8fafc; stroke:#e5e7eb; stroke-width:1.5}
+      .laneTitle{font:700 13px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .box{fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; rx:12; ry:12}
+      .boxT{font:650 13px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .boxD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .arrow{stroke:#2563eb; stroke-width:2.2; fill:none; marker-end:url(#mEnd)}
+      .arrow2{stroke:#0ea5e9; stroke-width:2.2; fill:none; marker-end:url(#mEnd2)}
+      .note{fill:#eff6ff; stroke:#93c5fd; stroke-width:1.2; rx:10; ry:10}
+      .noteT{font:700 12px system-ui,Segoe UI,Roboto,Arial; fill:#1e3a8a}
+      .noteD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#1e40af}
+    </style>
+    <marker id="mEnd" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="mEnd2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="720" fill="#ffffff"/>
+  <text x="32" y="44" class="title">App - Sequence: Phat thuyet minh + hang doi + Skip</text>
+  <text x="32" y="70" class="sub">Idea: Dang phat POI A, user di chuyen sang POI B. App hien nut Skip (note: Tiep theo: B). Neu nhan Skip thi nhay sang B.</text>
+
+  <!-- lanes -->
+  <rect x="32" y="96" width="240" height="592" class="lane"/>
+  <rect x="288" y="96" width="300" height="592" class="lane"/>
+  <rect x="604" y="96" width="300" height="592" class="lane"/>
+  <rect x="920" y="96" width="328" height="592" class="lane"/>
+  <text x="48" y="126" class="laneTitle">Nguoi dung</text>
+  <text x="304" y="126" class="laneTitle">MapPage + GPS + Geofence</text>
+  <text x="620" y="126" class="laneTitle">NarrationEngine (queue)</text>
+  <text x="936" y="126" class="laneTitle">AudioService / TTS</text>
+
+  <!-- steps -->
+  <rect x="52" y="156" width="200" height="70" class="box"/>
+  <text x="72" y="184" class="boxT">1) Dang o POI A</text>
+  <text x="72" y="206" class="boxD">Auto play thuyet minh A</text>
+
+  <rect x="320" y="150" width="236" height="92" class="box"/>
+  <text x="340" y="178" class="boxT">2) LocationUpdated</text>
+  <text x="340" y="200" class="boxD">Process(location) -> ActivePoi=A</text>
+  <text x="340" y="222" class="boxD">CanTrigger=true</text>
+
+  <rect x="636" y="150" width="236" height="110" class="box"/>
+  <text x="656" y="178" class="boxT">3) PlayAsync(A)</text>
+  <text x="656" y="200" class="boxD">Lock drain loop</text>
+  <text x="656" y="222" class="boxD">CurrentPoiId=A</text>
+  <text x="656" y="244" class="boxD">Queue empty</text>
+
+  <rect x="956" y="160" width="270" height="92" class="box"/>
+  <text x="976" y="188" class="boxT">4) Play audio/TTS A</text>
+  <text x="976" y="210" class="boxD">MP3 (cache/download) or TTS</text>
+  <text x="976" y="232" class="boxD">Emit playback state/progress</text>
+
+  <rect x="52" y="288" width="200" height="70" class="box"/>
+  <text x="72" y="316" class="boxT">5) Di chuyen sang POI B</text>
+  <text x="72" y="338" class="boxD">B vao vung trong luc A dang phat</text>
+
+  <rect x="320" y="282" width="236" height="92" class="box"/>
+  <text x="340" y="310" class="boxT">6) Process(location) -> B</text>
+  <text x="340" y="332" class="boxD">ActivePoi=B, CanTrigger=true</text>
+  <text x="340" y="354" class="boxD">Call PlayAsync(B, force=false)</text>
+
+  <rect x="636" y="288" width="236" height="120" class="box"/>
+  <text x="656" y="316" class="boxT">7) Enqueue B</text>
+  <text x="656" y="338" class="boxD">Lock dang bi giu -> enqueue</text>
+  <text x="656" y="360" class="boxD">QueueChanged event</text>
+  <text x="656" y="382" class="boxD">Queue[0]=B</text>
+
+  <rect x="320" y="430" width="236" height="110" class="box"/>
+  <text x="340" y="458" class="boxT">8) UI hien Skip</text>
+  <text x="340" y="480" class="boxD">Panel: "Tiep theo: B"</text>
+  <text x="340" y="502" class="boxD">Nut Skip enable</text>
+
+  <rect x="52" y="560" width="200" height="92" class="box"/>
+  <text x="72" y="588" class="boxT">9) (Tuy chon) Nhan Skip</text>
+  <text x="72" y="610" class="boxD">Neu muon nhay sang B ngay</text>
+  <text x="72" y="632" class="boxD">Khong can cho A ket thuc</text>
+
+  <rect x="636" y="556" width="236" height="110" class="box"/>
+  <text x="656" y="584" class="boxT">10) SkipAsync()</text>
+  <text x="656" y="606" class="boxD">Cancel current playback</text>
+  <text x="656" y="628" class="boxD">Stop audio/TTS</text>
+  <text x="656" y="650" class="boxD">Drain loop dequeue -> B</text>
+
+  <rect x="956" y="566" width="270" height="92" class="box"/>
+  <text x="976" y="594" class="boxT">11) Play audio/TTS B</text>
+  <text x="976" y="616" class="boxD">A stopped; B start</text>
+  <text x="976" y="638" class="boxD">QueueChanged -> hide/update</text>
+
+  <!-- arrows -->
+  <path d="M252 190 L320 190" class="arrow"/>
+  <path d="M556 196 L636 206" class="arrow"/>
+  <path d="M872 210 L956 214" class="arrow2"/>
+
+  <path d="M252 322 L320 322" class="arrow"/>
+  <path d="M556 346 L636 346" class="arrow"/>
+  <path d="M872 360 L320 470" class="arrow2"/>
+
+  <path d="M252 604 L636 604" class="arrow"/>
+  <path d="M872 612 L956 612" class="arrow2"/>
+
+  <!-- note -->
+  <rect x="920" y="430" width="328" height="110" class="note"/>
+  <text x="940" y="458" class="noteT">Ghi chu</text>
+  <text x="940" y="480" class="noteD">Neu user khong nhan Skip: A phat het, drain loop tu dong chuyen sang B.</text>
+  <text x="940" y="502" class="noteD">Queue toi da N POI; neu full thi bo POI moi (theo policy).</text>
+  <text x="940" y="524" class="noteD">ForcePlay (tap thu cong) se clear queue va phat ngay.</text>
+</svg>

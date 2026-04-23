@@ -63,6 +63,49 @@
                                         <Label x:Name="CurrentTimeLabel" Grid.Column="0" Text="01:12" FontSize="12" TextColor="#4A5568" FontAttributes="Bold" HorizontalOptions="Start"/>
                                         <Label x:Name="TotalTimeLabel" Grid.Column="1" Text="03:45" FontSize="12" TextColor="#4A5568" FontAttributes="Bold" HorizontalOptions="End"/>
                                     </Grid>
+
+                                    <!-- Queue UX: khi user di chuyển sang POI khác trong lúc đang phát -->
+                                    <Border x:Name="QueueHintPanel"
+                                            IsVisible="False"
+                                            BackgroundColor="#EEF6FF"
+                                            StrokeThickness="1"
+                                            Stroke="#D6E8FF"
+                                            Padding="12,10"
+                                            Margin="0,8,0,0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="14" />
+                                        </Border.StrokeShape>
+                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                <Label Text="Tiếp theo" FontSize="11" TextColor="#2F5D9B" FontAttributes="Bold" />
+                                                <Label x:Name="QueueNextPoiLabel"
+                                                       Text="—"
+                                                       FontSize="13"
+                                                       TextColor="#1A1A1A"
+                                                       FontAttributes="Bold"
+                                                       LineBreakMode="TailTruncation"
+                                                       MaxLines="1"/>
+                                            </VerticalStackLayout>
+
+                                            <Border Grid.Column="1"
+                                                    x:Name="QueueSkipBtn"
+                                                    BackgroundColor="#1E5631"
+                                                    Padding="12,8"
+                                                    StrokeThickness="0"
+                                                    VerticalOptions="Center">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="12" />
+                                                </Border.StrokeShape>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="OnQueueSkipTapped" />
+                                                </Border.GestureRecognizers>
+                                                <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                                    <Label Text="Skip" TextColor="White" FontSize="12" FontAttributes="Bold" VerticalOptions="Center"/>
+                                                    <Label Text="⏭" TextColor="White" FontSize="12" VerticalOptions="Center"/>
+                                                </HorizontalStackLayout>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
                                 </VerticalStackLayout>
 
                                 <Border Grid.Column="1" WidthRequest="65" HeightRequest="65" BackgroundColor="#1E5631" StrokeThickness="0" VerticalOptions="Center">

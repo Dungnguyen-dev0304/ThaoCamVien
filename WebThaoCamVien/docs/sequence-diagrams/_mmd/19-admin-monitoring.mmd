@@ -1,0 +1,34 @@
+sequenceDiagram
+    autonumber
+    actor U as Admin
+    participant B as Browser
+    participant W as WebThaoCamVien (AdminController)
+    participant DB as WebContext (SQL Server)
+
+    U->>B: Mo /Admin/Monitoring
+    B->>W: GET /Admin/Monitoring
+
+    Note over W: AuthN/AuthZ (cookie)
+
+    par Lay so lieu tong hop
+        W->>DB: Query health status (Web/API/DB)
+        DB-->>W: healthSummary
+    and Lay thong ke loi/latency
+        W->>DB: Query request logs + exception logs (rolling window)
+        DB-->>W: errorRate + latencySeries
+    and Lay tinh trang dong bo
+        W->>DB: Query sync backlog / retry queue (neu co)
+        DB-->>W: syncBacklog
+    end
+
+    W-->>B: 200 View(MonitoringViewModel)
+    B-->>U: Render tiles + charts + danh sach su co gan day
+
+    opt Dieu tra su co
+        U->>B: Bam drill-down (filter endpoint/status/POI)
+        B->>W: GET /Admin/Monitoring?from&to&filter...
+        W->>DB: Query chi tiet (paging)
+        DB-->>W: rows
+        W-->>B: 200 Partial/JSON (tuy thiet ke)
+        B-->>U: Cap nhat bang/chi tiet
+    end

@@ -32,6 +32,9 @@ public static class AppConfig
     // dia chi ip nhà dương
     public const string LanIp = "192.168.1.10";
 
+    //ip cua dung
+    // public const string LanIp = "192.168.0.100";
+
 
     public const string ApiPort = "5281";
     public const string WebPort = "5181";

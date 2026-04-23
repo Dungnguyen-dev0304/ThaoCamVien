@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor U as Admin
+    participant B as Browser
+    participant W as WebThaoCamVien (AdminController)
+    participant DB as WebContext (SQL Server)
+
+    U->>B: Mo /Admin/Heatmap
+    B->>W: GET /Admin/Heatmap?from&to&poiId
+
+    Note over W: AuthN/AuthZ (cookie) + validate range
+
+    W->>DB: Aggregate visits/playback by POI (time bucket)
+    DB-->>W: points(lat,lng,intensity) + legend
+
+    W-->>B: 200 View(HeatmapViewModel)
+    B-->>U: Render heatmap layer + legend
+
+    opt Doi filter/range
+        U->>B: Chon range moi / chon POI
+        B->>W: GET /Admin/Heatmap?from&to&poiId
+        W->>DB: Re-aggregate
+        DB-->>W: points + legend
+        W-->>B: 200 View/Partial/JSON
+        B-->>U: Update heatmap
+    end

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android Network Security Configuration
+    Tài liệu: https://developer.android.com/training/articles/security-config
+
+    Mục tiêu: cho phép HTTP (cleartext) tới server LAN nội bộ trong khi
+    vẫn bắt buộc HTTPS cho mọi traffic ra Internet.
+
+    Cấu trúc ưu tiên (từ cao xuống thấp):
+      1. debug-overrides   — chỉ áp dụng khi build DEBUG
+      2. domain-config     — áp dụng cho host/IP khớp
+      3. base-config       — mặc định cho tất cả host còn lại
+-->
+<network-security-config>
+
+    <!--
+        BASE CONFIG: tất cả kết nối ra ngoài PHẢI dùng HTTPS.
+        Tin certificate từ system CA store (CA được cài sẵn bởi Android).
+    -->
+    <!--
+        Cho phép HTTP (cleartext) để app gọi server nội bộ (LAN/dev).
+        Lưu ý: nếu muốn siết chặt khi release production, tách file cấu hình theo build
+        (Debug cho phép cleartext, Release bắt buộc HTTPS) hoặc chuyển API sang HTTPS.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+
+    <!--
+        DOMAIN CONFIG: các địa chỉ LAN / dev được phép HTTP.
+        Bao gồm:
+          - localhost, 127.0.0.1   : chạy trên emulator
+          - 10.0.2.2               : alias loopback của host trong Android emulator
+          - Dải 192.168.x.x        : LAN WiFi thông dụng (router gia đình / văn phòng)
+          - Dải 10.x.x.x           : LAN WiFi doanh nghiệp / hotspot
+
+        LƯU Ý: network-security-config KHÔNG hỗ trợ CIDR hoặc wildcard IP.
+        Giải pháp: dùng thuộc tính "host" với prefix ngắn nhất có thể khớp.
+        Với IP động (auto-discovery), base-config ở phần DEBUG-OVERRIDES bên dưới
+        sẽ xử lý toàn bộ khi build DEBUG.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Emulator loopback -->
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+
+        <!--
+            Các IP LAN phổ biến — thêm/bớt theo mạng WiFi thực tế.
+            Khi đổi router và nhận IP mới, DEBUG-OVERRIDES bên dưới
+            vẫn cho phép cleartext toàn bộ trong build Debug.
+        -->
+        <domain includeSubdomains="false">192.168.1.1</domain>
+        <domain includeSubdomains="false">192.168.1.5</domain>
+        <domain includeSubdomains="false">192.168.1.10</domain>
+        <domain includeSubdomains="false">192.168.0.1</domain>
+        <domain includeSubdomains="false">192.168.0.5</domain>
+        <domain includeSubdomains="false">10.0.0.1</domain>
+
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
+    <!--
+        DEBUG OVERRIDES: chỉ áp dụng trong build DEBUG (Android build system tự loại bỏ
+        khi build Release). Cho phép:
+          - cleartext tới MỌI địa chỉ (an toàn vì chỉ debug)
+          - tin certificate từ user store (cho Fiddler, Charles Proxy, mitmproxy)
+    -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </debug-overrides>
+
+</network-security-config>

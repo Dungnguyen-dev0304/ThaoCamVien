@@ -264,7 +264,7 @@
             <div class="card">
               <h3>Bối cảnh nghiệp vụ (Web + App)</h3>
               <ul class="list">
-                <li>Web Admin cần quản trị tập trung POI/tour/audio/bản dịch để đảm bảo dữ liệu chuẩn, đồng nhất đa ngôn ngữ.</li>
+                <li>Web Admin cần quản trị tập trung POI/audio/ban dich de dam bao du lieu chuan, dong nhat da ngon ngu.</li>
                 <li>App tham quan cần trải nghiệm ổn định theo trạng thái Loading/Success/Empty/Error, hỗ trợ bản đồ, audio, QR, offline.</li>
                 <li>Vận hành cần theo dõi thống kê hành vi người dùng trên App và hiệu quả nội dung trên Web để tối ưu liên tục.</li>
               </ul>
@@ -272,7 +272,7 @@
             <div class="card">
               <h3>Giải pháp tổng thể</h3>
               <ul class="list">
-                <li>WebThaoCamVien: xác thực quản trị, CRUD POI/tour, quản lý audio và translation, dashboard analytics.</li>
+                <li>WebThaoCamVien: xac thuc quan tri, CRUD POI, quan ly audio va translation, dashboard analytics.</li>
                 <li>AppThaoCamVien: Home/Map/StoryAudio/QR/About + onboarding, geofencing, narration, tải gói offline.</li>
                 <li>Kênh dữ liệu thống nhất qua API để App đọc nội dung đã được Web kiểm duyệt và xuất bản.</li>
                 <li>Hệ quy chiếu tài liệu đồng bộ bằng sequence diagrams + use case SVG cho cả Web và App.</li>
@@ -293,7 +293,7 @@
           <div class="card">
             <h3>Mục tiêu sản phẩm liên thông Web + App</h3>
             <ul class="list">
-              <li>Web: rút ngắn thời gian quản trị nội dung (POI/tour/audio/translation), giảm lỗi nhập liệu và lỗi file.</li>
+              <li>Web: rut ngan thoi gian quan tri noi dung (POI/audio/translation), giam loi nhap lieu va loi file.</li>
               <li>App: tăng mức độ hoàn tất hành trình tham quan (xem map, nghe thuyết minh, tra cứu QR) với trải nghiệm mượt.</li>
               <li>Vận hành: có dashboard đo được hiệu quả nội dung và hành vi người dùng để ra quyết định nhanh.</li>
             </ul>
@@ -350,7 +350,6 @@
               <h3>Trong phạm vi <span class="badge good">In scope</span></h3>
               <ul class="list">
                 <li>Đăng nhập/đăng xuất bằng Cookie Authentication.</li>
-                <li>Tour: xem danh sách, thêm, sửa, bật/tắt active, xóa.</li>
                 <li>POI: danh sách, thêm/sửa/xóa; upload ảnh thumbnail; validate tọa độ (ranh giới + khoảng cách tối thiểu).</li>
                 <li>Audio theo POI: danh sách, quản lý theo POI; upload file audio; record trực tiếp trên web (lưu .webm); xóa audio.</li>
                 <li>Bản dịch POI: thêm/cập nhật theo ngôn ngữ; trang quản lý tổng hợp.</li>
@@ -360,7 +359,7 @@
             <div class="card">
               <h3>Ngoài phạm vi <span class="badge warn">Out of scope</span></h3>
               <ul class="list">
-                <li>Tối ưu hóa tìm kiếm nâng cao (full-text), recommendation tour tự động.</li>
+                <li>Toi uu hoa tim kiem nang cao (full-text), recommendation tu dong.</li>
                 <li>Streaming audio nâng cao, transcoding đa định dạng trên server.</li>
                 <li>Ứng dụng mobile/clients cho khách tham quan (nếu có sẽ là PRD riêng).</li>
                 <li>Phân quyền đa vai trò phức tạp (RBAC nhiều cấp) — hiện coi là “Admin” truy cập.</li>
@@ -375,7 +374,7 @@
             <div class="card">
               <h3>Quản trị nội dung (Web Admin)</h3>
               <div class="kvs">
-                <div class="k">Mục tiêu</div><div class="v">Tạo/sửa POI, tour, audio, bản dịch.</div>
+                <div class="k">Mục tiêu</div><div class="v">Tao/sua POI, audio, ban dich.</div>
                 <div class="k">Pain points</div><div class="v">Thiếu chuẩn validate, mất file, trùng lặp audio theo ngôn ngữ.</div>
               </div>
             </div>
@@ -430,44 +429,6 @@
           <ul class="list">
             <li>Cho phép admin đăng xuất, xoá session/cookie, về trang login (hoặc trang công khai nếu có).</li>
           </ul>
-
-          <h3>FR-03 — Tour management</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Tính năng</th>
-                <th>Yêu cầu</th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Danh sách tour</td>
-                <td>Xem danh sách, trạng thái active, thao tác sửa/xóa/bật-tắt.</td>
-                <td>Tham chiếu: sequence diagrams “03…06”.</td>
-              </tr>
-              <tr>
-                <td>Thêm tour</td>
-                <td>Form tạo mới; validate dữ liệu bắt buộc; lưu DB.</td>
-                <td>Định nghĩa trường cụ thể theo model hiện có.</td>
-              </tr>
-              <tr>
-                <td>Sửa tour</td>
-                <td>Load theo id; chỉnh sửa; validate; lưu DB.</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Bật/tắt active</td>
-                <td>Toggle hiển thị tour; phản hồi rõ ràng trạng thái sau khi cập nhật.</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Xóa tour</td>
-                <td>Xóa khỏi DB (hoặc soft delete nếu đang áp dụng).</td>
-                <td>Tham chiếu “06-tour-toggle-delete”.</td>
-              </tr>
-            </tbody>
-          </table>
 
           <h3>FR-04 — POI management (CRUD + ảnh + validate tọa độ)</h3>
           <ul class="list">
@@ -672,16 +633,6 @@
                 </td>
               </tr>
               <tr>
-                <td>Tour</td>
-                <td>List / Add / Edit / Toggle Delete</td>
-                <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/03-tour-list.svg">03-tour-list.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/04-tour-add.svg">04-tour-add.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/05-tour-edit.svg">05-tour-edit.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/06-tour-toggle-delete.svg">06-tour-toggle-delete.svg</a>
-                </td>
-              </tr>
-              <tr>
                 <td>POI</td>
                 <td>CRUD + Add/Edit/Delete chi tiết</td>
                 <td>
@@ -715,6 +666,14 @@
                 <td>Admin Index (thống kê + lịch sử)</td>
                 <td>
                   <a href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Operations</td>
+                <td>Monitoring / Heatmap</td>
+                <td>
+                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/19-admin-monitoring.svg">19-admin-monitoring.svg</a>,
+                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/20-admin-heatmap.svg">20-admin-heatmap.svg</a>
                 </td>
               </tr>
             </tbody>
@@ -799,20 +758,6 @@
                 <td><a href="WebThaoCamVien/docs/use-cases/wuc-08-translation-poi.svg">wuc-08-translation-poi.svg</a></td>
               </tr>
               <tr>
-                <td class="mono">WUC-09</td>
-                <td>Tạo/Sửa bản dịch cho tour</td>
-                <td>Admin</td>
-                <td>Tour có tên/mô tả theo ngôn ngữ tương tự POI để hiển thị đa ngôn ngữ.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-09-translation-tour.svg">wuc-09-translation-tour.svg</a></td>
-              </tr>
-              <tr>
-                <td class="mono">WUC-10</td>
-                <td>Xem action log (CRUD/auth)</td>
-                <td>Admin</td>
-                <td>Bảng log có lọc theo ngày/loại hành động/người dùng/đối tượng; xem chi tiết before/after.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-10-action-log.svg">wuc-10-action-log.svg</a></td>
-              </tr>
-              <tr>
                 <td class="mono">WUC-11</td>
                 <td>Xem log phát POI từ App (analytics)</td>
                 <td>Admin</td>
@@ -820,46 +765,18 @@
                 <td><a href="WebThaoCamVien/docs/use-cases/wuc-11-poi-play-log.svg">wuc-11-poi-play-log.svg</a></td>
               </tr>
               <tr>
-                <td class="mono">WUC-12</td>
-                <td>Tạo/Sửa/Xóa tour</td>
-                <td>Admin</td>
-                <td>Tour gồm danh sách POI theo thứ tự, thời gian dự kiến và trạng thái.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-12-tour-crud.svg">wuc-12-tour-crud.svg</a></td>
-              </tr>
-              <tr>
-                <td class="mono">WUC-13</td>
-                <td>Sắp xếp POI trong tour</td>
-                <td>Admin</td>
-                <td>Kéo thả đổi thứ tự; mỗi POI có thể có ghi chú và thời gian dừng.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-13-tour-order.svg">wuc-13-tour-order.svg</a></td>
-              </tr>
-              <tr>
-                <td class="mono">WUC-14</td>
-                <td>Xuất tour (CSV/PDF) hoặc xuất sang App</td>
-                <td>Admin</td>
-                <td>Xuất danh sách POI và thông tin tour; hoặc publish để App tải về.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-14-tour-export.svg">wuc-14-tour-export.svg</a></td>
-              </tr>
-              <tr>
-                <td class="mono">WUC-15</td>
-                <td>Quản lý tài khoản</td>
-                <td>Admin</td>
-                <td>Thêm/sửa/khóa tài khoản và gán vai trò phù hợp.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-15-user-management.svg">wuc-15-user-management.svg</a></td>
-              </tr>
-              <tr>
-                <td class="mono">WUC-16</td>
-                <td>Phân quyền chi tiết (RBAC)</td>
-                <td>Admin</td>
-                <td>Role: Admin/Viewer; quyền theo module view/create/update/delete/export.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-16-rbac.svg">wuc-16-rbac.svg</a></td>
-              </tr>
-              <tr>
                 <td class="mono">WUC-17</td>
-                <td>Xem dashboard chung</td>
+                <td>Monitoring</td>
                 <td>Admin</td>
-                <td>Tiles tổng POI/tour/audio/user; top POI; có thể mở rộng heatmap khi đủ dữ liệu.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-17-dashboard.svg">wuc-17-dashboard.svg</a></td>
+                <td>Theo doi suc khoe he thong, health/error/latency, drill-down su co.</td>
+                <td><a href="WebThaoCamVien/docs/use-cases/wuc-17-monitoring.svg">wuc-17-monitoring.svg</a></td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-18</td>
+                <td>Heatmap</td>
+                <td>Admin</td>
+                <td>Xem diem nong theo luot phat/tham quan theo time range, filter POI (tuy chon).</td>
+                <td><a href="WebThaoCamVien/docs/use-cases/wuc-18-heatmap.svg">wuc-18-heatmap.svg</a></td>
               </tr>
             </tbody>
           </table>
@@ -969,15 +886,9 @@
               <tr><td class="mono">WUC-06</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/14-audio-upload.svg">14-audio-upload.svg</a></td></tr>
               <tr><td class="mono">WUC-07</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/16-audio-delete.svg">16-audio-delete.svg</a></td></tr>
               <tr><td class="mono">WUC-08</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/17-translation-save-add.svg">17-translation-save-add.svg</a></td></tr>
-              <tr><td class="mono">WUC-09</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/18-translation-save-update.svg">18-translation-save-update.svg</a></td></tr>
-              <tr><td class="mono">WUC-10</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a></td></tr>
               <tr><td class="mono">WUC-11</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a></td></tr>
-              <tr><td class="mono">WUC-12</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/03-tour-list.svg">03-tour-list.svg</a>, <a href="WebThaoCamVien/docs/sequence-diagrams/images/04-tour-add.svg">04-tour-add.svg</a>, <a href="WebThaoCamVien/docs/sequence-diagrams/images/05-tour-edit.svg">05-tour-edit.svg</a>, <a href="WebThaoCamVien/docs/sequence-diagrams/images/06-tour-toggle-delete.svg">06-tour-toggle-delete.svg</a></td></tr>
-              <tr><td class="mono">WUC-13</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/03-tour-list.svg">03-tour-list.svg</a>, <a href="WebThaoCamVien/docs/sequence-diagrams/images/05-tour-edit.svg">05-tour-edit.svg</a></td></tr>
-              <tr><td class="mono">WUC-14</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/03-tour-list.svg">03-tour-list.svg</a>, <a href="WebThaoCamVien/docs/sequence-diagrams/images/06-tour-toggle-delete.svg">06-tour-toggle-delete.svg</a></td></tr>
-              <tr><td class="mono">WUC-15</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/01-account-login.svg">01-account-login.svg</a> (liên quan xác thực/ủy quyền)</td></tr>
-              <tr><td class="mono">WUC-16</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/01-account-login.svg">01-account-login.svg</a> (liên quan xác thực/ủy quyền)</td></tr>
-              <tr><td class="mono">WUC-17</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a></td></tr>
+              <tr><td class="mono">WUC-17</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/19-admin-monitoring.svg">19-admin-monitoring.svg</a> (monitoring)</td></tr>
+              <tr><td class="mono">WUC-18</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/20-admin-heatmap.svg">20-admin-heatmap.svg</a> (heatmap)</td></tr>
             </tbody>
           </table>
 

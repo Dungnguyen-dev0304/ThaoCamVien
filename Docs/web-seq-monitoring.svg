@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="700" viewBox="0 0 1180 700">
+  <defs>
+    <style>
+      .title{font:700 22px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .sub{font:500 13px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .lane{fill:#f8fafc; stroke:#e5e7eb; stroke-width:1.5}
+      .laneTitle{font:700 14px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .box{fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; rx:12; ry:12}
+      .boxT{font:600 13px system-ui,Segoe UI,Roboto,Arial; fill:#111827}
+      .boxD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#4b5563}
+      .arrow{stroke:#2563eb; stroke-width:2.2; fill:none; marker-end:url(#mEnd)}
+      .arrowW{stroke:#b45309; stroke-width:2.2; fill:none; marker-end:url(#mEndW)}
+      .note{fill:#fff7ed; stroke:#fdba74; stroke-width:1.2; rx:10; ry:10}
+      .noteT{font:700 12px system-ui,Segoe UI,Roboto,Arial; fill:#7c2d12}
+      .noteD{font:500 12px system-ui,Segoe UI,Roboto,Arial; fill:#9a3412}
+    </style>
+    <marker id="mEnd" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="mEndW" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="700" fill="#ffffff"/>
+  <text x="32" y="44" class="title">Web - Sequence: Monitoring</text>
+  <text x="32" y="70" class="sub">Pham vi: giam sat suc khoe Web/API (uptime, loi, latency) va chat luong dong bo du lieu App - Server.</text>
+
+  <!-- lanes -->
+  <rect x="32" y="96" width="276" height="568" class="lane"/>
+  <rect x="326" y="96" width="386" height="568" class="lane"/>
+  <rect x="730" y="96" width="418" height="568" class="lane"/>
+  <text x="48" y="126" class="laneTitle">Van hanh (Admin)</text>
+  <text x="342" y="126" class="laneTitle">WebThaoCamVien (Monitoring UI)</text>
+  <text x="746" y="126" class="laneTitle">Nguon giam sat (Logs/DB/Health)</text>
+
+  <!-- steps -->
+  <rect x="52" y="160" width="236" height="70" class="box"/>
+  <text x="72" y="188" class="boxT">1) Mo Monitoring</text>
+  <text x="72" y="210" class="boxD">Xem trang thai he thong theo thoi gian</text>
+
+  <rect x="356" y="160" width="326" height="110" class="box"/>
+  <text x="376" y="188" class="boxT">2) GET /admin/monitoring</text>
+  <text x="376" y="210" class="boxD">AuthN/AuthZ; load dashboard summary</text>
+  <text x="376" y="232" class="boxD">Gom du lieu: health, error rate, sync backlog</text>
+  <text x="376" y="254" class="boxD">Tra ve view + JSON widgets</text>
+
+  <rect x="760" y="170" width="358" height="130" class="box"/>
+  <text x="780" y="198" class="boxT">3) Collect metrics</text>
+  <text x="780" y="220" class="boxD">/health endpoint (Web/API/DB)</text>
+  <text x="780" y="242" class="boxD">Exception log / request log (rolling window)</text>
+  <text x="780" y="264" class="boxD">Queue/backlog: background sync, retries</text>
+  <text x="780" y="286" class="boxD">Ket qua: status + series + counters</text>
+
+  <rect x="356" y="320" width="326" height="92" class="box"/>
+  <text x="376" y="348" class="boxT">4) Render widgets</text>
+  <text x="376" y="370" class="boxD">Status tiles, charts, recent incidents</text>
+  <text x="376" y="392" class="boxD">Doi range / filter va refresh</text>
+
+  <rect x="52" y="452" width="236" height="92" class="box"/>
+  <text x="72" y="480" class="boxT">5) Dieu tra su co</text>
+  <text x="72" y="502" class="boxD">Mo chi tiet loi, trace, export log</text>
+  <text x="72" y="524" class="boxD">Tao checklist xu ly</text>
+
+  <rect x="356" y="452" width="326" height="120" class="box"/>
+  <text x="376" y="480" class="boxT">6) Drill-down</text>
+  <text x="376" y="502" class="boxD">Xem request/exception theo thoi gian</text>
+  <text x="376" y="524" class="boxD">Loc theo endpoint, status code, POI</text>
+  <text x="376" y="546" class="boxD">(Tuy chon) tai file log / snapshot cau hinh</text>
+
+  <!-- arrows -->
+  <path d="M288 195 L356 210" class="arrow"/>
+  <path d="M682 220 L760 240" class="arrow"/>
+  <path d="M760 290 L682 360" class="arrow"/>
+  <path d="M288 498 L356 510" class="arrowW"/>
+
+  <!-- notes -->
+  <rect x="760" y="340" width="358" height="90" class="note"/>
+  <text x="780" y="368" class="noteT">Chuan monitoring toi thieu</text>
+  <text x="780" y="390" class="noteD">Co health-check; co error/latency; co canh bao nguong; khong log secret</text>
+  <text x="780" y="412" class="noteD">Tach du lieu van hanh (admin) khoi du lieu khach tham quan</text>
+</svg>

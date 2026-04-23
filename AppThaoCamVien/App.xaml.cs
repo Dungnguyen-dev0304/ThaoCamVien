@@ -21,6 +21,41 @@ public partial class App : Application
         AppConfig.EnsureFreshPreferences();
 
         LanguageManager.Load();
+
+        // Tự động tìm API trong LAN để tránh phải hardcode IP.
+        // Nếu discovery tìm thấy → lưu Preferences["ApiBaseUrl"] và refresh các services đang chạy.
+        TryAutoDiscoverApiInBackground();
+    }
+
+    private void TryAutoDiscoverApiInBackground()
+    {
+#if ANDROID
+        if (DeviceInfo.DeviceType != DeviceType.Physical)
+            return;
+#endif
+
+        // Nếu user đã set ApiBaseUrl rồi thì tôn trọng lựa chọn đó.
+        if (Preferences.Default.ContainsKey("ApiBaseUrl"))
+            return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var discovery = _sp.GetService<ServerDiscoveryService>();
+                if (discovery == null) return;
+
+                var found = await discovery.DiscoverAndSaveAsync(timeoutMs: 2500).ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(found)) return;
+
+                _sp.GetService<ApiService>()?.RefreshBaseUrlFromPreferences();
+                _sp.GetService<DatabaseService>()?.RefreshApiBaseUrl();
+            }
+            catch
+            {
+                // Silent fail: nếu không discover được thì user vẫn có thể nhập IP ở onboarding/settings.
+            }
+        });
     }
 
     /// <summary>

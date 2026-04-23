@@ -36,6 +36,7 @@ public partial class StoryAudioPage : ContentPage
 
         _audio.PlaybackStateChanged += OnStateChanged;
         _audio.ProgressChanged += OnProgress;
+        _narration.QueueChanged += OnNarrationQueueChanged;
     }
 
     public void LoadPoi(Poi poi)
@@ -52,6 +53,7 @@ public partial class StoryAudioPage : ContentPage
         if (_poi == null) return;
 
         RenderPoi(_poi);
+        UpdateQueueHintUI();
         try
         {
             _vm.SetPoiContext(_poi.PoiId);
@@ -68,6 +70,7 @@ public partial class StoryAudioPage : ContentPage
     {
         base.OnDisappearing();
         _isNarrating = false;
+        QueueHintPanel.IsVisible = false;
 
         // Dừng audio ngầm, không await để không block
         _ = Task.Run(async () =>
@@ -233,6 +236,44 @@ public partial class StoryAudioPage : ContentPage
     private void UpdateBtn(bool playing)
         => PlayPauseIcon.Source = playing ? "icon_pause_dark.png" : "icon_play_dark.png";
 
+    // ── Queue UX (Skip + "Tiếp theo") ───────────────────────────────────
+    private void OnNarrationQueueChanged(object? sender, EventArgs e)
+        => MainThread.BeginInvokeOnMainThread(UpdateQueueHintUI);
+
+    private void UpdateQueueHintUI()
+    {
+        try
+        {
+            var queued = _narration.GetQueueSnapshot();
+            if (queued.Count == 0)
+            {
+                QueueHintPanel.IsVisible = false;
+                return;
+            }
+
+            var next = queued[0];
+            QueueNextPoiLabel.Text = next.Name ?? $"POI #{next.PoiId}";
+            QueueHintPanel.IsVisible = true;
+        }
+        catch
+        {
+            QueueHintPanel.IsVisible = false;
+        }
+    }
+
+    private async void OnQueueSkipTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            await _narration.SkipAsync();
+            // Panel sẽ tự ẩn/đổi theo QueueChanged.
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[StoryPage] Skip error: {ex.Message}");
+        }
+    }
+
     private static string Fmt(double s)
     {
         var t = TimeSpan.FromSeconds(s < 0 ? 0 : s);
@@ -262,6 +303,7 @@ public partial class StoryAudioPage : ContentPage
         {
             _audio.PlaybackStateChanged -= OnStateChanged;
             _audio.ProgressChanged -= OnProgress;
+            _narration.QueueChanged -= OnNarrationQueueChanged;
         }
         catch { }
     }
