@@ -24,7 +24,11 @@ public static class AppConfig
     /// IP LAN của PC khi test / demo trên máy Android thật.
     /// Đổi dòng này trước mỗi buổi demo nếu router cấp IP khác.
     /// </summary>
+    //public const string LanIp = "192.168.1.10";
+
+    //public const string LanIp = "192.168.31.126";
     public const string LanIp = "192.168.1.10";
+
 
     public const string ApiPort = "5281";
     public const string WebPort = "5181";
@@ -78,7 +82,7 @@ public static class AppConfig
         if (isEmulator || isCurrentLan || isLocalhost) return;
 
         System.Diagnostics.Debug.WriteLine(
-            $"[AppConfig] Stale pref {key}='{val}' (không match emulator/LanIp={LanIp}) → xoá.");
+            $"[AppConfig] Stale pref {key}='{val}' (không match emulator/LanIp={LanIp}) → xoá");
         Preferences.Default.Remove(key);
     }
 }

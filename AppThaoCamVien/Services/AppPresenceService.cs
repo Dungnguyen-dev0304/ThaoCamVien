@@ -54,7 +54,9 @@ public sealed class AppPresenceService
 
             try
             {
-                await Task.Delay(45_000).ConfigureAwait(false);
+                // Ping 2s/lần để admin phát hiện offline trong ~5s sau khi thoát app.
+                // Đánh đổi: tốn pin + traffic. Chỉ hợp với demo, KHÔNG phù hợp deploy thật.
+                await Task.Delay(2_000).ConfigureAwait(false);
             }
             catch
             {

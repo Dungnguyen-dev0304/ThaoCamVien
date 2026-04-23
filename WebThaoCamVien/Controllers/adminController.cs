@@ -90,9 +90,9 @@ namespace WebThaoCamVien.Controllers
 
         /// <summary>JSON for dashboard polling: app sessions seen recently (devices need internet to ping API).</summary>
         [HttpGet]
-        public async Task<IActionResult> ActiveAppSessionsJson([FromQuery] int staleSeconds = 90)
+        public async Task<IActionResult> ActiveAppSessionsJson([FromQuery] int staleSeconds = 3)
         {
-            staleSeconds = Math.Clamp(staleSeconds, 30, 600);
+            staleSeconds = Math.Clamp(staleSeconds, 2, 600);
             var since = DateTime.UtcNow.AddSeconds(-staleSeconds);
             var count = await _context.AppClientPresences.AsNoTracking()
                 .CountAsync(p => p.LastSeenUtc >= since);
@@ -142,7 +142,8 @@ namespace WebThaoCamVien.Controllers
 
             var totalListenSec = await listens.SumAsync(v => (long?)v.ListenDuration) ?? 0L;
 
-            var activeSince = DateTime.UtcNow.AddSeconds(-90);
+            // Cửa sổ 3s: app ping 2s/lần → user thoát app thì admin thấy 0 trong ~5s.
+            var activeSince = DateTime.UtcNow.AddSeconds(-3);
             var activeDevices = await _context.AppClientPresences.AsNoTracking()
                 .CountAsync(p => p.LastSeenUtc >= activeSince);
 

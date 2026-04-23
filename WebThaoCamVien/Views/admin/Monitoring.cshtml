@@ -435,5 +435,19 @@
         // ─── boot ─────────────────────────────────────────────────
         loadData(7);
         // Không auto-start. User phải tick checkbox "Tự làm mới" mới chạy.
+
+        // ─── Lightweight poll chỉ cho "Thiết bị đang hoạt động" ──────
+        // Chạy 2s/lần, không reload charts.
+        // Kết hợp với server threshold 3s + app ping 2s →
+        // sau khi user thoát app, admin thấy 0 trong ~5 giây.
+        async function pollActiveDevices() {
+            try {
+                const r = await fetch('/Admin/ActiveAppSessionsJson?staleSeconds=3', { credentials: 'same-origin' });
+                if (!r.ok) return;
+                const d = await r.json();
+                if (typeof d.activeCount === 'number') setValue('k-devices', d.activeCount);
+            } catch { /* network blip — bỏ qua */ }
+        }
+        setInterval(() => { if (!document.hidden) pollActiveDevices(); }, 2000);
     </script>
 }
