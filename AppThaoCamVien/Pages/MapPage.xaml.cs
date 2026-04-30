@@ -28,6 +28,7 @@ public partial class MapPage : ContentPage
     private CancellationTokenSource? _dotCts;
     private bool _mapReady = false;
     private bool _routeVisible = false;
+    private readonly SemaphoreSlim _locationGate = new(1, 1);
 
     // Màu sắc đẹp cho các loại POI
     private static readonly Color PinColorDefault = Color.FromArgb("#4CAF50");   // Xanh lá
@@ -277,8 +278,13 @@ public partial class MapPage : ContentPage
         // Dùng Task.Run để xử lý geofencing trên background thread
         _ = Task.Run(async () =>
         {
+            Poi? poiToAutoPlay = null;
             try
             {
+                // Serialize location processing để tránh race khi fake/teleport GPS
+                // (2 update tới gần nhau có thể chạy chồng và đảo thứ tự).
+                await _locationGate.WaitAsync();
+
                 // Cập nhật chấm vị trí trên bản đồ (phải trên MainThread)
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
@@ -330,19 +336,31 @@ public partial class MapPage : ContentPage
                 if (result.ActivePoi != null && result.CanTrigger)
                 {
                     _geo.MarkTriggered(result.ActivePoi.PoiId);
-                    try
-                    {
-                        await _narration.PlayAsync(result.ActivePoi, forcePlay: false);
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[Map] Narration error: {ex.Message}");
-                    }
+                    // Không await ở đây: nếu await thì location tiếp theo (B) sẽ bị chặn
+                    // bởi _locationGate cho tới khi A phát xong, làm queue không enqueue được.
+                    poiToAutoPlay = result.ActivePoi;
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[Map] OnLocation error: {ex.Message}");
+            }
+            finally
+            {
+                try { _locationGate.Release(); } catch { }
+            }
+
+            // Gọi narration sau khi đã release gate để không chặn các location tiếp theo.
+            if (poiToAutoPlay != null)
+            {
+                try
+                {
+                    _ = _narration.PlayAsync(poiToAutoPlay, forcePlay: false);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Map] Narration enqueue error: {ex.Message}");
+                }
             }
         });
     }
