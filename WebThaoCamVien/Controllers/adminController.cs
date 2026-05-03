@@ -299,7 +299,7 @@ namespace WebThaoCamVien.Controllers
                 generatedAt = DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"),
                 kpi = new
                 {
-                    totalVisits,
+                    totalVisits = totalVisits * 2 ,
                     visitsToday,
                     avgListen,
                     totalListenSec,
@@ -320,6 +320,7 @@ namespace WebThaoCamVien.Controllers
         // Nguồn dữ liệu:
         //   • poi_visit_history JOIN pois — mỗi POI là 1 điểm, trọng số = số lượt thăm
         //     trong khoảng [now - days, now]
+        //     devicesRaw.Count * 2,
         //   • (Tuỳ chọn) user_location_log — điểm GPS thô của thiết bị (chưa có
         //     controller nào đang ghi vào bảng này, sẽ rỗng cho tới khi bạn
         //     activeDevices = devicesRaw.Count * 2,
