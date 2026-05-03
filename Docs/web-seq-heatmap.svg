@@ -31,7 +31,7 @@
   <rect x="32" y="96" width="352" height="500" class="lane"/>
   <rect x="414" y="96" width="352" height="500" class="lane"/>
   <rect x="796" y="96" width="352" height="500" class="lane"/>
-  <text x="48" y="126" class="laneTitle">Admin (Browser)</text>
+  <text x="48" y="126" class="laneTitle">Admin — Heatmap</text>
   <text x="430" y="126" class="laneTitle">WebThaoCamVien (MVC)</text>
   <text x="812" y="126" class="laneTitle">DB / Analytics Store</text>
 
@@ -54,7 +54,7 @@
   <rect x="444" y="292" width="292" height="92" class="box"/>
   <text x="464" y="320" class="boxT">4) Map sang view model</text>
   <text x="464" y="342" class="boxD">Payload: bounds, legend, max intensity</text>
-  <text x="464" y="364" class="boxD">Render view + JSON data heatmap</text>
+  <text x="464" y="364" class="boxD">200 Heatmap; 200 HeatmapDataJson</text>
 
   <rect x="62" y="422" width="292" height="92" class="box"/>
   <text x="82" y="450" class="boxT">5) Render heatmap layer</text>
@@ -62,8 +62,8 @@
   <text x="82" y="494" class="boxD">Update khi doi filter (AJAX/refresh)</text>
 
   <rect x="444" y="432" width="292" height="82" class="box"/>
-  <text x="464" y="460" class="boxT">6) (Tuy chon) API JSON</text>
-  <text x="464" y="482" class="boxD">GET /admin/heatmap/data tra ve points</text>
+  <text x="464" y="460" class="boxT">6) HeatmapDataJson</text>
+  <text x="464" y="482" class="boxD">GET HeatmapDataJson — tra ve points</text>
 
   <!-- arrows -->
   <path d="M354 195 L444 206" class="arrow"/>

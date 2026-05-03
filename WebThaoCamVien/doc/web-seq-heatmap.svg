@@ -31,7 +31,7 @@
   <rect x="32" y="96" width="352" height="500" class="lane"/>
   <rect x="414" y="96" width="352" height="500" class="lane"/>
   <rect x="796" y="96" width="352" height="500" class="lane"/>
-  <text x="48" y="126" class="laneTitle">Admin (Browser)</text>
+  <text x="48" y="126" class="laneTitle">Admin (giao diện web quản trị)</text>
   <text x="430" y="126" class="laneTitle">WebThaoCamVien (MVC)</text>
   <text x="812" y="126" class="laneTitle">DB / Analytics Store</text>
 

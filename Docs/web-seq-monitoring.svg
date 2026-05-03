@@ -31,7 +31,7 @@
   <rect x="32" y="96" width="276" height="568" class="lane"/>
   <rect x="326" y="96" width="386" height="568" class="lane"/>
   <rect x="730" y="96" width="418" height="568" class="lane"/>
-  <text x="48" y="126" class="laneTitle">Van hanh (Admin)</text>
+  <text x="48" y="126" class="laneTitle">Van hanh (Admin) — Monitoring</text>
   <text x="342" y="126" class="laneTitle">WebThaoCamVien (Monitoring UI)</text>
   <text x="746" y="126" class="laneTitle">Nguon giam sat (Logs/DB/Health)</text>
 
@@ -44,7 +44,7 @@
   <text x="376" y="188" class="boxT">2) GET /admin/monitoring</text>
   <text x="376" y="210" class="boxD">AuthN/AuthZ; load dashboard summary</text>
   <text x="376" y="232" class="boxD">Gom du lieu: health, error rate, sync backlog</text>
-  <text x="376" y="254" class="boxD">Tra ve view + JSON widgets</text>
+  <text x="376" y="254" class="boxD">200 Monitoring; 200 MonitoringDataJson, ActiveAppSessionsJson</text>
 
   <rect x="760" y="170" width="358" height="130" class="box"/>
   <text x="780" y="198" class="boxT">3) Collect metrics</text>

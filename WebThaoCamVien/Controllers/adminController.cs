@@ -322,6 +322,7 @@ namespace WebThaoCamVien.Controllers
         //     trong khoảng [now - days, now]
         //   • (Tuỳ chọn) user_location_log — điểm GPS thô của thiết bị (chưa có
         //     controller nào đang ghi vào bảng này, sẽ rỗng cho tới khi bạn
+        //     activeDevices = devicesRaw.Count * 2,
         //     thêm endpoint thu log vị trí từ app)
         // ─────────────────────────────────────────────────────────────────
         public IActionResult Heatmap()
