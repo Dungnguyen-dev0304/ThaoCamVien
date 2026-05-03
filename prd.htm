@@ -1,93 +1,134 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PRD — ThaoCamVien_Project (WebThaoCamVien)</title>
-  <meta name="description" content="Product Requirements Document (PRD) cho dự án ThaoCamVien_Project / WebThaoCamVien." />
+  <meta name="description"
+    content="Product Requirements Document (PRD) cho dự án ThaoCamVien_Project / WebThaoCamVien." />
   <style>
-    :root{
+    :root {
       /* Light theme (white background) */
-      --bg:#ffffff;
-      --panel:#ffffff;
-      --card:#ffffff;
-      --text:#111827;    /* slate-900 */
-      --muted:#4b5563;   /* slate-600 */
-      --border:rgba(17,24,39,.12);
-      --shadow:0 10px 28px rgba(17,24,39,.10);
-      --brand:#2563eb;   /* blue-600 */
-      --brand2:#0ea5e9;  /* sky-500 */
-      --warn:#b45309;    /* amber-700 */
-      --bad:#b91c1c;     /* red-700 */
-      --good:#15803d;    /* green-700 */
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --card: #ffffff;
+      --text: #111827;
+      /* slate-900 */
+      --muted: #4b5563;
+      /* slate-600 */
+      --border: rgba(17, 24, 39, .12);
+      --shadow: 0 10px 28px rgba(17, 24, 39, .10);
+      --brand: #2563eb;
+      /* blue-600 */
+      --brand2: #0ea5e9;
+      /* sky-500 */
+      --warn: #b45309;
+      /* amber-700 */
+      --bad: #b91c1c;
+      /* red-700 */
+      --good: #15803d;
+      /* green-700 */
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
-    * { box-sizing: border-box; }
-    body{
-      margin:0;
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
       font-family: var(--sans);
       color: var(--text);
       background: var(--bg);
       line-height: 1.55;
     }
-    a{ color: var(--brand); text-decoration: none; }
-    a:hover{ text-decoration: underline; }
-    code, pre{ font-family: var(--mono); }
-    .wrap{
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    code,
+    pre {
+      font-family: var(--mono);
+    }
+
+    .wrap {
       max-width: 1180px;
       margin: 0 auto;
       padding: 28px 18px 80px;
     }
-    header{
+
+    header {
       border: 1px solid var(--border);
       border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.92));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, .92));
       box-shadow: var(--shadow);
       padding: 18px 18px 14px;
       position: static;
       backdrop-filter: blur(10px);
       z-index: auto;
     }
-    .titleRow{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
+
+    .titleRow {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
       gap: 14px;
       flex-wrap: wrap;
     }
-    h1{
-      margin:0;
+
+    h1 {
+      margin: 0;
       font-size: 22px;
       letter-spacing: .2px;
     }
-    .subtitle{
+
+    .subtitle {
       margin: 6px 0 0;
       color: var(--muted);
       font-size: 13px;
     }
-    .pillRow{ display:flex; gap: 8px; flex-wrap: wrap; }
-    .pill{
+
+    .pillRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(17,24,39,.03);
+      background: rgba(17, 24, 39, .03);
       color: var(--muted);
       font-size: 12px;
       white-space: nowrap;
     }
-    .pill strong{ color: var(--text); font-weight: 650; }
-    main{
+
+    .pill strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    main {
       margin-top: 18px;
-      display:grid;
+      display: grid;
       grid-template-columns: 320px 1fr;
       gap: 16px;
-      align-items:start;
+      align-items: start;
     }
-    nav{
+
+    nav {
       border: 1px solid var(--border);
       border-radius: 16px;
-      background: rgba(17,24,39,.02);
+      background: rgba(17, 24, 39, .02);
       box-shadow: var(--shadow);
       padding: 14px 14px 10px;
       position: sticky;
@@ -95,17 +136,30 @@
       max-height: calc(100vh - 130px);
       overflow: auto;
     }
-    nav .tocTitle{
+
+    nav .tocTitle {
       margin: 0 0 8px;
       font-size: 13px;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: .12em;
     }
-    nav ul{ margin:0; padding-left: 18px; }
-    nav li{ margin: 6px 0; color: var(--muted); }
-    nav a{ color: var(--text); }
-    .content{
+
+    nav ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    nav li {
+      margin: 6px 0;
+      color: var(--muted);
+    }
+
+    nav a {
+      color: var(--text);
+    }
+
+    .content {
       border: 1px solid var(--border);
       border-radius: 16px;
       background: #ffffff;
@@ -113,48 +167,87 @@
       padding: 18px;
       min-width: 0;
     }
-    section{ padding: 10px 0 0; border-top: 1px solid rgba(17,24,39,.10); margin-top: 14px; }
-    section:first-child{ border-top: 0; margin-top: 0; padding-top: 0; }
-    h2{
+
+    section {
+      padding: 10px 0 0;
+      border-top: 1px solid rgba(17, 24, 39, .10);
+      margin-top: 14px;
+    }
+
+    section:first-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    h2 {
       margin: 0 0 8px;
       font-size: 16px;
       letter-spacing: .2px;
     }
-    h3{
+
+    h3 {
       margin: 14px 0 8px;
       font-size: 14px;
       color: var(--text);
     }
-    p{ margin: 8px 0; color: var(--muted); }
-    .grid2{
-      display:grid;
+
+    p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    .grid2 {
+      display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-    .card{
+
+    .card {
       border: 1px solid var(--border);
       border-radius: 14px;
-      background: rgba(17,24,39,.02);
+      background: rgba(17, 24, 39, .02);
       padding: 12px;
     }
-    .card h3{ margin-top: 0; }
-    .kvs{
-      display:grid;
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .kvs {
+      display: grid;
       grid-template-columns: 180px 1fr;
       gap: 8px 12px;
       margin-top: 10px;
     }
-    .k{ color: var(--muted); }
-    .v{ color: var(--text); }
-    .v code{ background: rgba(17,24,39,.03); border: 1px solid rgba(17,24,39,.10); padding: 2px 6px; border-radius: 8px; }
-    .list{
+
+    .k {
+      color: var(--muted);
+    }
+
+    .v {
+      color: var(--text);
+    }
+
+    .v code {
+      background: rgba(17, 24, 39, .03);
+      border: 1px solid rgba(17, 24, 39, .10);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    .list {
       margin: 8px 0 0;
       padding-left: 18px;
       color: var(--muted);
     }
-    .list li{ margin: 6px 0; }
-    .badge{
-      display:inline-block;
+
+    .list li {
+      margin: 6px 0;
+    }
+
+    .badge {
+      display: inline-block;
       padding: 2px 8px;
       border-radius: 999px;
       border: 1px solid var(--border);
@@ -162,21 +255,41 @@
       vertical-align: middle;
       margin-left: 8px;
       color: var(--muted);
-      background: rgba(17,24,39,.03);
+      background: rgba(17, 24, 39, .03);
     }
-    .badge.good{ color: #14532d; border-color: rgba(21,128,61,.28); background: rgba(21,128,61,.10); }
-    .badge.warn{ color: #7c2d12; border-color: rgba(180,83,9,.28); background: rgba(180,83,9,.10); }
-    .badge.bad{ color: #7f1d1d; border-color: rgba(185,28,28,.25); background: rgba(185,28,28,.08); }
-    .note{
-      border-left: 3px solid rgba(37,99,235,.70);
+
+    .badge.good {
+      color: #14532d;
+      border-color: rgba(21, 128, 61, .28);
+      background: rgba(21, 128, 61, .10);
+    }
+
+    .badge.warn {
+      color: #7c2d12;
+      border-color: rgba(180, 83, 9, .28);
+      background: rgba(180, 83, 9, .10);
+    }
+
+    .badge.bad {
+      color: #7f1d1d;
+      border-color: rgba(185, 28, 28, .25);
+      background: rgba(185, 28, 28, .08);
+    }
+
+    .note {
+      border-left: 3px solid rgba(37, 99, 235, .70);
       padding: 10px 12px;
       border-radius: 10px;
-      background: rgba(37,99,235,.06);
+      background: rgba(37, 99, 235, .06);
       color: var(--muted);
       margin: 10px 0;
     }
-    .note strong{ color: var(--text); }
-    table{
+
+    .note strong {
+      color: var(--text);
+    }
+
+    table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
@@ -184,48 +297,120 @@
       border: 1px solid var(--border);
       border-radius: 14px;
     }
-    th, td{
-      text-align:left;
+
+    th,
+    td {
+      text-align: left;
       padding: 10px 10px;
-      border-bottom: 1px solid rgba(17,24,39,.08);
+      border-bottom: 1px solid rgba(17, 24, 39, .08);
       vertical-align: top;
       color: var(--muted);
     }
-    th{ color: var(--text); background: rgba(17,24,39,.03); font-weight: 650; }
-    tr:last-child td{ border-bottom: 0; }
-    .small{ font-size: 12px; color: var(--muted); }
-    .mono{ font-family: var(--mono); }
-    .footer{
+
+    th {
+      color: var(--text);
+      background: rgba(17, 24, 39, .03);
+      font-weight: 650;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: var(--mono);
+    }
+
+    .footer {
       margin-top: 18px;
       color: var(--muted);
       font-size: 12px;
     }
-    @media (max-width: 980px){
-      main{ grid-template-columns: 1fr; }
-      nav{ position: relative; top: 0; max-height: none; }
-      header{ position: relative; top: 0; }
-      .kvs{ grid-template-columns: 1fr; }
-      .grid2{ grid-template-columns: 1fr; }
+
+    @media (max-width: 980px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        position: relative;
+        top: 0;
+        max-height: none;
+      }
+
+      header {
+        position: relative;
+        top: 0;
+      }
+
+      .kvs {
+        grid-template-columns: 1fr;
+      }
+
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
     }
-    @media print{
-      header, nav{ position: static; box-shadow:none; }
-      body{ background:#fff; color:#000; }
-      .content, nav, header{ background:#fff; border-color:#ddd; }
-      a{ color:#0645ad; }
-      p, li, td{ color:#222; }
-      .badge{ border-color:#ddd; background:#f5f5f5; color:#111; }
-      .note{ background:#f3f7ff; border-left-color:#2b6cb0; }
+
+    @media print {
+
+      header,
+      nav {
+        position: static;
+        box-shadow: none;
+      }
+
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      .content,
+      nav,
+      header {
+        background: #fff;
+        border-color: #ddd;
+      }
+
+      a {
+        color: #0645ad;
+      }
+
+      p,
+      li,
+      td {
+        color: #222;
+      }
+
+      .badge {
+        border-color: #ddd;
+        background: #f5f5f5;
+        color: #111;
+      }
+
+      .note {
+        background: #f3f7ff;
+        border-left-color: #2b6cb0;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
       <div class="titleRow">
         <div>
-          <h1>PRD — ThaoCamVien_Project <span class="badge good">WebThaoCamVien</span><span class="badge good">AppThaoCamVien</span></h1>
+          <h1>PRD — ThaoCamVien_Project <span class="badge good">WebThaoCamVien</span><span
+              class="badge good">AppThaoCamVien</span></h1>
           <p class="subtitle">
-            Product Requirements Document cho hệ sinh thái: Web quản trị nội dung + App trải nghiệm tham quan (map, POI, audio, QR, about).
+            Product Requirements Document cho hệ sinh thái: Web quản trị nội dung + App trải nghiệm tham quan (map, POI,
+            audio, QR, about).
           </p>
         </div>
         <div class="pillRow" aria-label="metadata">
@@ -264,16 +449,20 @@
             <div class="card">
               <h3>Bối cảnh nghiệp vụ (Web + App)</h3>
               <ul class="list">
-                <li>Web Admin cần quản trị tập trung POI/audio/ban dich de dam bao du lieu chuan, dong nhat da ngon ngu.</li>
-                <li>App tham quan cần trải nghiệm ổn định theo trạng thái Loading/Success/Empty/Error, hỗ trợ bản đồ, audio, QR, offline.</li>
-                <li>Vận hành cần theo dõi thống kê hành vi người dùng trên App và hiệu quả nội dung trên Web để tối ưu liên tục.</li>
+                <li>Web Admin cần quản trị tập trung POI/audio/ban dich de dam bao du lieu chuan, dong nhat da ngon ngu.
+                </li>
+                <li>App tham quan cần trải nghiệm ổn định theo trạng thái Loading/Success/Empty/Error, hỗ trợ bản đồ,
+                  audio, QR, offline.</li>
+                <li>Vận hành cần theo dõi thống kê hành vi người dùng trên App và hiệu quả nội dung trên Web để tối ưu
+                  liên tục.</li>
               </ul>
             </div>
             <div class="card">
               <h3>Giải pháp tổng thể</h3>
               <ul class="list">
                 <li>WebThaoCamVien: xac thuc quan tri, CRUD POI, quan ly audio va translation, dashboard analytics.</li>
-                <li>AppThaoCamVien: Home/Map/StoryAudio/QR/About + onboarding, geofencing, narration, tải gói offline.</li>
+                <li>AppThaoCamVien: Home/Map/StoryAudio/QR/About + onboarding, geofencing, narration, tải gói offline.
+                </li>
                 <li>Kênh dữ liệu thống nhất qua API để App đọc nội dung đã được Web kiểm duyệt và xuất bản.</li>
                 <li>Hệ quy chiếu tài liệu đồng bộ bằng sequence diagrams + use case SVG cho cả Web và App.</li>
               </ul>
@@ -293,8 +482,10 @@
           <div class="card">
             <h3>Mục tiêu sản phẩm liên thông Web + App</h3>
             <ul class="list">
-              <li>Web: rut ngan thoi gian quan tri noi dung (POI/audio/translation), giam loi nhap lieu va loi file.</li>
-              <li>App: tăng mức độ hoàn tất hành trình tham quan (xem map, nghe thuyết minh, tra cứu QR) với trải nghiệm mượt.</li>
+              <li>Web: rut ngan thoi gian quan tri noi dung (POI/audio/translation), giam loi nhap lieu va loi file.
+              </li>
+              <li>App: tăng mức độ hoàn tất hành trình tham quan (xem map, nghe thuyết minh, tra cứu QR) với trải nghiệm
+                mượt.</li>
               <li>Vận hành: có dashboard đo được hiệu quả nội dung và hành vi người dùng để ra quyết định nhanh.</li>
             </ul>
           </div>
@@ -350,8 +541,10 @@
               <h3>Trong phạm vi <span class="badge good">In scope</span></h3>
               <ul class="list">
                 <li>Đăng nhập/đăng xuất bằng Cookie Authentication.</li>
-                <li>POI: danh sách, thêm/sửa/xóa; upload ảnh thumbnail; validate tọa độ (ranh giới + khoảng cách tối thiểu).</li>
-                <li>Audio theo POI: danh sách, quản lý theo POI; upload file audio; record trực tiếp trên web (lưu .webm); xóa audio.</li>
+                <li>POI: danh sách, thêm/sửa/xóa; upload ảnh thumbnail; validate tọa độ (ranh giới + khoảng cách tối
+                  thiểu).</li>
+                <li>Audio theo POI: danh sách, quản lý theo POI; upload file audio; record trực tiếp trên web (lưu
+                  .webm); xóa audio.</li>
                 <li>Bản dịch POI: thêm/cập nhật theo ngôn ngữ; trang quản lý tổng hợp.</li>
                 <li>Admin Index/Analytics: thống kê + lịch sử truy cập, lọc theo POI và số ngày, phân trang.</li>
               </ul>
@@ -374,29 +567,37 @@
             <div class="card">
               <h3>Quản trị nội dung (Web Admin)</h3>
               <div class="kvs">
-                <div class="k">Mục tiêu</div><div class="v">Tao/sua POI, audio, ban dich.</div>
-                <div class="k">Pain points</div><div class="v">Thiếu chuẩn validate, mất file, trùng lặp audio theo ngôn ngữ.</div>
+                <div class="k">Mục tiêu</div>
+                <div class="v">Tao/sua POI, audio, ban dich.</div>
+                <div class="k">Pain points</div>
+                <div class="v">Thiếu chuẩn validate, mất file, trùng lặp audio theo ngôn ngữ.</div>
               </div>
             </div>
             <div class="card">
               <h3>Quản trị vận hành (Web Admin)</h3>
               <div class="kvs">
-                <div class="k">Mục tiêu</div><div class="v">Theo dõi thống kê truy cập, xem lịch sử nghe, top POI.</div>
-                <div class="k">Pain points</div><div class="v">Không có dashboard tổng hợp, khó lọc theo thời gian/POI.</div>
+                <div class="k">Mục tiêu</div>
+                <div class="v">Theo dõi thống kê truy cập, xem lịch sử nghe, top POI.</div>
+                <div class="k">Pain points</div>
+                <div class="v">Không có dashboard tổng hợp, khó lọc theo thời gian/POI.</div>
               </div>
             </div>
             <div class="card">
               <h3>Khách tham quan (App User)</h3>
               <div class="kvs">
-                <div class="k">Mục tiêu</div><div class="v">Dễ tìm điểm tham quan, nghe thuyết minh, tra cứu nhanh bằng QR hoặc mã.</div>
-                <div class="k">Pain points</div><div class="v">Mạng không ổn định, khó định vị, nội dung không đồng nhất theo ngôn ngữ.</div>
+                <div class="k">Mục tiêu</div>
+                <div class="v">Dễ tìm điểm tham quan, nghe thuyết minh, tra cứu nhanh bằng QR hoặc mã.</div>
+                <div class="k">Pain points</div>
+                <div class="v">Mạng không ổn định, khó định vị, nội dung không đồng nhất theo ngôn ngữ.</div>
               </div>
             </div>
             <div class="card">
               <h3>Nhóm vận hành kỹ thuật</h3>
               <div class="kvs">
-                <div class="k">Mục tiêu</div><div class="v">Giám sát lỗi App/Web, đảm bảo dữ liệu đồng bộ API - DB - file.</div>
-                <div class="k">Pain points</div><div class="v">Khó truy vết lỗi liên thông giữa backend, dashboard, và app client.</div>
+                <div class="k">Mục tiêu</div>
+                <div class="v">Giám sát lỗi App/Web, đảm bảo dữ liệu đồng bộ API - DB - file.</div>
+                <div class="k">Pain points</div>
+                <div class="v">Khó truy vết lỗi liên thông giữa backend, dashboard, và app client.</div>
               </div>
             </div>
           </div>
@@ -405,10 +606,14 @@
         <section id="gia-tri">
           <h2>Giá trị mang lại</h2>
           <ul class="list">
-            <li><strong>Giá trị cho Web</strong>: tăng năng suất quản trị nội dung, giảm thao tác lỗi và cải thiện khả năng kiểm soát vòng đời dữ liệu.</li>
-            <li><strong>Giá trị cho App</strong>: trải nghiệm tham quan liền mạch qua map, geofencing, narration, QR/Numpad và cơ chế offline.</li>
-            <li><strong>Giá trị vận hành</strong>: dữ liệu analytics đồng nhất giúp đo chất lượng nội dung và hành vi người dùng theo thời gian.</li>
-            <li><strong>Giá trị mở rộng</strong>: kiến trúc API-first giúp mở rộng thêm ngôn ngữ, loại nội dung và kênh client trong tương lai.</li>
+            <li><strong>Giá trị cho Web</strong>: tăng năng suất quản trị nội dung, giảm thao tác lỗi và cải thiện khả
+              năng kiểm soát vòng đời dữ liệu.</li>
+            <li><strong>Giá trị cho App</strong>: trải nghiệm tham quan liền mạch qua map, geofencing, narration,
+              QR/Numpad và cơ chế offline.</li>
+            <li><strong>Giá trị vận hành</strong>: dữ liệu analytics đồng nhất giúp đo chất lượng nội dung và hành vi
+              người dùng theo thời gian.</li>
+            <li><strong>Giá trị mở rộng</strong>: kiến trúc API-first giúp mở rộng thêm ngôn ngữ, loại nội dung và kênh
+              client trong tương lai.</li>
           </ul>
         </section>
 
@@ -416,24 +621,16 @@
           <h2>Yêu cầu chức năng (Web + App)</h2>
 
           <div class="note">
-            <strong>Ghi chú</strong>: Mục này chỉ mô tả yêu cầu chức năng Web + App. Sequence diagrams được tách sang mục riêng bên dưới.
+            <strong>Ghi chú</strong>: Mục này chỉ mô tả yêu cầu chức năng Web + App. Sequence diagrams được tách sang
+            mục riêng bên dưới.
           </div>
-
-          <h3>FR-01 — Đăng nhập (Cookie Authentication)</h3>
-          <ul class="list">
-            <li>GET <code>/Account/Login</code>: nếu đã đăng nhập thì redirect <code>/Admin/Index</code>, nếu chưa thì hiển thị form.</li>
-            <li>POST <code>/Account/Login</code>: nhận email/password + anti-forgery; xác thực với DB; tạo cookie (persistent) thời hạn ~7 ngày; lỗi thì trả về view với thông báo.</li>
-          </ul>
-
-          <h3>FR-02 — Đăng xuất</h3>
-          <ul class="list">
-            <li>Cho phép admin đăng xuất, xoá session/cookie, về trang login (hoặc trang công khai nếu có).</li>
-          </ul>
 
           <h3>FR-04 — POI management (CRUD + ảnh + validate tọa độ)</h3>
           <ul class="list">
-            <li>Danh sách POI: sắp xếp mới nhất trước; hiển thị POI mới tạo nổi bật (tham chiếu ViewBag.NewPoi trong diagram).</li>
-            <li>Thêm POI: bắt buộc ảnh thumbnail; validate ModelState; validate tọa độ trong ranh giới; kiểm tra khoảng cách tối thiểu với POI khác (diagram đề cập &lt; 5m).</li>
+            <li>Danh sách POI: sắp xếp mới nhất trước; hiển thị POI mới tạo nổi bật (tham chiếu ViewBag.NewPoi trong
+              diagram).</li>
+            <li>Thêm POI: bắt buộc ảnh thumbnail; validate ModelState; validate tọa độ trong ranh giới; kiểm tra khoảng
+              cách tối thiểu với POI khác (diagram đề cập &lt; 5m).</li>
             <li>Sửa POI: validate tương tự; nếu đổi ảnh thì xóa ảnh cũ rồi lưu ảnh mới với tên file unique.</li>
             <li>Xóa POI: xác nhận; xóa ảnh thumbnail (nếu có) trên filesystem; xóa record DB.</li>
           </ul>
@@ -448,8 +645,11 @@
           <ul class="list">
             <li>Trang danh sách audio: hiển thị POI + map audio theo ngôn ngữ + danh sách ngôn ngữ hỗ trợ.</li>
             <li>Trang quản lý theo POI: xem các bản audio hiện có theo ngôn ngữ.</li>
-            <li>Upload audio: validate file (không rỗng, đúng định dạng); nếu đã có audio cùng (POI, LanguageCode) thì xóa file cũ và update record; nếu chưa có thì insert mới.</li>
-            <li>Record trên web: ghi âm và lưu blob (.webm); hành vi cập nhật/tạo mới tương tự upload; trả JSON <code>{success:true/false}</code>.</li>
+            <li>Upload audio: validate file (không rỗng, đúng định dạng); nếu đã có audio cùng (POI, LanguageCode) thì
+              xóa file cũ và update record; nếu chưa có thì insert mới.</li>
+            <li>Record trên web: ghi âm và lưu blob (.webm); hành vi cập nhật/tạo mới tương tự upload; trả JSON
+              <code>{success:true/false}</code>.
+            </li>
             <li>Xóa audio: xóa file nếu tồn tại + xóa record DB.</li>
           </ul>
 
@@ -463,11 +663,53 @@
           <h3>FR-07 — Admin Index / Analytics (thống kê + lịch sử)</h3>
           <ul class="list">
             <li>GET <code>/Admin/Index?poiId&amp;days&amp;page</code> hỗ trợ lọc theo POI và số ngày gần đây.</li>
-            <li>Thống kê gợi ý theo diagram: totalVisits, totalUsers, todayVisits, average listen duration (nếu có), chuỗi 7 ngày gần nhất, Top 5 POI, danh sách lịch sử gần đây (phân trang).</li>
+            <li>Thống kê gợi ý theo diagram: totalVisits, totalUsers, todayVisits, average listen duration (nếu có),
+              chuỗi 7 ngày gần nhất, Top 5 POI, danh sách lịch sử gần đây (phân trang).</li>
             <li>Hiển thị danh sách POI để lọc nhanh.</li>
           </ul>
+          <h3>Phần Web — API tối thiểu</h3>
+          <p>Danh sách endpoint/route tối thiểu phục vụ chức năng Web Admin (từ thư mục Controllers):</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Mục đích</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/Admin/Index</td>
+                <td>Dashboard thống kê và lịch sử truy cập (FR-07)</td>
+              </tr>
+              <tr>
+                <td class="mono">GET, POST</td>
+                <td class="mono">/Pois1</td>
+                <td>Quản lý danh sách POI (Index, Create, Edit, Delete)</td>
+              </tr>
+              <tr>
+                <td class="mono">GET, POST</td>
+                <td class="mono">/QrCodes</td>
+                <td>Quản lý mã QR (Index, Create, Edit, Delete)</td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/QrCodes/PrintQr</td>
+                <td>Trang in mã QR cho tất cả POI đang active</td>
+              </tr>
+              <tr>
+                <td class="mono">GET, POST</td>
+                <td class="mono">/PoiMediums</td>
+                <td>Quản lý Media của POI (Index, Create, Edit, Delete)</td>
+              </tr>
+            </tbody>
+          </table>
           <h3>Phần App — Yêu cầu chức năng</h3>
-          <p>Phần App được tổng hợp từ đặc tả UX theo hướng API-first tại <code>AppThaoCamVien/Docs/ApiFirstUxSpec.md</code>. Các sequence diagrams cho App hiện chưa có (sẽ bổ sung sau).</p>
+          <p>Phần App được tổng hợp từ đặc tả UX theo hướng API-first tại
+            <code>AppThaoCamVien/Docs/ApiFirstUxSpec.md</code>. Các sequence diagrams cho App hiện chưa có (sẽ bổ sung
+            sau).
+          </p>
 
           <h3>AFR-01 — State machine chuẩn cho mọi màn hình</h3>
           <ul class="list">
@@ -480,7 +722,8 @@
           <h3>AFR-02 — Home</h3>
           <ul class="list">
             <li>Dữ liệu: <span class="mono">HomeFeed</span>, <span class="mono">Weather</span>.</li>
-            <li>Empty: không có card ở cả <span class="mono">HappenNow</span> và <span class="mono">Recommended</span>.</li>
+            <li>Empty: không có card ở cả <span class="mono">HappenNow</span> và <span class="mono">Recommended</span>.
+            </li>
             <li>Error CTA: retry + mở map như phương án fallback.</li>
           </ul>
 
@@ -515,7 +758,9 @@
           <h3>AFR-07 — Skeleton component catalog (tối thiểu)</h3>
           <ul class="list">
             <li><span class="mono">SkeletonBlock</span>, <span class="mono">StateContainer</span></li>
-            <li>Compositions gợi ý: <span class="mono">HomeHeaderSkeleton</span>, <span class="mono">HomeHorizontalCardSkeleton</span>, <span class="mono">MapNearbyListSkeleton</span>, <span class="mono">StoryAudioSkeleton</span>, <span class="mono">AboutAccordionSkeleton</span></li>
+            <li>Compositions gợi ý: <span class="mono">HomeHeaderSkeleton</span>, <span
+                class="mono">HomeHorizontalCardSkeleton</span>, <span class="mono">MapNearbyListSkeleton</span>, <span
+                class="mono">StoryAudioSkeleton</span>, <span class="mono">AboutAccordionSkeleton</span></li>
           </ul>
           <h3>Phần App — API tối thiểu</h3>
           <p>Danh sách endpoint tối thiểu theo đặc tả hiện có (có thể thay đổi theo backend thực tế):</p>
@@ -528,14 +773,41 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/home-feed</td><td>Home feed</td></tr>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/weather/current</td><td>Thời tiết hiện tại</td></tr>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/pois/clusters?z={zoom}&amp;bbox={bbox}</td><td>Cluster POI theo viewport</td></tr>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/pois/nearby?lat={lat}&amp;lng={lng}&amp;radius={m}</td><td>POI/đối tượng gần vị trí</td></tr>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/tts/voices?lang={lang}</td><td>Danh sách giọng đọc</td></tr>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/audio/lyrics-timeline?poiId={id}&amp;voiceId={id}</td><td>Timeline lời thoại / audio story</td></tr>
-              <tr><td class="mono">POST</td><td class="mono">/api/mobile/qr/lookup</td><td>Tra cứu POI theo QR</td></tr>
-              <tr><td class="mono">GET</td><td class="mono">/api/mobile/about/sections</td><td>Nội dung About</td></tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/api/mobile/home-feed</td>
+                <td>Home feed</td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/api/mobile/pois/clusters?z={zoom}&amp;bbox={bbox}</td>
+                <td>Cluster POI theo viewport</td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/api/mobile/pois/nearby?lat={lat}&amp;lng={lng}&amp;radius={m}</td>
+                <td>POI/đối tượng gần vị trí</td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/api/mobile/tts/voices?lang={lang}</td>
+                <td>Danh sách giọng đọc</td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/api/mobile/audio/lyrics-timeline?poiId={id}&amp;voiceId={id}</td>
+                <td>Timeline lời thoại / audio story</td>
+              </tr>
+              <tr>
+                <td class="mono">POST</td>
+                <td class="mono">/api/mobile/qr/lookup</td>
+                <td>Tra cứu POI theo QR</td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/api/mobile/about/sections</td>
+                <td>Nội dung About</td>
+              </tr>
             </tbody>
           </table>
         </section>
@@ -567,50 +839,58 @@
               <tr>
                 <td>StoryAudio (Voices + Lyrics Timeline)</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/03-app-story-audio-flow.svg">03-app-story-audio-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/03-app-story-audio-flow.svg">03-app-story-audio-flow.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>QR Lookup</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/04-app-qr-lookup-flow.svg">04-app-qr-lookup-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/04-app-qr-lookup-flow.svg">04-app-qr-lookup-flow.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>About Sections</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/05-app-about-sections-flow.svg">05-app-about-sections-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/05-app-about-sections-flow.svg">05-app-about-sections-flow.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Onboarding (Welcome → Permissions → Offline Download → Vào App)</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/06-app-onboarding-flow.svg">06-app-onboarding-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/06-app-onboarding-flow.svg">06-app-onboarding-flow.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Explore/Animals (lọc, chọn loài, mở StoryAudio)</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/07-app-animals-explore-flow.svg">07-app-animals-explore-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/07-app-animals-explore-flow.svg">07-app-animals-explore-flow.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Numpad nhập mã POI (tra cứu local + mở StoryAudio)</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/08-app-numpad-lookup-flow.svg">08-app-numpad-lookup-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/08-app-numpad-lookup-flow.svg">08-app-numpad-lookup-flow.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Map geofencing + tự phát narration theo POI</td>
                 <td>
-                  <a href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
                 </td>
               </tr>
             </tbody>
           </table>
           <p class="small">
             Nguồn Mermaid của App nằm tại
-            <code>AppThaoCamVien/Docs/sequence-diagrams/_mmd</code>. Nội dung trong sequence của App dùng tiếng Việt có dấu theo yêu cầu.
+            <code>AppThaoCamVien/Docs/sequence-diagrams/_mmd</code>. Nội dung trong sequence của App dùng tiếng Việt có
+            dấu theo yêu cầu.
           </p>
 
           <h3>Phần Web — Sequence diagrams</h3>
@@ -625,30 +905,27 @@
             </thead>
             <tbody>
               <tr>
-                <td>Auth</td>
-                <td>Login / Logout</td>
-                <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/01-account-login.svg">01-account-login.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/02-account-logout.svg">02-account-logout.svg</a>
-                </td>
-              </tr>
-              <tr>
                 <td>POI</td>
                 <td>CRUD + Add/Edit/Delete chi tiết</td>
                 <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/07-admin-poi-crud.svg">07-admin-poi-crud.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/07-admin-poi-crud.svg">07-admin-poi-crud.svg</a>,
                   <a href="WebThaoCamVien/docs/sequence-diagrams/images/11-admin-poi-add.svg">11-admin-poi-add.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/12-admin-poi-edit.svg">12-admin-poi-edit.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/13-admin-poi-delete.svg">13-admin-poi-delete.svg</a>
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/12-admin-poi-edit.svg">12-admin-poi-edit.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/13-admin-poi-delete.svg">13-admin-poi-delete.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Audio</td>
                 <td>Management + Upload + SaveRecording + Delete</td>
                 <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/08-audio-management.svg">08-audio-management.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/08-audio-management.svg">08-audio-management.svg</a>,
                   <a href="WebThaoCamVien/docs/sequence-diagrams/images/14-audio-upload.svg">14-audio-upload.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/15-audio-save-recording.svg">15-audio-save-recording.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/15-audio-save-recording.svg">15-audio-save-recording.svg</a>,
                   <a href="WebThaoCamVien/docs/sequence-diagrams/images/16-audio-delete.svg">16-audio-delete.svg</a>
                 </td>
               </tr>
@@ -656,23 +933,28 @@
                 <td>Translation</td>
                 <td>Management + Save Add/Update</td>
                 <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/09-translation-management.svg">09-translation-management.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/17-translation-save-add.svg">17-translation-save-add.svg</a>,
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/18-translation-save-update.svg">18-translation-save-update.svg</a>
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/09-translation-management.svg">09-translation-management.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/17-translation-save-add.svg">17-translation-save-add.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/18-translation-save-update.svg">18-translation-save-update.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Analytics</td>
                 <td>Admin Index (thống kê + lịch sử)</td>
                 <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a>
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a>
                 </td>
               </tr>
               <tr>
                 <td>Operations</td>
                 <td>Monitoring / Heatmap</td>
                 <td>
-                  <a href="WebThaoCamVien/docs/sequence-diagrams/images/19-admin-monitoring.svg">19-admin-monitoring.svg</a>,
+                  <a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/19-admin-monitoring.svg">19-admin-monitoring.svg</a>,
                   <a href="WebThaoCamVien/docs/sequence-diagrams/images/20-admin-heatmap.svg">20-admin-heatmap.svg</a>
                 </td>
               </tr>
@@ -686,7 +968,8 @@
 
         <section id="use-cases">
           <h2>Use case (Web + App)</h2>
-          <p>Các use case dưới đây được tổng hợp từ tài liệu <code>nhap_prd.docx</code> và các đặc tả hiện có trong repo. Mục tiêu là “đóng khung” nghiệp vụ để bạn bổ sung/điều chỉnh chi tiết sau.</p>
+          <p>Các use case dưới đây được tổng hợp từ tài liệu <code>nhap_prd.docx</code> và các đặc tả hiện có trong
+            repo. Mục tiêu là “đóng khung” nghiệp vụ để bạn bổ sung/điều chỉnh chi tiết sau.</p>
 
           <h3>Web (CMS/Admin) — Use case chính</h3>
           <p>Mỗi chức năng Web có 1 SVG riêng trong thư mục <code>WebThaoCamVien/docs/use-cases</code>.</p>
@@ -701,13 +984,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="mono">WUC-01</td>
-                <td>Đăng nhập hệ thống</td>
-                <td>Admin</td>
-                <td>Đăng nhập thành công bằng email/mật khẩu để vào khu vực quản trị.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-01-login.svg">wuc-01-login.svg</a></td>
-              </tr>
               <tr>
                 <td class="mono">WUC-02</td>
                 <td>Liệt kê POI</td>
@@ -748,14 +1024,18 @@
                 <td>Sửa/Xóa audio</td>
                 <td>Admin</td>
                 <td>Cập nhật file/URL/metadata hoặc xóa; đảm bảo dọn file trên storage (nếu có).</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-07-audio-edit-delete.svg">wuc-07-audio-edit-delete.svg</a></td>
+                <td><a
+                    href="WebThaoCamVien/docs/use-cases/wuc-07-audio-edit-delete.svg">wuc-07-audio-edit-delete.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">WUC-08</td>
                 <td>Tạo/Sửa bản dịch cho POI</td>
                 <td>Admin</td>
-                <td>Quản lý nội dung theo <span class="mono">LanguageCode</span>; có thao tác đồng bộ bản dịch cho ô trống.</td>
-                <td><a href="WebThaoCamVien/docs/use-cases/wuc-08-translation-poi.svg">wuc-08-translation-poi.svg</a></td>
+                <td>Quản lý nội dung theo <span class="mono">LanguageCode</span>; có thao tác đồng bộ bản dịch cho ô
+                  trống.</td>
+                <td><a href="WebThaoCamVien/docs/use-cases/wuc-08-translation-poi.svg">wuc-08-translation-poi.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">WUC-11</td>
@@ -798,42 +1078,54 @@
                 <td>Lấy vị trí hiện tại</td>
                 <td>App</td>
                 <td>Đã cấp quyền location; lấy (lat,lng,timestamp) theo tần suất cấu hình.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-01-lay-vi-tri-hien-tai.svg">auc-01-lay-vi-tri-hien-tai.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-01-lay-vi-tri-hien-tai.svg">auc-01-lay-vi-tri-hien-tai.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-02</td>
                 <td>Tính khoảng cách tới POI</td>
                 <td>Geofence Engine</td>
                 <td>Lọc POI trong bán kính; ưu tiên theo priority/distance.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-02-tinh-khoang-cach-toi-poi.svg">auc-02-tinh-khoang-cach-toi-poi.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-02-tinh-khoang-cach-toi-poi.svg">auc-02-tinh-khoang-cach-toi-poi.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-03</td>
                 <td>Kích hoạt POI khi vào vùng</td>
                 <td>Geofence Engine</td>
                 <td>Thỏa điều kiện distance ≤ radius + cooldown/debounce; phát sinh event kích hoạt.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-03-kich-hoat-poi-khi-vao-vung.svg">auc-03-kich-hoat-poi-khi-vao-vung.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-03-kich-hoat-poi-khi-vao-vung.svg">auc-03-kich-hoat-poi-khi-vao-vung.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-04</td>
                 <td>Phát thuyết minh theo POI</td>
                 <td>Narration Engine</td>
                 <td>Chọn nguồn TTS hoặc audio file; quản lý hàng đợi; tránh phát trùng trong X phút.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-04-phat-thuyet-minh-theo-poi.svg">auc-04-phat-thuyet-minh-theo-poi.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-04-phat-thuyet-minh-theo-poi.svg">auc-04-phat-thuyet-minh-theo-poi.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-05</td>
                 <td>Xem bản đồ và marker POI</td>
                 <td>Người dùng</td>
                 <td>Xem bản đồ + vị trí hiện tại + POI; highlight POI gần nhất/đang phát.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-05-map-view-poi-markers.svg">auc-05-map-view-poi-markers.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-05-map-view-poi-markers.svg">auc-05-map-view-poi-markers.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-06</td>
                 <td>Tap POI → xem chi tiết → phát lại</td>
                 <td>Người dùng</td>
                 <td>Mở chi tiết POI; chọn ngôn ngữ; phát/nhắc lại audio; tạm dừng/tiếp tục.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-06-tap-poi-xem-chi-tiet-phat-lai.svg">auc-06-tap-poi-xem-chi-tiet-phat-lai.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-06-tap-poi-xem-chi-tiet-phat-lai.svg">auc-06-tap-poi-xem-chi-tiet-phat-lai.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-07</td>
@@ -847,14 +1139,18 @@
                 <td>Tải gói nội dung offline</td>
                 <td>Người dùng</td>
                 <td>Download manager; theo dõi tiến trình; lưu POI + audio offline.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-08-tai-goi-noi-dung-offline.svg">auc-08-tai-goi-noi-dung-offline.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-08-tai-goi-noi-dung-offline.svg">auc-08-tai-goi-noi-dung-offline.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-09</td>
                 <td>Ghi log analytics ẩn danh</td>
                 <td>App</td>
                 <td>Ghi log phát POI, thời lượng, luồng di chuyển; gửi batch khi có mạng.</td>
-                <td><a href="AppThaoCamVien/Docs/use-cases/auc-09-ghi-log-analytics-an-danh.svg">auc-09-ghi-log-analytics-an-danh.svg</a></td>
+                <td><a
+                    href="AppThaoCamVien/Docs/use-cases/auc-09-ghi-log-analytics-an-danh.svg">auc-09-ghi-log-analytics-an-danh.svg</a>
+                </td>
               </tr>
               <tr>
                 <td class="mono">AUC-10</td>
@@ -878,17 +1174,62 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td class="mono">WUC-01</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/01-account-login.svg">01-account-login.svg</a></td></tr>
-              <tr><td class="mono">WUC-02</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/07-admin-poi-crud.svg">07-admin-poi-crud.svg</a></td></tr>
-              <tr><td class="mono">WUC-03</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/11-admin-poi-add.svg">11-admin-poi-add.svg</a></td></tr>
-              <tr><td class="mono">WUC-04</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/12-admin-poi-edit.svg">12-admin-poi-edit.svg</a></td></tr>
-              <tr><td class="mono">WUC-05</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/13-admin-poi-delete.svg">13-admin-poi-delete.svg</a></td></tr>
-              <tr><td class="mono">WUC-06</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/14-audio-upload.svg">14-audio-upload.svg</a></td></tr>
-              <tr><td class="mono">WUC-07</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/16-audio-delete.svg">16-audio-delete.svg</a></td></tr>
-              <tr><td class="mono">WUC-08</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/17-translation-save-add.svg">17-translation-save-add.svg</a></td></tr>
-              <tr><td class="mono">WUC-11</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a></td></tr>
-              <tr><td class="mono">WUC-17</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/19-admin-monitoring.svg">19-admin-monitoring.svg</a> (monitoring)</td></tr>
-              <tr><td class="mono">WUC-18</td><td><a href="WebThaoCamVien/docs/sequence-diagrams/images/20-admin-heatmap.svg">20-admin-heatmap.svg</a> (heatmap)</td></tr>
+              <tr>
+                <td class="mono">WUC-02</td>
+                <td><a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/07-admin-poi-crud.svg">07-admin-poi-crud.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-03</td>
+                <td><a href="WebThaoCamVien/docs/sequence-diagrams/images/11-admin-poi-add.svg">11-admin-poi-add.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-04</td>
+                <td><a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/12-admin-poi-edit.svg">12-admin-poi-edit.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-05</td>
+                <td><a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/13-admin-poi-delete.svg">13-admin-poi-delete.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-06</td>
+                <td><a href="WebThaoCamVien/docs/sequence-diagrams/images/14-audio-upload.svg">14-audio-upload.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-07</td>
+                <td><a href="WebThaoCamVien/docs/sequence-diagrams/images/16-audio-delete.svg">16-audio-delete.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-08</td>
+                <td><a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/17-translation-save-add.svg">17-translation-save-add.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-11</td>
+                <td><a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/10-admin-index-analytics.svg">10-admin-index-analytics.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-17</td>
+                <td><a
+                    href="WebThaoCamVien/docs/sequence-diagrams/images/19-admin-monitoring.svg">19-admin-monitoring.svg</a>
+                  (monitoring)</td>
+              </tr>
+              <tr>
+                <td class="mono">WUC-18</td>
+                <td><a href="WebThaoCamVien/docs/sequence-diagrams/images/20-admin-heatmap.svg">20-admin-heatmap.svg</a>
+                  (heatmap)</td>
+              </tr>
             </tbody>
           </table>
 
@@ -901,16 +1242,73 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td class="mono">AUC-01</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/02-app-map-flow.svg">02-app-map-flow.svg</a>, <a href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-02</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-03</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-04</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/03-app-story-audio-flow.svg">03-app-story-audio-flow.svg</a>, <a href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-05</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/02-app-map-flow.svg">02-app-map-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-06</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/03-app-story-audio-flow.svg">03-app-story-audio-flow.svg</a>, <a href="AppThaoCamVien/Docs/sequence-diagrams/images/07-app-animals-explore-flow.svg">07-app-animals-explore-flow.svg</a>, <a href="AppThaoCamVien/Docs/sequence-diagrams/images/08-app-numpad-lookup-flow.svg">08-app-numpad-lookup-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-07</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/01-app-home-flow.svg">01-app-home-flow.svg</a> (chuyển ngôn ngữ/cấu hình hiển thị)</td></tr>
-              <tr><td class="mono">AUC-08</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/06-app-onboarding-flow.svg">06-app-onboarding-flow.svg</a></td></tr>
-              <tr><td class="mono">AUC-09</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a> (luồng sự kiện phát)</td></tr>
-              <tr><td class="mono">AUC-10</td><td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/04-app-qr-lookup-flow.svg">04-app-qr-lookup-flow.svg</a>, <a href="AppThaoCamVien/Docs/sequence-diagrams/images/08-app-numpad-lookup-flow.svg">08-app-numpad-lookup-flow.svg</a></td></tr>
+              <tr>
+                <td class="mono">AUC-01</td>
+                <td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/02-app-map-flow.svg">02-app-map-flow.svg</a>,
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-02</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-03</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-04</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/03-app-story-audio-flow.svg">03-app-story-audio-flow.svg</a>,
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-05</td>
+                <td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/02-app-map-flow.svg">02-app-map-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-06</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/03-app-story-audio-flow.svg">03-app-story-audio-flow.svg</a>,
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/07-app-animals-explore-flow.svg">07-app-animals-explore-flow.svg</a>,
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/08-app-numpad-lookup-flow.svg">08-app-numpad-lookup-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-07</td>
+                <td><a href="AppThaoCamVien/Docs/sequence-diagrams/images/01-app-home-flow.svg">01-app-home-flow.svg</a>
+                  (chuyển ngôn ngữ/cấu hình hiển thị)</td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-08</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/06-app-onboarding-flow.svg">06-app-onboarding-flow.svg</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-09</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/09-app-map-geofence-narration-flow.svg">09-app-map-geofence-narration-flow.svg</a>
+                  (luồng sự kiện phát)</td>
+              </tr>
+              <tr>
+                <td class="mono">AUC-10</td>
+                <td><a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/04-app-qr-lookup-flow.svg">04-app-qr-lookup-flow.svg</a>,
+                  <a
+                    href="AppThaoCamVien/Docs/sequence-diagrams/images/08-app-numpad-lookup-flow.svg">08-app-numpad-lookup-flow.svg</a>
+                </td>
+              </tr>
             </tbody>
           </table>
         </section>
@@ -921,25 +1319,33 @@
             <div class="card">
               <h3>Hiệu năng (Web + App)</h3>
               <ul class="list">
-                <li>Web: trang danh sách POI/tour/audio tải &le; 2s với dữ liệu quy mô vừa, có phân trang và lọc hiệu quả.</li>
-                <li>Web: upload/record audio có phản hồi tiến trình rõ ràng; thao tác hoàn tất &le; 10s tùy kích thước file.</li>
-                <li>App: thời gian hiển thị nội dung đầu tiên (Home/Map) mục tiêu &le; 2.5s trong điều kiện mạng ổn định.</li>
+                <li>Web: trang danh sách POI/tour/audio tải &le; 2s với dữ liệu quy mô vừa, có phân trang và lọc hiệu
+                  quả.</li>
+                <li>Web: upload/record audio có phản hồi tiến trình rõ ràng; thao tác hoàn tất &le; 10s tùy kích thước
+                  file.</li>
+                <li>App: thời gian hiển thị nội dung đầu tiên (Home/Map) mục tiêu &le; 2.5s trong điều kiện mạng ổn
+                  định.</li>
                 <li>App: chuyển trạng thái Loading → Success/Empty/Error nhất quán, không treo UI.</li>
               </ul>
             </div>
             <div class="card">
               <h3>Độ tin cậy & phục hồi</h3>
               <ul class="list">
-                <li>Web: không mất đồng bộ DB ↔ filesystem; nếu lưu DB thất bại phải dọn file mới, nếu lưu file thất bại không ghi DB.</li>
-                <li>App: hỗ trợ retry khi lỗi mạng; fallback dữ liệu cục bộ cho các luồng cho phép (map/offline/about).</li>
-                <li>Web + App: ghi log cho thao tác quan trọng (đăng nhập, CRUD, phát audio, lỗi hệ thống) để truy vết sự cố.</li>
-                <li>Duy trì <strong>version history</strong> tối thiểu cho POI/Tour/Translation để tra cứu và rollback khi cần.</li>
+                <li>Web: không mất đồng bộ DB ↔ filesystem; nếu lưu DB thất bại phải dọn file mới, nếu lưu file thất bại
+                  không ghi DB.</li>
+                <li>App: hỗ trợ retry khi lỗi mạng; fallback dữ liệu cục bộ cho các luồng cho phép (map/offline/about).
+                </li>
+                <li>Web + App: ghi log cho thao tác quan trọng (đăng nhập, CRUD, phát audio, lỗi hệ thống) để truy vết
+                  sự cố.</li>
+                <li>Duy trì <strong>version history</strong> tối thiểu cho POI/Tour/Translation để tra cứu và rollback
+                  khi cần.</li>
               </ul>
             </div>
             <div class="card">
               <h3>Khả năng mở rộng</h3>
               <ul class="list">
-                <li>Ngôn ngữ hỗ trợ được cấu hình; audio/translation theo <span class="mono">LanguageCode</span> cho cả Web và App.</li>
+                <li>Ngôn ngữ hỗ trợ được cấu hình; audio/translation theo <span class="mono">LanguageCode</span> cho cả
+                  Web và App.</li>
                 <li>Cho phép thay đổi ngưỡng geofencing/radius và khoảng cách tối thiểu POI theo cấu hình.</li>
                 <li>Kiến trúc API-first cho phép mở rộng thêm module App và dashboard Web mà không phá vỡ luồng cũ.</li>
               </ul>
@@ -956,14 +1362,16 @@
 
           <h3>Backup & khôi phục</h3>
           <ul class="list">
-            <li>Sao lưu định kỳ dữ liệu Web (POI, tour, audio metadata, bản dịch, logs) theo lịch và có quy trình restore rõ ràng.</li>
+            <li>Sao lưu định kỳ dữ liệu Web (POI, tour, audio metadata, bản dịch, logs) theo lịch và có quy trình
+              restore rõ ràng.</li>
             <li>App hỗ trợ phục hồi phiên bản dữ liệu offline theo gói tải, tránh hỏng cache khi gián đoạn mạng.</li>
           </ul>
         </section>
 
         <section id="du-lieu">
           <h2>Mô hình dữ liệu (khái niệm)</h2>
-          <p>Dựa trên use case và sequence của Web + App, hệ thống tối thiểu có các thực thể sau (tên bảng/thuộc tính chi tiết theo code/DB thực tế):</p>
+          <p>Dựa trên use case và sequence của Web + App, hệ thống tối thiểu có các thực thể sau (tên bảng/thuộc tính
+            chi tiết theo code/DB thực tế):</p>
           <table>
             <thead>
               <tr>
@@ -973,11 +1381,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><strong>User</strong></td>
-                <td>Email, Password (khuyến nghị hash), …</td>
-                <td>1-n với VisitHistory, 1-n với ActionLog</td>
-              </tr>
               <tr>
                 <td><strong>Poi</strong></td>
                 <td>Name, Lat, Lng, IsActive, CreatedAt, ImageThumbnail, …</td>
@@ -1025,29 +1428,38 @@
         <section id="bao-mat">
           <h2>Bảo mật & phân quyền</h2>
           <ul class="list">
-            <li><strong>Authentication (Web)</strong>: Cookie Authentication + anti-forgery cho các POST form quản trị.</li>
-            <li><strong>Authorization (Web)</strong>: toàn bộ route quản trị yêu cầu đăng nhập; role vận hành hiện tại chuẩn hóa về <span class="mono">Admin</span>.</li>
-            <li><strong>Client security (App)</strong>: kiểm soát quyền camera/GPS/thông báo theo đúng luồng onboarding, từ chối quyền vẫn phải hoạt động an toàn.</li>
-            <li><strong>API security</strong>: xác thực request từ App, kiểm soát CORS/rate limit, hạn chế lộ thông tin nội bộ qua lỗi chi tiết.</li>
-            <li><strong>File upload</strong>: kiểm tra định dạng + kích thước, đặt tên file unique, chặn path traversal và file độc hại.</li>
+            <li><strong>Authentication (Web)</strong>: Cookie Authentication + anti-forgery cho các POST form quản trị.
+            </li>
+            <li><strong>Authorization (Web)</strong>: toàn bộ route quản trị yêu cầu đăng nhập; role vận hành hiện tại
+              chuẩn hóa về <span class="mono">Admin</span>.</li>
+            <li><strong>Client security (App)</strong>: kiểm soát quyền camera/GPS/thông báo theo đúng luồng onboarding,
+              từ chối quyền vẫn phải hoạt động an toàn.</li>
+            <li><strong>API security</strong>: xác thực request từ App, kiểm soát CORS/rate limit, hạn chế lộ thông tin
+              nội bộ qua lỗi chi tiết.</li>
+            <li><strong>File upload</strong>: kiểm tra định dạng + kích thước, đặt tên file unique, chặn path traversal
+              và file độc hại.</li>
             <li><strong>Password</strong>: bắt buộc hash + salt, không lưu plain-text.</li>
           </ul>
           <div class="note">
-            <strong>Backlog bảo mật</strong>: harden upload, rate-limit login/API, lockout, audit log đầy đủ, ký request App bằng token ngắn hạn.
+            <strong>Backlog bảo mật</strong>: harden upload, rate-limit login/API, lockout, audit log đầy đủ, ký request
+            App bằng token ngắn hạn.
           </div>
         </section>
 
         <section id="ux">
           <h2>UX/UI & quy ước nội dung</h2>
           <ul class="list">
-            <li>Web: thông báo thao tác thành công/thất bại nhất quán; form POI/audio/translation trả lỗi chi tiết theo field.</li>
+            <li>Web: thông báo thao tác thành công/thất bại nhất quán; form POI/audio/translation trả lỗi chi tiết theo
+              field.</li>
             <li>Web: bảng dữ liệu ưu tiên lọc, sắp xếp, phân trang rõ ràng; dashboard hiển thị KPI chính trước.</li>
             <li>App: tất cả màn hình tuân thủ state machine Loading/Success/Empty/Error với CTA rõ ràng.</li>
-            <li>App: map và story audio ưu tiên thao tác một tay, icon rõ nghĩa, trạng thái phát/tạm dừng dễ nhận biết.</li>
+            <li>App: map và story audio ưu tiên thao tác một tay, icon rõ nghĩa, trạng thái phát/tạm dừng dễ nhận biết.
+            </li>
             <li>Nội dung đa ngôn ngữ cần thống nhất thuật ngữ giữa CMS và App để tránh lệch bản dịch.</li>
           </ul>
           <div class="note">
-            <strong>Quy ước tài liệu diagram</strong>: sequence của App hiện dùng tiếng Việt có dấu; use-case Web hiện theo tên không dấu để tương thích SVG hiện tại.
+            <strong>Quy ước tài liệu diagram</strong>: sequence của App hiện dùng tiếng Việt có dấu; use-case Web hiện
+            theo tên không dấu để tương thích SVG hiện tại.
           </div>
         </section>
 
@@ -1067,11 +1479,16 @@
             <div class="card">
               <h3>Rủi ro</h3>
               <ul class="list">
-                <li><span class="badge bad">High</span> Lỗi bảo mật xác thực/phân quyền có thể làm lộ dữ liệu quản trị hoặc API nội bộ.</li>
-                <li><span class="badge warn">Medium</span> Quản lý file trên filesystem dễ sinh file mồ côi nếu transaction không chặt.</li>
-                <li><span class="badge warn">Medium</span> Mạng di động không ổn định khiến App dễ rơi vào Error/timeout nếu thiếu fallback.</li>
-                <li><span class="badge warn">Medium</span> Trôi dữ liệu giữa Web xuất bản và App cache offline nếu thiếu cơ chế version bundle.</li>
-                <li><span class="badge warn">Medium</span> Analytics query nặng khi dữ liệu lớn cần index, phân trang và archive định kỳ.</li>
+                <li><span class="badge bad">High</span> Lỗi bảo mật xác thực/phân quyền có thể làm lộ dữ liệu quản trị
+                  hoặc API nội bộ.</li>
+                <li><span class="badge warn">Medium</span> Quản lý file trên filesystem dễ sinh file mồ côi nếu
+                  transaction không chặt.</li>
+                <li><span class="badge warn">Medium</span> Mạng di động không ổn định khiến App dễ rơi vào Error/timeout
+                  nếu thiếu fallback.</li>
+                <li><span class="badge warn">Medium</span> Trôi dữ liệu giữa Web xuất bản và App cache offline nếu thiếu
+                  cơ chế version bundle.</li>
+                <li><span class="badge warn">Medium</span> Analytics query nặng khi dữ liệu lớn cần index, phân trang và
+                  archive định kỳ.</li>
               </ul>
             </div>
           </div>
@@ -1098,4 +1515,5 @@
     </main>
   </div>
 </body>
+
 </html>
