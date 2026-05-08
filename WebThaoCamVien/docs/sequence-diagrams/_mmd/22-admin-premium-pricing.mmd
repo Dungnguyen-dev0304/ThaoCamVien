@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    actor U as Admin
+    participant B as Browser
+    participant W as WebThaoCamVien (PaymentAdminController)
+    participant DB as WebContext (SQL Server)
+
+    U->>B: Mở /PaymentAdmin/Pricing
+    B->>W: GET /PaymentAdmin/Pricing
+
+    Note over W: AuthN/AuthZ (cookie admin)
+
+    W->>DB: SELECT PoiId, Name, IsPremium, PremiumPrice, IsActive FROM Pois ORDER BY PoiId
+    DB-->>W: pois[]
+    W-->>B: 200 View(Pricing, pois)
+    B-->>U: Bảng POI + checkbox Premium + input giá
+
+    U->>B: Bật/tắt Premium hoặc chỉnh giá cho POI
+    U->>B: Submit form (anti-forgery token)
+    B->>W: POST /PaymentAdmin/UpdatePricing { poiId, isPremium, price }
+
+    Note over W: ValidateAntiForgeryToken
+
+    W->>DB: SELECT Poi WHERE PoiId = @id
+    DB-->>W: poi (hoặc null)
+
+    alt POI tồn tại
+        W->>W: poi.IsPremium = isPremium
+        W->>W: poi.PremiumPrice = isPremium ? (price ?? 50000) : null
+        W->>DB: UPDATE Pois SET IsPremium, PremiumPrice
+        DB-->>W: SaveChanges OK
+        W-->>B: 302 Redirect → /PaymentAdmin/Pricing (TempData["Msg"])
+        B->>W: GET /PaymentAdmin/Pricing
+        W->>DB: SELECT pois (lần nữa)
+        DB-->>W: pois[] (đã cập nhật)
+        W-->>B: 200 View
+        B-->>U: Hiện toast "Đã cập nhật POI #X" + bảng mới
+    else Không tìm thấy POI
+        W-->>B: 404 NotFound
+        B-->>U: Trang lỗi
+    end
+
+    Note over DB,U: Lần kế tiếp app gọi GET /api/payment/check/{poiId}<br/>sẽ trả về isPremium và price mới — phản ánh lên UI app.

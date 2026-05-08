@@ -1,0 +1,60 @@
+sequenceDiagram
+    autonumber
+    actor U as Admin
+    participant B as Browser
+    participant W as WebThaoCamVien (PaymentAdminController)
+    participant DB as WebContext (SQL Server)
+
+    U->>B: Mở /PaymentAdmin
+    B->>W: GET /PaymentAdmin?status=&q=&page=1&size=20
+
+    Note over W: AuthN/AuthZ (cookie admin)
+
+    par Lấy thống kê hôm nay
+        W->>DB: COUNT giao dịch (today, status=success/pending/failed)
+        DB-->>W: TotalToday, SuccessToday, PendingToday, FailedToday
+    and Lấy doanh thu
+        W->>DB: SUM(Amount) WHERE Status=success (today + total)
+        DB-->>W: RevenueToday, RevenueTotal
+    and Lấy danh sách giao dịch (paging + filter)
+        W->>DB: SELECT PaymentTransactions JOIN Pois ORDER BY CreatedAt DESC
+        DB-->>W: items + total
+    end
+
+    W-->>B: 200 View(Index, ViewBag.Stats + items)
+    B-->>U: Render dashboard (tiles thống kê + bảng giao dịch)
+
+    opt Lọc theo trạng thái / tìm kiếm
+        U->>B: Chọn status hoặc nhập txnCode/deviceId
+        B->>W: GET /PaymentAdmin?status=success&q=TXN20260508
+        W->>DB: Query với điều kiện WHERE
+        DB-->>W: items (đã lọc)
+        W-->>B: 200 View
+        B-->>U: Cập nhật bảng
+    end
+
+    opt Xem chi tiết 1 giao dịch
+        U->>B: Bấm vào dòng giao dịch
+        B->>W: GET /PaymentAdmin/Detail/{txnCode}
+        W->>DB: SELECT PaymentTransaction + POI theo TransactionCode
+        DB-->>W: txn (hoặc null)
+
+        alt Tìm thấy giao dịch
+            W->>DB: SELECT PremiumAccess WHERE TransactionId = txn.Id
+            DB-->>W: access
+            W-->>B: 200 View(Detail, ViewBag.Access)
+            B-->>U: Hiển thị chi tiết: amount, status, gatewayRef, IPN raw, access đã cấp
+        else Không tìm thấy
+            W-->>B: 404 NotFound
+            B-->>U: Trang lỗi
+        end
+    end
+
+    opt Phân trang
+        U->>B: Bấm trang kế / trang trước
+        B->>W: GET /PaymentAdmin?page=2
+        W->>DB: SELECT ... OFFSET (page-1)*size LIMIT size
+        DB-->>W: items
+        W-->>B: 200 View
+        B-->>U: Render trang mới
+    end
