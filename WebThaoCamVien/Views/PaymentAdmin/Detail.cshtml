@@ -1,0 +1,195 @@
+@using SharedThaoCamVien.Models
+@model PaymentTransaction
+@{
+    ViewData["Title"] = "Chi tiết giao dịch";
+    ViewData["PageTitle"] = "Chi tiết giao dịch";
+    ViewData["Active"] = "payment";
+    Layout = "~/Views/Shared/_adminlayout.cshtml";
+    var access = ViewBag.Access as PremiumAccess;
+}
+
+<style>
+    .apple-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 18px; }
+    .apple-tag { font-size: 11px; font-weight: 700; color: #7a7a7a; letter-spacing: 3px; text-transform: uppercase; }
+    .apple-display { font-size: 56px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+    .apple-headline { font-size: 28px; font-weight: 600; color: #1d1d1f; letter-spacing: -0.4px; }
+    .apple-pill { border-radius: 9999px; padding: 10px 22px; font-size: 14px; font-weight: 600; display: inline-block; }
+    .timeline-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .timeline-line { width: 2px; background: #e0e0e0; flex-shrink: 0; }
+    .meta-row { display:flex; padding: 14px 0; border-top: 1px solid #f0f0f0; }
+    .meta-row:first-child { border-top: 0; }
+    .meta-key { font-size: 12px; color: #7a7a7a; width: 140px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; padding-top: 2px; }
+    .meta-val { font-size: 14px; color: #1d1d1f; word-break: break-all; flex: 1; }
+    .mono { font-family: 'SF Mono', monospace; font-size: 12px; }
+</style>
+
+<div class="mb-6">
+    <a href="@Url.Action("Index")" style="color:#0066cc; font-size:14px; font-weight:600;">← Quay lại danh sách</a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- ── LEFT: 2/3 width — main content ── -->
+    <div class="lg:col-span-2 space-y-6">
+
+        <!-- Hero status card — full Apple aesthetic -->
+        <div class="apple-card p-10">
+            <div class="apple-tag mb-4">Trạng thái</div>
+
+            @switch (Model.Status)
+            {
+                case "success":
+                    <div class="apple-pill mb-6" style="background:#0066cc; color:#fff;">✓ Thanh toán thành công</div>
+                    break;
+                case "pending":
+                    <div class="apple-pill mb-6" style="background:#fff7e6; color:#995c00;">● Chờ thanh toán</div>
+                    break;
+                case "processing":
+                    <div class="apple-pill mb-6" style="background:#e8f3ff; color:#0066cc;">● Đang xử lý</div>
+                    break;
+                case "failed":
+                    <div class="apple-pill mb-6" style="background:#fef2f2; color:#d32f2f;">✕ Thất bại</div>
+                    break;
+                case "expired":
+                    <div class="apple-pill mb-6" style="background:#f5f5f7; color:#7a7a7a;">⏰ Hết hạn</div>
+                    break;
+            }
+
+            <div class="apple-tag mb-2">Số tiền</div>
+            <div class="apple-display" style="color:#0066cc;">
+                @Model.Amount.ToString("#,##0") ₫
+            </div>
+
+            <div class="mt-6 mono" style="color:#7a7a7a;">
+                @Model.TransactionCode
+            </div>
+        </div>
+
+        <!-- POI Info card -->
+        <div class="apple-card p-8">
+            <div class="apple-tag mb-4">Nội dung Premium</div>
+            <div class="apple-headline mb-3">@(Model.Poi?.Name ?? "—")</div>
+            <div style="color:#7a7a7a; font-size:14px; line-height:1.5;">
+                POI ID: <span class="mono" style="color:#1d1d1f;">@Model.PoiId</span> · Audio Premium · Truy cập vĩnh viễn
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="apple-card p-8">
+            <div class="apple-tag mb-5">Tiến trình giao dịch</div>
+
+            <div class="space-y-1">
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center" style="width:20px;">
+                        <div class="timeline-dot" style="background:#0066cc;"></div>
+                        <div class="timeline-line" style="height:30px;"></div>
+                    </div>
+                    <div class="flex-1 pb-5">
+                        <div class="font-semibold apple-ink">Tạo giao dịch</div>
+                        <div class="apple-muted text-xs mt-1">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
+                    </div>
+                </div>
+
+                @if (Model.QrExpiredAt.HasValue)
+                {
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center" style="width:20px;">
+                            <div class="timeline-dot" style="background:@(Model.Status == "expired" ? "#d32f2f" : "#cccccc");"></div>
+                            <div class="timeline-line" style="height:30px;"></div>
+                        </div>
+                        <div class="flex-1 pb-5">
+                            <div class="font-semibold apple-ink">QR hết hạn (dự kiến)</div>
+                            <div class="apple-muted text-xs mt-1">@Model.QrExpiredAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.CompletedAt.HasValue)
+                {
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center" style="width:20px;">
+                            <div class="timeline-dot" style="background:#0066cc;"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold apple-ink">Hoàn tất</div>
+                            <div class="apple-muted text-xs mt-1">@Model.CompletedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center" style="width:20px;">
+                            <div class="timeline-dot" style="background:#cccccc;"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold" style="color:#7a7a7a;">Chờ hoàn tất</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.GatewayResponse))
+        {
+            <div class="apple-card p-6">
+                <div class="apple-tag mb-3">Phản hồi từ Gateway</div>
+                <pre style="background:#f5f5f7; padding:16px; border-radius:12px; font-size:11px; overflow-x:auto; color:#1d1d1f;">@Model.GatewayResponse</pre>
+            </div>
+        }
+    </div>
+
+    <!-- ── RIGHT: 1/3 width — metadata ── -->
+    <div class="space-y-6">
+
+        <!-- Bảo mật / Audit -->
+        <div class="apple-card p-6">
+            <div class="apple-tag mb-4">🔐 Audit Trail</div>
+
+            <div class="meta-row">
+                <div class="meta-key">Method</div>
+                <div class="meta-val mono uppercase">@Model.PaymentMethod</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-key">Gateway Ref</div>
+                <div class="meta-val mono">@(Model.GatewayRef ?? "—")</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-key">Device ID</div>
+                <div class="meta-val mono">@Model.DeviceId</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-key">Session</div>
+                <div class="meta-val mono">@(string.IsNullOrEmpty(Model.SessionId) ? "—" : Model.SessionId)</div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.FailureReason))
+            {
+                <div class="meta-row" style="border-top:1px solid #fee;">
+                    <div class="meta-key" style="color:#d32f2f;">Lý do lỗi</div>
+                    <div class="meta-val" style="color:#d32f2f;">@Model.FailureReason</div>
+                </div>
+            }
+        </div>
+
+        @if (access != null)
+        {
+            <div class="apple-card p-6" style="background:#0066cc; color:white; border:none;">
+                <div class="text-xs font-bold tracking-[3px] uppercase opacity-80 mb-3">✓ Quyền truy cập</div>
+                <div style="font-size:18px; font-weight:600; letter-spacing:-0.3px; margin-bottom:8px;">Đã cấp Premium</div>
+                <div style="font-size:13px; opacity:0.9; line-height:1.5;">
+                    Cấp lúc: <strong>@access.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong><br>
+                    Hết hạn: <strong>@(access.ExpiresAt.HasValue ? access.ExpiresAt.Value.ToLocalTime().ToString("dd/MM/yyyy") : "Vĩnh viễn")</strong>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.VnPayUrl))
+        {
+            <div class="apple-card p-6">
+                <div class="apple-tag mb-3">URL thanh toán</div>
+                <div class="mono" style="background:#f5f5f7; padding:12px; border-radius:12px; font-size:10px; word-break:break-all; color:#1d1d1f;">@Model.VnPayUrl</div>
+            </div>
+        }
+    </div>
+</div>

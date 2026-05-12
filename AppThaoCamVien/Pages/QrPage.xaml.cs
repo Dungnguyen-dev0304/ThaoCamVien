@@ -168,9 +168,9 @@ public partial class QrPage : ContentPage
             var poi = _vm.ResolvedPoiModel;
             if (poi != null)
             {
-                var narration = _sp.GetService<NarrationEngine>();
-                _ = narration?.PlayAsync(poi, forcePlay: true);
-
+                // KHÔNG phát narration tại đây — StoryAudioPage tự kiểm tra
+                // Premium gate rồi mới phát. Trước đây gọi PlayAsync(forcePlay:true)
+                // bypass gate khiến audio premium tự phát khi chưa thanh toán.
                 var page = _sp.GetService<StoryAudioPage>();
                 if (page != null)
                 {

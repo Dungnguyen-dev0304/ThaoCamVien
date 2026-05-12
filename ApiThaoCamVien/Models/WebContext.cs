@@ -31,6 +31,10 @@ public partial class WebContext : DbContext
     public virtual DbSet<AppClientPresence> AppClientPresences { get; set; }
     public virtual DbSet<QueueTicket> QueueTickets { get; set; }
 
+    // --- Payment tables ---
+    public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+    public virtual DbSet<PremiumAccess> PremiumAccesses { get; set; }
+
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //    => optionsBuilder.UseSqlServer("Server=.;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
 
@@ -61,6 +65,8 @@ public partial class WebContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
             entity.Property(e => e.Priority).HasDefaultValue(1).HasColumnName("priority");
             entity.Property(e => e.Radius).HasDefaultValue(15).HasColumnName("radius");
+            entity.Property(e => e.IsPremium).HasDefaultValue(false).HasColumnName("is_premium");
+            entity.Property(e => e.PremiumPrice).HasColumnType("decimal(18,0)").HasColumnName("premium_price");
 
             // Quan hệ 1 chiều với Category
             entity.HasOne<PoiCategory>().WithMany(p => p.Pois)
@@ -217,11 +223,60 @@ public partial class WebContext : DbContext
             entity.Property(e => e.StartedPlayingUtc).HasColumnType("datetime").HasColumnName("started_playing_utc");
             entity.Property(e => e.FinishedUtc).HasColumnType("datetime").HasColumnName("finished_utc");
 
-            // Index phục vụ ComputePosition: lọc theo POI + chưa xong
             entity.HasIndex(e => new { e.PoiId, e.FinishedUtc })
                   .HasDatabaseName("IX_queue_tickets_poi_active");
             entity.HasIndex(e => e.JoinedUtc)
                   .HasDatabaseName("IX_queue_tickets_joined");
+        });
+
+        // 12. Cấu hình PaymentTransactions (Premium MoMo)
+        modelBuilder.Entity<PaymentTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_payment_transactions");
+            entity.ToTable("payment_transactions");
+            entity.HasIndex(e => e.TransactionCode).IsUnique().HasDatabaseName("UQ_txn_code");
+            entity.HasIndex(e => new { e.DeviceId, e.PoiId }).HasDatabaseName("IX_txn_device_poi");
+
+            entity.Property(e => e.TransactionCode).HasMaxLength(50);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.DeviceId).HasMaxLength(200);
+            entity.Property(e => e.Amount).HasColumnType("decimal(18,0)");
+            entity.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("VND");
+            entity.Property(e => e.PaymentMethod).HasMaxLength(20).HasDefaultValue("vnpay");
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("pending");
+            entity.Property(e => e.VnPayUrl).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.GatewayRef).HasMaxLength(200);
+            entity.Property(e => e.GatewayResponse).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(d => d.Poi).WithMany()
+                .HasForeignKey(d => d.PoiId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_payment_poi");
+        });
+
+        // 13. Cấu hình PremiumAccesses
+        modelBuilder.Entity<PremiumAccess>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_premium_accesses");
+            entity.ToTable("premium_accesses");
+            entity.HasIndex(e => new { e.DeviceId, e.PoiId }).HasDatabaseName("IX_access_device_poi");
+
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.DeviceId).HasMaxLength(200);
+            entity.Property(e => e.GrantedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(d => d.Transaction).WithMany()
+                .HasForeignKey(d => d.TransactionId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_access_transaction");
+
+            entity.HasOne(d => d.Poi).WithMany()
+                .HasForeignKey(d => d.PoiId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_access_poi");
         });
 
         OnModelCreatingPartial(modelBuilder);

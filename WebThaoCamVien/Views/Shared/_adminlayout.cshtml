@@ -97,6 +97,23 @@
                 <span>Quản lý Audio</span>
             </a>
 
+            @* Section Premium / Doanh thu *@
+            <div class="nav-section-label">
+                <p class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Premium · Doanh thu</p>
+            </div>
+
+            @* Quản lý thanh toán — dashboard giao dịch *@
+            <a asp-controller="PaymentAdmin" asp-action="Index" class="nav-link @(ViewData["Active"]?.ToString() == "payment" ? "active" : "")">
+                <i class="bi bi-credit-card-2-front-fill"></i>
+                <span>Quản lý Thanh toán</span>
+            </a>
+
+            @* Cấu hình giá Premium cho POI *@
+            <a asp-controller="PaymentAdmin" asp-action="Pricing" class="nav-link @(ViewData["Active"]?.ToString() == "pricing" ? "active" : "")">
+                <i class="bi bi-gem"></i>
+                <span>Cấu hình Premium</span>
+            </a>
+
             @* Quản lý tour *@
             @* <a href="/Tour/TourList" class="nav-link @(ViewData["Active"]?.ToString() == "tourlist" ? "active" : "")">
                 <i class="bi bi-signpost-split-fill"></i>

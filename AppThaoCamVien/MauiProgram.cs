@@ -41,6 +41,7 @@ namespace AppThaoCamVien
             builder.Services.AddSingleton<AppPresenceService>();
             builder.Services.AddSingleton<DirectionsService>();
             builder.Services.AddSingleton<ServerDiscoveryService>();
+            builder.Services.AddSingleton<PaymentApiService>();
 
             // ── Pages ─────────────────────────────────────────────────────
             // QUAN TRỌNG: Dùng Transient cho tất cả Pages.
@@ -50,6 +51,7 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<QrPage>();
             builder.Services.AddTransient<NumpadPage>();
             builder.Services.AddTransient<StoryAudioPage>();
+            builder.Services.AddTransient<PaymentPage>();
             builder.Services.AddTransient<AboutPage>();
             builder.Services.AddTransient<AnimalListPage>();
             builder.Services.AddTransient<AnimalsPage>();
@@ -61,6 +63,7 @@ namespace AppThaoCamVien
             builder.Services.AddTransient<MapPageViewModel>();
             builder.Services.AddTransient<QrPageViewModel>();
             builder.Services.AddTransient<StoryAudioViewModel>();
+            builder.Services.AddTransient<PaymentViewModel>();
             builder.Services.AddTransient<AnimalsViewModel>();
             builder.Services.AddTransient<OnboardingWelcomePage>();
             builder.Services.AddTransient<OnboardingPermissionsPage>();

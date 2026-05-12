@@ -34,6 +34,7 @@ public partial class AppShell : Shell
 
         // Đăng ký routes cho Navigation.PushAsync()
         Routing.RegisterRoute(nameof(StoryAudioPage), typeof(StoryAudioPage));
+        Routing.RegisterRoute(nameof(PaymentPage), typeof(PaymentPage));
         Routing.RegisterRoute(nameof(MapPage), typeof(MapPage));
         Routing.RegisterRoute(nameof(QrPage), typeof(QrPage));
         Routing.RegisterRoute(nameof(NumpadPage), typeof(NumpadPage));

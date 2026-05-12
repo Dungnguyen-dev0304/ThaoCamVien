@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             x:Class="AppThaoCamVien.Pages.PaymentPage"
+             BackgroundColor="#f5f5f7"
+             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False">
+
+    <!--
+        Apple-inspired payment screen — museum-gallery vibe.
+        Tokens (DESIGN-apple.md):
+          colors.primary       #0066cc  Action Blue (single interactive)
+          colors.ink           #1d1d1f  Near-black
+          colors.canvas        #ffffff
+          colors.parchment     #f5f5f7  Off-white background
+          colors.muted-80      #333333
+          colors.muted-48      #7a7a7a
+          colors.hairline      #e0e0e0  1px borders
+        rounded.lg = 18, rounded.pill = 9999, rounded.sm = 8
+        spacing.section = 80, spacing.lg = 24
+    -->
+
+    <ContentPage.Resources>
+        <Color x:Key="AppleBlue">#0066cc</Color>
+        <Color x:Key="AppleBlueFocus">#0071e3</Color>
+        <Color x:Key="AppleInk">#1d1d1f</Color>
+        <Color x:Key="AppleCanvas">#ffffff</Color>
+        <Color x:Key="AppleParchment">#f5f5f7</Color>
+        <Color x:Key="AppleMuted80">#333333</Color>
+        <Color x:Key="AppleMuted48">#7a7a7a</Color>
+        <Color x:Key="AppleHairline">#e0e0e0</Color>
+        <Color x:Key="AppleDividerSoft">#f0f0f0</Color>
+        <Color x:Key="AppleSuccess">#28a745</Color>
+        <Color x:Key="AppleDanger">#d32f2f</Color>
+        <Color x:Key="MoMoPink">#a50064</Color>
+    </ContentPage.Resources>
+
+    <Grid>
+        <ScrollView VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="0,72,0,40" Spacing="0">
+
+                <!-- ── Eyebrow + Hero Headline (display-md typography) ── -->
+                <VerticalStackLayout Padding="32,0,32,8" Spacing="6">
+                    <Label Text="NỘI DUNG PREMIUM"
+                           TextColor="{StaticResource AppleMuted48}"
+                           FontSize="12"
+                           CharacterSpacing="3"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- POI name — display-md (34px / 600 / -0.374) -->
+                <Label x:Name="PoiNameLabel"
+                       Text="{Binding PoiName}"
+                       FontSize="34"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource AppleInk}"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       Padding="32,8,32,0"
+                       LineBreakMode="WordWrap"/>
+
+                <!-- Amount — hero-display proportions (56px / 600 / -0.28) -->
+                <Label Text="{Binding AmountDisplay}"
+                       FontSize="56"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource AppleBlue}"
+                       HorizontalOptions="Center"
+                       Margin="0,16,0,4"/>
+
+                <Label Text="Một lần mua · Truy cập vĩnh viễn"
+                       FontSize="14"
+                       TextColor="{StaticResource AppleMuted48}"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,40"/>
+
+                <!-- ── QR Card (white, hairline border, rounded.lg) ── -->
+                <Border BackgroundColor="{StaticResource AppleCanvas}"
+                        Stroke="{StaticResource AppleHairline}"
+                        StrokeThickness="1"
+                        Margin="20,0,20,20"
+                        Padding="32">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="24" HorizontalOptions="Center">
+
+                        <!-- MoMo brand row (subtle) -->
+                        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                            <Border BackgroundColor="{StaticResource MoMoPink}"
+                                    StrokeThickness="0"
+                                    Padding="10,5"
+                                    HeightRequest="26">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6"/>
+                                </Border.StrokeShape>
+                                <Label Text="MoMo"
+                                       TextColor="White"
+                                       FontSize="12"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Quét bằng Ví MoMo"
+                                   TextColor="{StaticResource AppleMuted80}"
+                                   FontSize="14"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+
+                        <!-- ── QR Code area (290 × 290 with internal hairline frame) ── -->
+                        <Border BackgroundColor="{StaticResource AppleCanvas}"
+                                Stroke="{StaticResource AppleDividerSoft}"
+                                StrokeThickness="1"
+                                Padding="16"
+                                HorizontalOptions="Center">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Grid HeightRequest="280" WidthRequest="280">
+
+                                <zxing:BarcodeGeneratorView x:Name="QrCodeView"
+                                                            IsVisible="False"
+                                                            Format="QrCode"
+                                                            Value="{Binding QrCodeValue}"
+                                                            ForegroundColor="#1d1d1f"
+                                                            BackgroundColor="White"/>
+
+                                <!-- Loading -->
+                                <VerticalStackLayout x:Name="LoadingOverlay"
+                                                     IsVisible="True"
+                                                     VerticalOptions="Center"
+                                                     HorizontalOptions="Center"
+                                                     Spacing="14">
+                                    <ActivityIndicator IsRunning="True"
+                                                       Color="{StaticResource AppleBlue}"
+                                                       HeightRequest="32"
+                                                       WidthRequest="32"/>
+                                    <Label Text="Đang tạo mã thanh toán"
+                                           FontSize="14"
+                                           TextColor="{StaticResource AppleMuted48}"
+                                           HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+
+                                <!-- Expired -->
+                                <Border x:Name="ExpiredOverlay"
+                                        IsVisible="False"
+                                        BackgroundColor="#F5F5F7"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8"/>
+                                    </Border.StrokeShape>
+                                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                                        <Label Text="⏱"
+                                               FontSize="36"
+                                               HorizontalOptions="Center"
+                                               TextColor="{StaticResource AppleMuted80}"/>
+                                        <Label x:Name="ExpiredText"
+                                               Text="Mã đã hết hạn"
+                                               FontSize="15"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource AppleInk}"
+                                               HorizontalOptions="Center"/>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- ── Status + Countdown row ── -->
+                        <Grid ColumnDefinitions="*,Auto" HorizontalOptions="FillAndExpand">
+                            <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                <Border x:Name="StatusDot"
+                                        WidthRequest="8" HeightRequest="8"
+                                        BackgroundColor="{StaticResource AppleBlue}"
+                                        StrokeThickness="0"
+                                        VerticalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="4"/>
+                                    </Border.StrokeShape>
+                                </Border>
+                                <Label x:Name="StatusLabel"
+                                       Text="{Binding StatusDisplay}"
+                                       FontSize="14"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource AppleInk}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+
+                            <Label Grid.Column="1"
+                                   Text="{Binding TimeRemainingDisplay}"
+                                   FontSize="14"
+                                   FontAttributes="None"
+                                   TextColor="{StaticResource AppleMuted48}"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ── Steps card (display-md style headline) ── -->
+                <Border BackgroundColor="{StaticResource AppleCanvas}"
+                        Stroke="{StaticResource AppleHairline}"
+                        StrokeThickness="1"
+                        Margin="20,0,20,20"
+                        Padding="28,28,28,32">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="18">
+                        <Label Text="Cách thanh toán"
+                               FontSize="21"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource AppleInk}"
+                               CharacterSpacing="0.231"/>
+
+                        <Grid ColumnDefinitions="36,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+                            <Border Grid.Row="0" Grid.Column="0"
+                                    BackgroundColor="{StaticResource AppleParchment}"
+                                    Stroke="{StaticResource AppleHairline}" StrokeThickness="1"
+                                    WidthRequest="28" HeightRequest="28"
+                                    HorizontalOptions="Start" VerticalOptions="Start">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                                <Label Text="1" FontSize="13" FontAttributes="Bold"
+                                       TextColor="{StaticResource AppleInk}"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Text="Mở ứng dụng MoMo trên điện thoại của bạn"
+                                   FontSize="15"
+                                   TextColor="{StaticResource AppleInk}"
+                                   LineHeight="1.47"
+                                   VerticalOptions="Center"/>
+
+                            <Border Grid.Row="1" Grid.Column="0"
+                                    BackgroundColor="{StaticResource AppleParchment}"
+                                    Stroke="{StaticResource AppleHairline}" StrokeThickness="1"
+                                    WidthRequest="28" HeightRequest="28"
+                                    HorizontalOptions="Start" VerticalOptions="Start">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                                <Label Text="2" FontSize="13" FontAttributes="Bold"
+                                       TextColor="{StaticResource AppleInk}"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="1"
+                                   Text="Quét mã QR phía trên và xác nhận"
+                                   FontSize="15"
+                                   TextColor="{StaticResource AppleInk}"
+                                   LineHeight="1.47"
+                                   VerticalOptions="Center"/>
+
+                            <Border Grid.Row="2" Grid.Column="0"
+                                    BackgroundColor="{StaticResource AppleParchment}"
+                                    Stroke="{StaticResource AppleHairline}" StrokeThickness="1"
+                                    WidthRequest="28" HeightRequest="28"
+                                    HorizontalOptions="Start" VerticalOptions="Start">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                                <Label Text="3" FontSize="13" FontAttributes="Bold"
+                                       TextColor="{StaticResource AppleInk}"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label Grid.Row="2" Grid.Column="1"
+                                   Text="Nội dung sẽ tự động mở khóa khi giao dịch hoàn tất"
+                                   FontSize="15"
+                                   TextColor="{StaticResource AppleInk}"
+                                   LineHeight="1.47"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ── Transaction code (caption, monospace, muted) ── -->
+                <Label HorizontalOptions="Center" Margin="0,12,0,28"
+                       FontSize="12"
+                       TextColor="{StaticResource AppleMuted48}">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Mã giao dịch  " />
+                            <Span Text="{Binding TransactionCode}"
+                                  FontFamily="Courier"
+                                  TextColor="{StaticResource AppleMuted80}"/>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+
+                <!-- ── Action Buttons (Apple pill style, padding 14×28) ── -->
+                <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
+
+                    <Button x:Name="OpenAppBtn"
+                            Text="Mở ứng dụng MoMo"
+                            Clicked="OnOpenVnPayClicked"
+                            BackgroundColor="{StaticResource AppleBlue}"
+                            TextColor="White"
+                            FontSize="17"
+                            HeightRequest="52"
+                            CornerRadius="26"
+                            BorderWidth="0"/>
+
+                    <Button x:Name="RefreshBtn"
+                            Text="Tạo mã mới"
+                            IsVisible="False"
+                            Clicked="OnRefreshClicked"
+                            BackgroundColor="{StaticResource AppleBlue}"
+                            TextColor="White"
+                            FontSize="17"
+                            HeightRequest="52"
+                            CornerRadius="26"
+                            BorderWidth="0"/>
+
+                    <Button x:Name="CancelBtn"
+                            Text="Hủy"
+                            Clicked="OnCancelClicked"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AppleBlue}"
+                            FontSize="17"
+                            HeightRequest="52"
+                            BorderColor="Transparent"
+                            BorderWidth="0"/>
+                </VerticalStackLayout>
+
+                <!-- ── DEMO HELPER ─────────────────────────────────────────
+                     Sandbox MoMo public không có ví test thật → user không
+                     trả tiền được qua nút "Mở app MoMo". Nút này gọi
+                     /api/payment/dev-mark-success để giả lập thành công.
+                     Chỉ dùng cho DEMO / luận văn.
+                -->
+                <VerticalStackLayout Padding="20,32,20,0" Spacing="10">
+                    <BoxView HeightRequest="1" Color="{StaticResource AppleHairline}" Margin="0,0,0,16"/>
+                    <Label Text="DEMO · LUẬN VĂN"
+                           FontSize="10"
+                           CharacterSpacing="3"
+                           TextColor="{StaticResource AppleMuted48}"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Sandbox MoMo public không có ví test. Bấm nút bên dưới để giả lập thành công."
+                           FontSize="12"
+                           TextColor="{StaticResource AppleMuted48}"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           LineHeight="1.5"
+                           Padding="20,0"/>
+                    <Button x:Name="DevSuccessBtn"
+                            Text="✓  Tôi đã thanh toán (Demo)"
+                            Clicked="OnDevSuccessClicked"
+                            BackgroundColor="{StaticResource AppleInk}"
+                            TextColor="White"
+                            FontSize="15"
+                            HeightRequest="48"
+                            CornerRadius="24"
+                            BorderWidth="0"/>
+                </VerticalStackLayout>
+
+                <!-- ── Error panel (if any) ── -->
+                <Border x:Name="ErrorPanel"
+                        IsVisible="False"
+                        BackgroundColor="{StaticResource AppleCanvas}"
+                        Stroke="#FFD0D0"
+                        StrokeThickness="1"
+                        Margin="20,16,20,0"
+                        Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="14"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Có lỗi xảy ra"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource AppleDanger}"/>
+                        <Label x:Name="ErrorLabel"
+                               Text="{Binding ErrorMessage}"
+                               FontSize="14"
+                               TextColor="{StaticResource AppleMuted80}"
+                               LineHeight="1.47"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ── Footer fine-print ── -->
+                <Label HorizontalOptions="Center"
+                       Margin="32,40,32,8"
+                       FontSize="12"
+                       TextColor="{StaticResource AppleMuted48}"
+                       HorizontalTextAlignment="Center"
+                       LineHeight="1.5"
+                       Text="Thanh toán an toàn qua MoMo · Mã hóa SHA-256"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- ── Close button (top-right, Apple translucent chip 36×36) ── -->
+        <Border WidthRequest="36" HeightRequest="36"
+                BackgroundColor="#D2D2D7"
+                Opacity="0.85"
+                StrokeThickness="0"
+                HorizontalOptions="End"
+                VerticalOptions="Start"
+                Margin="0,52,20,0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="18"/>
+            </Border.StrokeShape>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnCancelClicked"/>
+            </Border.GestureRecognizers>
+            <Label Text="✕"
+                   FontSize="13"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource AppleInk}"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+        </Border>
+
+        <!-- ── Success Overlay (full-screen takeover, museum gallery moment) ── -->
+        <Grid x:Name="SuccessOverlay"
+              IsVisible="False"
+              BackgroundColor="{StaticResource AppleCanvas}">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="32" Padding="40">
+
+                <!-- Hero check circle (Action Blue, 120×120) -->
+                <Border WidthRequest="120" HeightRequest="120"
+                        BackgroundColor="{StaticResource AppleBlue}"
+                        StrokeThickness="0"
+                        HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="60"/>
+                    </Border.StrokeShape>
+                    <Label Text="✓"
+                           TextColor="White"
+                           FontSize="68"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
+
+                <!-- Hero-display headline -->
+                <Label Text="Thanh toán thành công"
+                       FontSize="40"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource AppleInk}"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"/>
+
+                <!-- Lead subcopy -->
+                <Label Text="Nội dung Premium đã được mở khóa.&#10;Đang chuyển hướng..."
+                       FontSize="17"
+                       TextColor="{StaticResource AppleMuted48}"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       LineHeight="1.47"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

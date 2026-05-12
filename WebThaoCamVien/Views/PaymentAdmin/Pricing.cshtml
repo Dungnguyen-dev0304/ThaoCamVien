@@ -1,0 +1,156 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Cấu hình Premium";
+    ViewData["PageTitle"] = "Cấu hình giá Premium";
+    ViewData["Active"] = "pricing";
+    Layout = "~/Views/Shared/_adminlayout.cshtml";
+}
+
+<style>
+    .apple-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 18px; }
+    .apple-tag { font-size: 11px; font-weight: 700; color: #7a7a7a; letter-spacing: 3px; text-transform: uppercase; }
+    .apple-pill { border-radius: 9999px; padding: 6px 14px; font-size: 12px; font-weight: 700; display: inline-block; }
+    .apple-btn { background: #0066cc; color: #fff; border-radius: 9999px; padding: 9px 20px; font-size: 13px; font-weight: 600; transition: transform 0.15s; }
+    .apple-btn:hover { background: #0071e3; color: #fff; }
+    .apple-btn:active { transform: scale(0.96); }
+    .apple-btn-ghost { background: #f5f5f7; color: #1d1d1f; border-radius: 9999px; padding: 9px 20px; font-size: 13px; font-weight: 600; }
+    .apple-btn-ghost:hover { background: #ebebef; }
+    .row-hover:hover { background: #fafafc; }
+</style>
+
+<div class="mb-6 flex justify-between items-start">
+    <div>
+        <div class="apple-tag mb-2">Premium · Cấu hình</div>
+        <p style="color:#7a7a7a; font-size:14px;">Bật/tắt và đặt giá tiền cho từng điểm tham quan Premium</p>
+    </div>
+    <a href="@Url.Action("Index")" class="apple-btn-ghost">← Dashboard</a>
+</div>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="apple-card p-4 mb-4 flex items-center gap-3" style="background:#f0f9ff; border-color:#bae6fd;">
+        <div style="width:32px; height:32px; border-radius:50%; background:#0066cc; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</div>
+        <div style="color:#0066cc; font-weight:600; font-size:14px;">@TempData["Msg"]</div>
+    </div>
+}
+
+<div class="apple-card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead style="background:#fafafc;">
+            <tr class="text-left">
+                <th class="px-5 py-4 apple-tag" style="font-size:10px; width:60px;">ID</th>
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">Tên POI</th>
+                <th class="px-5 py-4 apple-tag text-center" style="font-size:10px; width:140px;">Trạng thái</th>
+                <th class="px-5 py-4 apple-tag text-right" style="font-size:10px; width:160px;">Giá (VND)</th>
+                <th class="px-5 py-4 text-center" style="width:140px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr class="row-hover" style="border-top:1px solid #f0f0f0;">
+                    <td class="px-5 py-5">
+                        <span style="font-family:'SF Mono',monospace; font-size:13px; color:#7a7a7a;">@p.PoiId</span>
+                    </td>
+                    <td class="px-5 py-5" style="font-size:15px; font-weight:600; color:#1d1d1f; letter-spacing:-0.2px;">
+                        @p.Name
+                    </td>
+                    <td class="px-5 py-5 text-center">
+                        @if ((bool)p.IsPremium)
+                        {
+                            <span class="apple-pill" style="background:#0066cc; color:white;">◈ PREMIUM</span>
+                        }
+                        else
+                        {
+                            <span class="apple-pill" style="background:#f5f5f7; color:#7a7a7a;">FREE</span>
+                        }
+                    </td>
+                    <td class="px-5 py-5 text-right" style="font-size:15px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">
+                        @{
+                            var price = p.PremiumPrice as decimal?;
+                        }
+                        @(price.HasValue ? price.Value.ToString("#,##0") + " ₫" : "—")
+                    </td>
+                    <td class="px-5 py-5 text-center">
+                        <button onclick="openEditModal(@p.PoiId, '@(((string)p.Name).Replace("'","\\'"))', @(((bool)p.IsPremium).ToString().ToLower()), @(price?.ToString("0") ?? "50000"))"
+                                class="apple-btn">
+                            Chỉnh sửa
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ── Edit Modal (Apple sheet style) ──────────────────────────────────── -->
+<div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(29,29,31,0.4); backdrop-filter:blur(8px);">
+    <div class="apple-card" style="width:100%; max-width:480px; padding:40px;">
+        <form method="post" action="@Url.Action("UpdatePricing")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="poiId" id="modalPoiId"/>
+
+            <div class="apple-tag mb-3">Cấu hình Premium</div>
+            <h2 style="font-size:28px; font-weight:600; letter-spacing:-0.4px; color:#1d1d1f; margin-bottom:8px; line-height:1.2;" id="modalPoiName">—</h2>
+            <p style="color:#7a7a7a; font-size:14px; margin-bottom:32px;">Bật chế độ Premium để khóa nội dung phía sau cổng thanh toán</p>
+
+            <!-- Toggle switch (Apple style) -->
+            <div class="flex items-center justify-between mb-8 p-4" style="background:#f5f5f7; border-radius:14px;">
+                <div>
+                    <div style="font-size:15px; font-weight:600; color:#1d1d1f;">Premium</div>
+                    <div style="font-size:12px; color:#7a7a7a; margin-top:2px;">Yêu cầu thanh toán để truy cập</div>
+                </div>
+                <label style="position:relative; display:inline-block; width:51px; height:31px; cursor:pointer;">
+                    <input type="checkbox" name="isPremium" id="modalIsPremium" value="true" style="opacity:0; width:0; height:0;" onchange="toggleSwitch(this)"/>
+                    <span id="switchTrack" style="position:absolute; top:0; left:0; right:0; bottom:0; background:#e0e0e0; border-radius:9999px; transition:0.2s;"></span>
+                    <span id="switchThumb" style="position:absolute; top:2px; left:2px; width:27px; height:27px; background:white; border-radius:50%; transition:0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></span>
+                </label>
+            </div>
+
+            <!-- Price input -->
+            <div class="mb-8">
+                <label class="apple-tag block mb-3">Giá (VND)</label>
+                <div style="position:relative;">
+                    <input type="number" name="price" id="modalPrice"
+                           min="1000" step="1000"
+                           style="width:100%; padding:16px 20px; padding-right:60px; background:#f5f5f7; border:none; border-radius:14px; font-size:24px; font-weight:600; color:#0066cc; letter-spacing:-0.3px; outline:none;"
+                           onfocus="this.style.background='#fff'; this.style.boxShadow='0 0 0 2px #0066cc';"
+                           onblur="this.style.background='#f5f5f7'; this.style.boxShadow='none';"/>
+                    <span style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:18px; font-weight:600; color:#7a7a7a;">₫</span>
+                </div>
+                <div style="font-size:12px; color:#7a7a7a; margin-top:8px;">Khuyến nghị 30.000 — 100.000 ₫</div>
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeEditModal()" class="apple-btn-ghost">Hủy</button>
+                <button type="submit" class="apple-btn">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleSwitch(checkbox) {
+        const track = document.getElementById('switchTrack');
+        const thumb = document.getElementById('switchThumb');
+        if (checkbox.checked) {
+            track.style.background = '#0066cc';
+            thumb.style.left = '22px';
+        } else {
+            track.style.background = '#e0e0e0';
+            thumb.style.left = '2px';
+        }
+    }
+    function openEditModal(id, name, isPremium, price) {
+        document.getElementById('modalPoiId').value = id;
+        document.getElementById('modalPoiName').textContent = name;
+        const cb = document.getElementById('modalIsPremium');
+        cb.checked = isPremium;
+        toggleSwitch(cb);
+        document.getElementById('modalPrice').value = price;
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+    }
+</script>

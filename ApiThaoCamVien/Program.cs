@@ -21,6 +21,8 @@ builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     // Trả về null thay vì bỏ qua field
     x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    // Không encode "&" thành "&" — URL VNPay phải giữ nguyên
+    x.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 });
 
 // ─── 3. CORS ─────────────────────────────────────────────────────────────────
@@ -53,6 +55,10 @@ builder.Services.AddScoped<QrQueueService>();
 
 // ─── 7. UDP server discovery (cho app mobile auto-detect IP LAN) ──────────────
 builder.Services.AddHostedService<UdpDiscoveryService>();
+
+// ─── 8. MoMo Payment Service (Singleton: read-only config) ──────────────────
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<MoMoService>();
 
 var app = builder.Build();
 
