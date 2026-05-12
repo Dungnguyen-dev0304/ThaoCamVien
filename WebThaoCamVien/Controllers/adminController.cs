@@ -299,7 +299,7 @@ namespace WebThaoCamVien.Controllers
                 generatedAt = DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"),
                 kpi = new
                 {
-                    totalVisits = totalVisits * 2 ,
+                    totalVisits,
                     visitsToday,
                     avgListen,
                     totalListenSec,

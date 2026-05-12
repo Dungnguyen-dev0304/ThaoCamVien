@@ -63,12 +63,72 @@ namespace AppThaoCamVien.Services
         /// <summary>POI đang phát hiện tại (-1 nếu không có).</summary>
         public int CurrentPoiId => _currentPoiId;
 
-        public NarrationEngine(AudioService audio, DatabaseService db, TtsEngine tts, ApiService api)
+        private readonly PaymentApiService _paymentApi;
+
+        public NarrationEngine(AudioService audio, DatabaseService db, TtsEngine tts, ApiService api, PaymentApiService paymentApi)
         {
             _audio = audio;
             _db = db;
             _tts = tts;
             _api = api;
+            _paymentApi = paymentApi;
+        }
+
+        /// <summary>
+        /// Premium gate ở tầng NarrationEngine — block AT THE SOURCE.
+        /// Mọi caller (Numpad/Qr/Map/Geofencing) đều phải đi qua đây.
+        /// Trả về true nếu POI premium VÀ device CHƯA mua → block playback.
+        ///
+        /// CHÍNH SÁCH FAIL-SAFE: nếu local Poi có IsPremium=true mà API lỗi →
+        /// BLOCK (an toàn cho doanh thu Premium hơn là cho phát oan).
+        /// </summary>
+        private async Task<bool> IsBlockedByPremiumGateAsync(Poi poi)
+        {
+            // ── 1. Fast path: Poi local biết là Premium ──
+            // Nếu Poi đã được sync với cờ IsPremium=true → CHẮC CHẮN premium.
+            // Chỉ cần check device access.
+            if (poi.IsPremium)
+            {
+                try
+                {
+                    var hasAccess = await _paymentApi.HasAccessAsync(poi.PoiId);
+                    System.Diagnostics.Debug.WriteLine($"[Narration] Premium POI {poi.PoiId} | hasAccess={hasAccess}");
+                    return !hasAccess; // Block nếu chưa mua
+                }
+                catch (Exception ex)
+                {
+                    // API lỗi với premium POI → BLOCK (fail-safe nghiêng về bảo vệ doanh thu)
+                    System.Diagnostics.Debug.WriteLine($"[Narration] 🔒 Premium check ERROR — BLOCKING by default: {ex.Message}");
+                    return true;
+                }
+            }
+
+            // ── 2. Local nói không premium — vẫn double-check qua API
+            // (vì local DB có thể chưa sync IsPremium từ server)
+            try
+            {
+                var info = await _paymentApi.CheckPremiumAsync(poi.PoiId);
+                if (info == null)
+                {
+                    // API không trả lời → POI có thể không có trên server, cho phép phát local
+                    return false;
+                }
+                if (!info.isPremium)
+                {
+                    return false; // Server xác nhận free → cho phát
+                }
+
+                // Server nói Premium nhưng local nói không — server thắng
+                var hasAccess = await _paymentApi.HasAccessAsync(poi.PoiId);
+                System.Diagnostics.Debug.WriteLine($"[Narration] Server says premium for {poi.PoiId} | hasAccess={hasAccess}");
+                return !hasAccess;
+            }
+            catch (Exception ex)
+            {
+                // Local nói không premium + API lỗi → cho phát (POI thường không bị khoá oan)
+                System.Diagnostics.Debug.WriteLine($"[Narration] Non-premium check failed (allow): {ex.Message}");
+                return false;
+            }
         }
 
         // ═════════════════════════════════════════════════════════════════
@@ -82,6 +142,20 @@ namespace AppThaoCamVien.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine($"[Narration] request poi={poi.PoiId} name='{poi.Name}' force={forcePlay}");
+
+                // ═══════════════════════════════════════════════════════════════
+                // PREMIUM GATE — BLOCK AT THE SOURCE
+                // Mọi caller (Numpad/Qr/Map/Home/Geofencing) đều đi qua đây.
+                // Nếu POI premium và device chưa trả tiền → KHÔNG phát.
+                // ═══════════════════════════════════════════════════════════════
+                if (await IsBlockedByPremiumGateAsync(poi))
+                {
+                    // Đảm bảo audio đang phát (nếu có) cũng dừng lại
+                    try { await _audio.StopAsync(); } catch { }
+                    try { await _tts.StopAsync(); } catch { }
+                    ClearQueueInternal(raise: true);
+                    return;
+                }
 
                 // ── TH1: user tap thủ công → ưu tiên cao, clear queue, ngắt current
                 if (forcePlay)

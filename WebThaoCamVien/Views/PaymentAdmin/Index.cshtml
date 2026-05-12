@@ -1,0 +1,199 @@
+@using SharedThaoCamVien.Models
+@model List<PaymentTransaction>
+@{
+    ViewData["Title"] = "Quản lý Thanh toán";
+    ViewData["PageTitle"] = "Quản lý Thanh toán Premium";
+    ViewData["Active"] = "payment";
+    Layout = "~/Views/Shared/_adminlayout.cshtml";
+    var stats = ViewBag.Stats;
+    var status = ViewBag.Status as string;
+    var query = ViewBag.Query as string;
+}
+
+<style>
+    /* Apple-inspired tokens overlaid on existing admin theme */
+    .apple-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 18px; }
+    .apple-pill { border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 600; display: inline-block; }
+    .apple-blue { color: #0066cc; }
+    .apple-bg-blue { background: #0066cc; color: #fff; }
+    .apple-ink { color: #1d1d1f; }
+    .apple-muted { color: #7a7a7a; }
+    .apple-display { font-size: 40px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.7px; line-height: 1.1; }
+    .apple-headline { font-size: 28px; font-weight: 600; color: #1d1d1f; letter-spacing: -0.4px; }
+    .apple-tag { font-size: 11px; font-weight: 700; color: #7a7a7a; letter-spacing: 3px; text-transform: uppercase; }
+    .apple-btn { background: #0066cc; color: #fff; border-radius: 9999px; padding: 11px 22px; font-size: 14px; font-weight: 600; transition: transform 0.15s; }
+    .apple-btn:hover { background: #0071e3; color: #fff; }
+    .apple-btn:active { transform: scale(0.96); }
+    .apple-btn-ghost { background: #fff; color: #0066cc; border: 1px solid #e0e0e0; border-radius: 9999px; padding: 11px 22px; font-size: 14px; font-weight: 600; }
+    .apple-btn-ghost:hover { background: #f5f5f7; }
+    .stat-num { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .row-hover:hover { background: #fafafc; }
+</style>
+
+<!-- ── Hero stats grid (Apple-style) ─────────────────────────────────── -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+    <div class="apple-card p-6">
+        <div class="apple-tag mb-2">Hôm nay</div>
+        <div class="stat-num apple-ink">@stats.TotalToday</div>
+        <div class="apple-muted text-sm mt-1">Tổng giao dịch</div>
+    </div>
+
+    <div class="apple-card p-6">
+        <div class="apple-tag mb-2">Thành công</div>
+        <div class="stat-num" style="color:#0066cc;">@stats.SuccessToday</div>
+        <div class="apple-muted text-sm mt-1">Giao dịch hoàn tất</div>
+    </div>
+
+    <div class="apple-card p-6">
+        <div class="apple-tag mb-2">Đang xử lý</div>
+        <div class="stat-num apple-ink">@stats.PendingToday</div>
+        <div class="apple-muted text-sm mt-1">Đang chờ xác nhận</div>
+    </div>
+
+    <div class="apple-card p-6">
+        <div class="apple-tag mb-2">Thất bại</div>
+        <div class="stat-num apple-ink" style="opacity:0.6;">@stats.FailedToday</div>
+        <div class="apple-muted text-sm mt-1">Giao dịch lỗi</div>
+    </div>
+</div>
+
+<!-- ── Revenue cards (massive numbers, museum gallery) ────────────────── -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+
+    <div class="apple-card p-8" style="background:#0066cc; border:none; color:white;">
+        <div class="text-xs font-bold tracking-[3px] uppercase opacity-80 mb-3">Doanh thu hôm nay</div>
+        <div style="font-size:48px; font-weight:700; letter-spacing:-1px; line-height:1;">
+            @(((decimal)stats.RevenueToday).ToString("#,##0")) ₫
+        </div>
+    </div>
+
+    <div class="apple-card p-8" style="background:#1d1d1f; border:none; color:white;">
+        <div class="text-xs font-bold tracking-[3px] uppercase mb-3" style="color:#cccccc;">Doanh thu lũy kế</div>
+        <div style="font-size:48px; font-weight:700; letter-spacing:-1px; line-height:1;">
+            @(((decimal)stats.RevenueTotal).ToString("#,##0")) ₫
+        </div>
+    </div>
+</div>
+
+<!-- ── Filter bar ─────────────────────────────────────────────────────── -->
+<div class="apple-card p-5 mb-4">
+    <form method="get" class="flex flex-wrap gap-3 items-center">
+        <input type="text" name="q" value="@query"
+               placeholder="Tìm theo mã GD hoặc Device ID..."
+               class="flex-1 px-5 py-3 bg-[#f5f5f7] border-0 outline-none focus:ring-2 focus:ring-[#0066cc]"
+               style="border-radius:9999px; font-size:14px; min-width:280px;"/>
+
+        <select name="status" class="px-4 py-3 bg-[#f5f5f7] border-0 outline-none" style="border-radius:9999px; font-size:14px;">
+            <option value="">Tất cả trạng thái</option>
+            <option value="success" selected="@(status == "success")">Thành công</option>
+            <option value="pending" selected="@(status == "pending")">Chờ thanh toán</option>
+            <option value="processing" selected="@(status == "processing")">Đang xử lý</option>
+            <option value="failed" selected="@(status == "failed")">Thất bại</option>
+            <option value="expired" selected="@(status == "expired")">Hết hạn</option>
+        </select>
+
+        <button type="submit" class="apple-btn">Lọc</button>
+        <a href="@Url.Action("Pricing")" class="apple-btn-ghost">⚙ Cấu hình giá</a>
+    </form>
+</div>
+
+<!-- ── Transactions table (clean, hairline rows) ──────────────────────── -->
+<div class="apple-card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead style="background:#fafafc;">
+            <tr class="text-left">
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">Mã GD</th>
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">POI</th>
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">Thiết bị</th>
+                <th class="px-5 py-4 apple-tag text-right" style="font-size:10px;">Số tiền</th>
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">Phương thức</th>
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">Trạng thái</th>
+                <th class="px-5 py-4 apple-tag" style="font-size:10px;">Thời gian</th>
+                <th class="px-5 py-4"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="px-5 py-20 text-center">
+                        <div class="apple-headline mb-2" style="opacity:0.4;">Chưa có giao dịch</div>
+                        <div class="apple-muted">Khi khách hàng thanh toán Premium, giao dịch sẽ xuất hiện tại đây.</div>
+                    </td>
+                </tr>
+            }
+            @foreach (var t in Model)
+            {
+                <tr class="row-hover" style="border-top:1px solid #f0f0f0;">
+                    <td class="px-5 py-4">
+                        <span style="font-family:'SF Mono',monospace; font-size:12px; color:#1d1d1f;">@t.TransactionCode</span>
+                    </td>
+                    <td class="px-5 py-4">
+                        <div class="font-semibold apple-ink">@(t.Poi?.Name ?? $"POI #{t.PoiId}")</div>
+                        <div class="apple-muted text-xs mt-1">ID @t.PoiId</div>
+                    </td>
+                    <td class="px-5 py-4">
+                        <span style="font-family:'SF Mono',monospace; font-size:11px; color:#7a7a7a;">@(t.DeviceId.Length > 18 ? t.DeviceId.Substring(0, 18) + "…" : t.DeviceId)</span>
+                    </td>
+                    <td class="px-5 py-4 text-right apple-ink font-bold" style="font-size:15px; letter-spacing:-0.2px;">
+                        @t.Amount.ToString("#,##0") ₫
+                    </td>
+                    <td class="px-5 py-4">
+                        <span class="apple-pill" style="background:#fdf2f8; color:#a50064;">@t.PaymentMethod.ToUpper()</span>
+                    </td>
+                    <td class="px-5 py-4">
+                        @switch (t.Status)
+                        {
+                            case "success":
+                                <span class="apple-pill" style="background:#e8f3ff; color:#0066cc;"><span class="status-dot" style="background:#0066cc;"></span>Thành công</span>
+                                break;
+                            case "pending":
+                                <span class="apple-pill" style="background:#fff7e6; color:#995c00;"><span class="status-dot" style="background:#cc7a00;"></span>Chờ</span>
+                                break;
+                            case "processing":
+                                <span class="apple-pill" style="background:#e8f3ff; color:#0066cc;"><span class="status-dot" style="background:#0066cc;"></span>Xử lý</span>
+                                break;
+                            case "failed":
+                                <span class="apple-pill" style="background:#fef2f2; color:#d32f2f;"><span class="status-dot" style="background:#d32f2f;"></span>Thất bại</span>
+                                break;
+                            case "expired":
+                                <span class="apple-pill" style="background:#f5f5f7; color:#7a7a7a;"><span class="status-dot" style="background:#aaa;"></span>Hết hạn</span>
+                                break;
+                            default:
+                                <span class="apple-muted text-xs">@t.Status</span>
+                                break;
+                        }
+                    </td>
+                    <td class="px-5 py-4 apple-muted text-xs">
+                        @t.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")
+                    </td>
+                    <td class="px-5 py-4">
+                        <a href="@Url.Action("Detail", new { txnCode = t.TransactionCode })"
+                           style="color:#0066cc; font-weight:600; font-size:13px;">Xem →</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="px-5 py-4 flex justify-between items-center" style="background:#fafafc; border-top:1px solid #f0f0f0;">
+            <div class="apple-muted text-sm">
+                Trang <strong class="apple-ink">@ViewBag.Page</strong> / @ViewBag.TotalPages — Tổng @ViewBag.Total giao dịch
+            </div>
+            <div class="flex gap-2">
+                @if (ViewBag.Page > 1)
+                {
+                    <a href="?page=@(ViewBag.Page - 1)&status=@status&q=@query" class="apple-btn-ghost">← Trước</a>
+                }
+                @if (ViewBag.Page < ViewBag.TotalPages)
+                {
+                    <a href="?page=@(ViewBag.Page + 1)&status=@status&q=@query" class="apple-btn">Sau →</a>
+                }
+            </div>
+        </div>
+    }
+</div>

@@ -152,6 +152,181 @@
             <ImageButton Source="icon_back_white.png" WidthRequest="20" HeightRequest="20" BackgroundColor="Transparent" Clicked="OnBackClicked" />
         </Border>
 
+        <!-- ──────────────────────────────────────────────────────────────
+             PREMIUM GATE — Apple Museum Gallery aesthetic
+             Edge-to-edge parchment canvas. Hero typography. Single Action Blue.
+             No shadows on chrome. Hairline borders only.
+        ────────────────────────────────────────────────────────────────── -->
+        <Grid x:Name="PremiumGateOverlay"
+              IsVisible="False"
+              BackgroundColor="#f5f5f7">
+
+            <ScrollView VerticalScrollBarVisibility="Never">
+                <VerticalStackLayout Padding="0,72,0,40" Spacing="0">
+
+                    <!-- Eyebrow tag -->
+                    <Label Text="THẢO CẦM VIÊN · PREMIUM"
+                           TextColor="#7a7a7a"
+                           FontSize="11"
+                           CharacterSpacing="3.5"
+                           HorizontalOptions="Center"
+                           Margin="0,0,0,32"/>
+
+                    <!-- Hero icon — single Action Blue circle, no shadow -->
+                    <Border WidthRequest="92" HeightRequest="92"
+                            BackgroundColor="#0066cc"
+                            StrokeThickness="0"
+                            HorizontalOptions="Center"
+                            Margin="0,0,0,40">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="46"/>
+                        </Border.StrokeShape>
+                        <Label Text="◈"
+                               FontSize="42"
+                               TextColor="White"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+                    </Border>
+
+                    <!-- Hero headline (display-md 34px / 600 / -0.374) -->
+                    <Label x:Name="GatePoiNameLabel"
+                           Text="—"
+                           FontSize="34"
+                           FontAttributes="Bold"
+                           TextColor="#1d1d1f"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           Padding="32,0"
+                           LineBreakMode="WordWrap"/>
+
+                    <!-- Lead subcopy (lead 28px / 400 — but slightly smaller for gate) -->
+                    <Label Text="Câu chuyện chuyên sâu, bản thuyết minh chuyên nghiệp"
+                           FontSize="17"
+                           TextColor="#7a7a7a"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           Padding="40,12,40,0"
+                           LineHeight="1.47"/>
+
+                    <!-- Massive price (hero-display proportions) -->
+                    <Label x:Name="GatePriceLabel"
+                           Text="50.000 ₫"
+                           FontSize="56"
+                           FontAttributes="Bold"
+                           TextColor="#0066cc"
+                           HorizontalOptions="Center"
+                           Margin="0,40,0,4"
+                           CharacterSpacing="-1"/>
+
+                    <Label Text="Một lần mua · Truy cập vĩnh viễn"
+                           FontSize="13"
+                           TextColor="#7a7a7a"
+                           HorizontalOptions="Center"
+                           CharacterSpacing="0.5"
+                           Margin="0,0,0,48"/>
+
+                    <!-- Benefit card (white surface, 1px hairline, rounded.lg=18) -->
+                    <Border BackgroundColor="White"
+                            Stroke="#e0e0e0"
+                            StrokeThickness="1"
+                            Margin="20,0,20,32"
+                            Padding="28,28,28,32">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="18"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="20">
+
+                            <Label Text="Bao gồm"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#1d1d1f"
+                                   CharacterSpacing="0.5"/>
+
+                            <Grid ColumnDefinitions="28,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+                                <Label Grid.Row="0" Grid.Column="0" Text="✓"
+                                       FontSize="15" FontAttributes="Bold"
+                                       TextColor="#0066cc" VerticalOptions="Start"/>
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="Bản thuyết minh giọng đọc gốc, chất lượng phòng thu"
+                                       FontSize="15" TextColor="#1d1d1f"
+                                       LineHeight="1.47"/>
+
+                                <Label Grid.Row="1" Grid.Column="0" Text="✓"
+                                       FontSize="15" FontAttributes="Bold"
+                                       TextColor="#0066cc" VerticalOptions="Start"/>
+                                <Label Grid.Row="1" Grid.Column="1"
+                                       Text="Câu chuyện sinh học chi tiết — sinh cảnh, hành vi, lịch sử"
+                                       FontSize="15" TextColor="#1d1d1f"
+                                       LineHeight="1.47"/>
+
+                                <Label Grid.Row="2" Grid.Column="0" Text="✓"
+                                       FontSize="15" FontAttributes="Bold"
+                                       TextColor="#0066cc" VerticalOptions="Start"/>
+                                <Label Grid.Row="2" Grid.Column="1"
+                                       Text="Thanh toán an toàn qua MoMo · Bảo mật mã hoá"
+                                       FontSize="15" TextColor="#1d1d1f"
+                                       LineHeight="1.47"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Action buttons (Apple pill — 52 height, full pill radius) -->
+                    <VerticalStackLayout Padding="20,0" Spacing="12">
+                        <Button Text="Mở khoá nội dung"
+                                Clicked="OnUnlockClicked"
+                                BackgroundColor="#0066cc"
+                                TextColor="White"
+                                FontSize="17"
+                                HeightRequest="52"
+                                CornerRadius="26"
+                                BorderWidth="0"/>
+
+                        <Button Text="Quay lại"
+                                Clicked="OnBackClicked"
+                                BackgroundColor="Transparent"
+                                TextColor="#0066cc"
+                                FontSize="17"
+                                HeightRequest="52"
+                                BorderColor="Transparent"
+                                BorderWidth="0"/>
+                    </VerticalStackLayout>
+
+                    <!-- Footer fine-print -->
+                    <Label HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           Margin="40,32,40,0"
+                           FontSize="11"
+                           TextColor="#7a7a7a"
+                           LineHeight="1.5"
+                           CharacterSpacing="0.3"
+                           Text="Thanh toán bảo mật qua MoMo Wallet · Sau khi mở khoá, bạn có thể truy cập nội dung này không giới hạn."/>
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Top-right close (Apple translucent chip 36×36) -->
+            <Border WidthRequest="36" HeightRequest="36"
+                    BackgroundColor="#D2D2D7"
+                    Opacity="0.85"
+                    StrokeThickness="0"
+                    HorizontalOptions="End"
+                    VerticalOptions="Start"
+                    Margin="0,52,20,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="18"/>
+                </Border.StrokeShape>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackClicked"/>
+                </Border.GestureRecognizers>
+                <Label Text="✕"
+                       FontSize="13"
+                       FontAttributes="Bold"
+                       TextColor="#1d1d1f"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+            </Border>
+        </Grid>
+
     </Grid>
 </ContentPage>
   

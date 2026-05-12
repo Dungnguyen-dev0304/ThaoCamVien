@@ -37,4 +37,16 @@
 
 	</application>
 
+	<!-- Android 11+ package visibility: cho phép Launcher kiểm tra app MoMo (momo://) và HTTPS -->
+	<queries>
+		<intent>
+			<action android:name="android.intent.action.VIEW" />
+			<data android:scheme="momo" />
+		</intent>
+		<intent>
+			<action android:name="android.intent.action.VIEW" />
+			<data android:scheme="https" />
+		</intent>
+	</queries>
+
 </manifest>

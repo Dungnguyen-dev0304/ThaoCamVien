@@ -87,10 +87,9 @@ public partial class NumpadPage : ContentPage
 
     private async Task NavigateAsync(Poi poi)
     {
-        // Phát narration ngầm
-        var narration = _sp.GetService<NarrationEngine>();
-        _ = narration?.PlayAsync(poi, forcePlay: true);
-
+        // KHÔNG phát narration tại đây — để StoryAudioPage tự kiểm tra Premium
+        // gate trước rồi mới quyết định phát hay không. Trước đây gọi
+        // narration.PlayAsync(forcePlay:true) ở đây làm audio bypass gate.
         var page = _sp.GetService<StoryAudioPage>();
         if (page != null) { page.LoadPoi(poi); await Navigation.PushAsync(page); }
         Reset();

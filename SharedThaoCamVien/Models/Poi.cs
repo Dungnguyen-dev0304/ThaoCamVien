@@ -50,6 +50,13 @@ namespace SharedThaoCamVien.Models
         [SQLite.Column("audio_code")]
         public string? AudioCode { get; set; }
 
+        // --- Premium content fields ---
+        [SQLite.Column("is_premium")]
+        public bool IsPremium { get; set; }
+
+        [SQLite.Column("premium_price")]
+        public decimal? PremiumPrice { get; set; }
+
         // Kết nối đến danh sách các file âm thanh
         // Lưu ý: SQLite thuần sẽ bỏ qua dòng này, nhưng nó cần thiết để bạn dùng chung Model với API
         [SQLite.Ignore]

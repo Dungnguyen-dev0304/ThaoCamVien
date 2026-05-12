@@ -1,0 +1,79 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant A as App MAUI (PaymentViewModel)
+    participant API as API Payment (PaymentController)
+    participant DB as WebContext (SQL Server)
+    participant M as MoMo Gateway (sandbox)
+    participant W as Ví MoMo (trên điện thoại)
+
+    U->>A: Chọn POI Premium → bấm "Mua nội dung"
+    A->>API: GET /api/payment/access/{poiId}?deviceId=...
+    API->>DB: Kiểm tra PremiumAccess theo deviceId
+    DB-->>API: hasAccess
+
+    alt Đã mua trước đó
+        API-->>A: { hasAccess: true }
+        A-->>U: Mở khóa nội dung ngay (bỏ qua thanh toán)
+    else Chưa mua
+        API-->>A: { hasAccess: false }
+        A->>A: State = Loading (mở PaymentPage)
+
+        A->>API: POST /api/payment/create { poiId, deviceId, sessionId }
+        API->>DB: Hủy các giao dịch pending cũ
+        API->>DB: Insert PaymentTransaction (status=pending)
+        API->>M: POST /v2/gateway/api/create + HMAC-SHA256
+        M-->>API: { payUrl, deeplink, qrCodeUrl }
+        API->>DB: Lưu payUrl, qrExpiredAt
+        API-->>A: { transactionCode, qrCodeUrl, deeplink, payUrl, qrExpiredAt }
+
+        A->>A: Encode qrCodeUrl thành QR (ZXing)
+        A-->>U: Hiển thị QR + countdown 15 phút
+        A->>A: StartPolling (mỗi 3s)
+        A->>A: StartCountdown (mỗi 1s)
+
+        par Người dùng quét QR / mở app MoMo
+            U->>W: Quét QR bằng app MoMo
+            W->>U: Hiển thị màn hình xác nhận + nút Thanh toán
+            U->>W: Bấm Thanh toán + xác thực (PIN/sinh trắc)
+            W->>M: Xác nhận thanh toán
+        and Polling trạng thái
+            loop Mỗi 3 giây
+                A->>API: GET /api/payment/status/{txnCode}
+                API->>DB: Đọc PaymentTransaction.Status
+                API-->>A: { status }
+            end
+        end
+
+        M->>API: POST /api/payment/momo-ipn (webhook + signature)
+        API->>API: VerifyIpnSignature (HMAC-SHA256)
+
+        alt Signature hợp lệ + resultCode = 0 + amount khớp
+            API->>DB: Update Status = success, GatewayRef, CompletedAt
+            API->>DB: Insert PremiumAccess { poiId, deviceId }
+            API-->>M: { resultCode: 0, message: "Confirmed" }
+
+            A->>API: GET /api/payment/status (poll lần kế tiếp)
+            API-->>A: { status: "success", accessGranted: true }
+            A->>A: StopPolling, hiển thị Success Overlay
+            A-->>U: "Thanh toán thành công" + mở khóa nội dung
+        else Signature sai / amount lệch / resultCode ≠ 0
+            API->>DB: Update Status = failed, FailureReason
+            API-->>M: { resultCode: 99, message }
+            A->>API: GET /api/payment/status
+            API-->>A: { status: "failed", failureReason }
+            A-->>U: Hiển thị lỗi + nút "Tạo mã mới"
+        else QR hết hạn (qrExpiredAt < now)
+            API->>DB: Update Status = expired
+            API-->>A: { status: "expired" }
+            A-->>U: "Mã QR đã hết hạn" + nút "Tạo mã mới"
+        end
+
+        opt Demo / Luận văn (sandbox không có ví test thật)
+            U->>A: Bấm "✓ Tôi đã thanh toán (Demo)"
+            A->>API: GET /api/payment/dev-mark-success/{txnCode}
+            API->>DB: Update Status = success + Insert PremiumAccess
+            API-->>A: 200 OK
+            Note over A,API: Polling tiếp theo nhận status=success
+        end
+    end

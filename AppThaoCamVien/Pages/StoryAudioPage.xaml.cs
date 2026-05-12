@@ -19,12 +19,15 @@ public partial class StoryAudioPage : ContentPage
     private readonly DatabaseService _db;
     private readonly StoryAudioViewModel _vm;
     private readonly IServiceProvider _sp;
+    private readonly PaymentApiService _paymentApi;
 
     private Poi? _poi;
     private bool _dragging;
     private bool _isNarrating;
+    private bool _premiumCheckDone;
+    private bool _premiumGated;  // true = đang khóa, chưa cho phát
 
-    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db, StoryAudioViewModel vm, IServiceProvider sp)
+    public StoryAudioPage(AudioService audio, NarrationEngine narration, DatabaseService db, StoryAudioViewModel vm, IServiceProvider sp, PaymentApiService paymentApi)
     {
         InitializeComponent();
         _audio = audio;
@@ -32,6 +35,7 @@ public partial class StoryAudioPage : ContentPage
         _db = db;
         _vm = vm;
         _sp = sp;
+        _paymentApi = paymentApi;
         BindingContext = _vm;
 
         _audio.PlaybackStateChanged += OnStateChanged;
@@ -61,9 +65,123 @@ public partial class StoryAudioPage : ContentPage
         }
         catch { /* ignore UI analytics load errors */ }
 
-        // QUAN TRỌNG: Phát audio/TTS hoàn toàn trên background thread
-        // Không await ở đây để không block UI thread → tránh ANR crash trên Android
-        _ = StartNarrationSafeAsync();
+        // ── KHÓA AUDIO MẶC ĐỊNH ngay khi page xuất hiện ───────────────────
+        // Đặt gate = true trước khi check để chặn mọi audio đang phát từ
+        // NarrationEngine/geofencing. Sau khi xác minh Premium status,
+        // mới mở khóa nếu POI free hoặc device đã mua.
+        _premiumGated = true;
+        StopAllAudioImmediate();
+
+        // Chạy check Premium ở background, không block UI
+        _ = Task.Run(CheckPremiumAndStartAsync);
+    }
+
+    /// <summary>
+    /// Dừng NGAY toàn bộ audio + narration khi page mở.
+    /// Tránh tình trạng audio đang phát từ trang trước hoặc geofencing.
+    /// </summary>
+    private void StopAllAudioImmediate()
+    {
+        try
+        {
+            // Stop AudioService trên main thread (không await)
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                try { _audio.Pause(); } catch { }
+                try { UpdateBtn(false); } catch { }
+            });
+
+            // Stop NarrationEngine queue ngầm
+            _ = Task.Run(async () =>
+            {
+                try { await _narration.StopAsync(); } catch { }
+            });
+        }
+        catch { /* tuyệt đối không throw từ OnAppearing */ }
+    }
+
+    /// <summary>
+    /// Kiểm tra premium → nếu chưa mua thì show gate, nếu đã mua hoặc free thì phát audio.
+    /// Chạy nền để không block UI.
+    /// </summary>
+    private async Task CheckPremiumAndStartAsync()
+    {
+        if (_poi == null) return;
+
+        bool gated = false;
+        try
+        {
+            var info = await _paymentApi.CheckPremiumAsync(_poi.PoiId);
+            if (info != null && info.isPremium)
+            {
+                // POI premium → kiểm tra device đã mua chưa
+                var hasAccess = await _paymentApi.HasAccessAsync(_poi.PoiId);
+                gated = !hasAccess;
+
+                if (info.price > 0)
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        GatePriceLabel.Text = $"{info.price:#,##0} ₫";
+                        GatePoiNameLabel.Text = info.name ?? _poi.Name ?? "—";
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[StoryPage] Premium check error: {ex.Message}");
+            // Lỗi mạng → fallback: cho phép xem (không khóa, để app vẫn chạy)
+            gated = false;
+        }
+
+        _premiumCheckDone = true;
+        _premiumGated = gated;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            PremiumGateOverlay.IsVisible = gated;
+        });
+
+        if (gated)
+        {
+            // Vẫn bị khóa → đảm bảo audio hoàn toàn dừng (lần 2 cho chắc)
+            StopAllAudioImmediate();
+        }
+        else
+        {
+            // Không khóa → phát thuyết minh ngay
+            _ = StartNarrationSafeAsync();
+        }
+    }
+
+    /// <summary>User nhấn nút "Mở khóa ngay" trên Premium Gate.</summary>
+    private async void OnUnlockClicked(object sender, EventArgs e)
+    {
+        if (_poi == null) return;
+
+        try
+        {
+            var page = _sp.GetRequiredService<PaymentPage>();
+            page.SetPoi(_poi);
+            await Navigation.PushAsync(page);
+
+            var ok = await page.WaitForResultAsync();
+            if (ok)
+            {
+                // Thanh toán thành công → ẩn gate và phát audio
+                _premiumGated = false;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    PremiumGateOverlay.IsVisible = false;
+                });
+                _ = StartNarrationSafeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Lỗi", $"Không mở được trang thanh toán: {ex.Message}", "OK");
+        }
     }
 
     protected override void OnDisappearing()
@@ -132,6 +250,11 @@ public partial class StoryAudioPage : ContentPage
     private async Task StartNarrationSafeAsync()
     {
         if (_poi == null || _isNarrating) return;
+        if (_premiumGated)
+        {
+            System.Diagnostics.Debug.WriteLine("[StoryPage] Narration blocked: premium gated");
+            return;
+        }
         _isNarrating = true;
 
         try
@@ -172,6 +295,12 @@ public partial class StoryAudioPage : ContentPage
     private async void OnPlayPauseClicked(object sender, TappedEventArgs e)
     {
         if (_poi == null) return;
+        if (_premiumGated)
+        {
+            await DisplayAlert("Nội dung Premium",
+                "Vui lòng mở khóa nội dung này để nghe.", "OK");
+            return;
+        }
 
         try
         {
