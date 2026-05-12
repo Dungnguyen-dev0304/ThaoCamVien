@@ -121,8 +121,35 @@
                                 <Grid RowDefinitions="160,Auto">
 
                                     <Grid Grid.Row="0">
-                                        <Image Source="{Binding ImageUrl}" 
+                                        <Image Source="{Binding ImageUrl}"
                        Aspect="AspectFill" />
+
+                                        <!-- ─── Overlay Premium (lock icon + giá) — chỉ hiện khi IsPremium=true ─── -->
+                                        <Grid IsVisible="{Binding IsPremium}"
+                                              BackgroundColor="#80000000">
+                                            <VerticalStackLayout HorizontalOptions="Center"
+                                                                 VerticalOptions="Center"
+                                                                 Spacing="6">
+                                                <Label Text="🔒"
+                                                       FontSize="36"
+                                                       HorizontalOptions="Center"
+                                                       TextColor="#FFD700" />
+                                                <Border Padding="10,3"
+                                                        BackgroundColor="#FFD700"
+                                                        StrokeThickness="0"
+                                                        HorizontalOptions="Center">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="10" />
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding PremiumPriceText}"
+                                                           TextColor="#111827"
+                                                           FontSize="11"
+                                                           FontAttributes="Bold"
+                                                           TextTransform="Uppercase"
+                                                           CharacterSpacing="0.5" />
+                                                </Border>
+                                            </VerticalStackLayout>
+                                        </Grid>
                                     </Grid>
 
                                     <VerticalStackLayout Grid.Row="1" Padding="16,16,16,20" Spacing="4">

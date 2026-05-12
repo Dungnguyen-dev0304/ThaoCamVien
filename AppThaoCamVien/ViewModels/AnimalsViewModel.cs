@@ -175,7 +175,9 @@ public sealed class AnimalsViewModel : INotifyPropertyChanged
                         category: TranslateCategory(a.Category, lang),
                         conservationStatus: a.ConservationStatus,
                         statusColorHex: a.StatusColorHex,
-                        imageUrl: a.ImageUrl));
+                        imageUrl: a.ImageUrl,
+                        isPremium: a.IsPremium,
+                        premiumPrice: a.PremiumPrice));
                 }
 
                 // Không phụ thuộc hoàn toàn dto.Filters từ backend:
@@ -390,7 +392,16 @@ public sealed class Animal
     public Color StatusColor { get; }
     public string ImageUrl { get; }
 
-    public Animal(int id, string name, string category, string conservationStatus, string statusColorHex, string imageUrl)
+    /// <summary>true = bị khóa Premium, hiển thị icon ổ khóa + label "Premium" trên card.</summary>
+    public bool IsPremium { get; }
+
+    /// <summary>Giá hiển thị trên overlay (vd "20.000đ"). Empty nếu IsPremium=false.</summary>
+    public string PremiumPriceText { get; }
+
+    public Animal(
+        int id, string name, string category, string conservationStatus,
+        string statusColorHex, string imageUrl,
+        bool isPremium = false, decimal? premiumPrice = null)
     {
         Id = id;
         Name = name;
@@ -398,6 +409,10 @@ public sealed class Animal
         ConservationStatus = conservationStatus;
         StatusColor = Color.FromArgb(statusColorHex);
         ImageUrl = imageUrl;
+        IsPremium = isPremium;
+        PremiumPriceText = isPremium && premiumPrice.HasValue && premiumPrice.Value > 0
+            ? $"{premiumPrice.Value:N0}đ"
+            : (isPremium ? "Premium" : "");
     }
 }
 

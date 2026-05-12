@@ -60,6 +60,12 @@ public sealed class AnimalCardDto
     public string Category { get; set; } = string.Empty;
     public string ConservationStatus { get; set; } = string.Empty;
     public string StatusColorHex { get; set; } = string.Empty;
+
+    /// <summary>true = POI bị khóa Premium, cần thanh toán MoMo mới nghe được.</summary>
+    public bool IsPremium { get; set; }
+
+    /// <summary>Giá Premium hiển thị trên overlay khóa (VND).</summary>
+    public decimal? PremiumPrice { get; set; }
 }
 
 public sealed class AnimalFilterDto

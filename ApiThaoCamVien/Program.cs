@@ -73,6 +73,25 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// ─── Middleware: nuốt OperationCanceledException khi client disconnect ──
+// Khi load test Ctrl+C, Python đóng connection giữa request → ASP.NET
+// cancel CancellationToken → EF Core throw TaskCanceledException →
+// Visual Studio popup "user-unhandled". Đây là bình thường, không phải bug.
+// Middleware này bắt + log INFO + trả 499 (Client Closed Request) để VS
+// không hiện popup nữa.
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+    {
+        // Client tự cancel — bình thường, không phải lỗi server.
+        context.Response.StatusCode = 499;   // Nginx-style "client closed request"
+    }
+});
+
 // QUAN TRỌNG: UseCors() phải TRƯỚC UseAuthorization() và MapControllers()
 app.UseCors();
 

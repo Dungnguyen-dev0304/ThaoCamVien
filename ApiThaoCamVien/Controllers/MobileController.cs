@@ -240,7 +240,9 @@ public sealed class MobileController : ControllerBase
                 ImageUrl = PoiMediaUrls.ResolveThumbnail(Request, p.ImageThumbnail),
                 Category = category,
                 ConservationStatus = lang == "en" ? statusEn(p.Priority) : statusVi(p.Priority),
-                StatusColorHex = colorHex(p.Priority)
+                StatusColorHex = colorHex(p.Priority),
+                IsPremium = p.IsPremium,
+                PremiumPrice = p.PremiumPrice
             });
         }
 
@@ -590,6 +592,12 @@ internal sealed class AnimalResponse
     public string Category { get; set; } = "";
     public string ConservationStatus { get; set; } = "";
     public string StatusColorHex { get; set; } = "";
+
+    /// <summary>true = POI bị khóa, cần thanh toán Premium MoMo mới nghe được.</summary>
+    public bool IsPremium { get; set; }
+
+    /// <summary>Giá Premium (VND). NULL nếu chưa cấu hình giá.</summary>
+    public decimal? PremiumPrice { get; set; }
 }
 
 internal sealed class AnimalFilterResponse

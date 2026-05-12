@@ -90,8 +90,9 @@ namespace WebThaoCamVien.Controllers
 
         /// <summary>JSON for dashboard polling: app sessions seen recently (devices need internet to ping API).</summary>
         [HttpGet]
-        public async Task<IActionResult> ActiveAppSessionsJson([FromQuery] int staleSeconds = 3)
+        public async Task<IActionResult> ActiveAppSessionsJson([FromQuery] int staleSeconds = 10)
         {
+            // Window 10s mặc định (cũ là 3s — quá ngắn, drop device khi server slow).
             staleSeconds = Math.Clamp(staleSeconds, 2, 600);
             var since = DateTime.UtcNow.AddSeconds(-staleSeconds);
             var count = await _context.AppClientPresences.AsNoTracking()
@@ -104,9 +105,11 @@ namespace WebThaoCamVien.Controllers
         /// POI đang nghe. Refresh mỗi 3s để bảng thiết bị nhảy theo load test.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ActiveDevicesJson([FromQuery] int staleSeconds = 5)
+        public async Task<IActionResult> ActiveDevicesJson([FromQuery] int staleSeconds = 15)
         {
-            staleSeconds = Math.Clamp(staleSeconds, 2, 60);
+            // Window 15s mặc định: với heartbeat client mỗi 1.5s, miss 10 lần liên
+            // tiếp mới drop. Đủ chống nhiễu khi server bận hoặc network blip.
+            staleSeconds = Math.Clamp(staleSeconds, 2, 120);
             var since = DateTime.UtcNow.AddSeconds(-staleSeconds);
 
             var devicesRaw = await _context.AppClientPresences.AsNoTracking()
@@ -222,8 +225,9 @@ namespace WebThaoCamVien.Controllers
 
             var totalListenSec = await listens.SumAsync(v => (long?)v.ListenDuration) ?? 0L;
 
-            // Cửa sổ 3s: app ping 2s/lần → user thoát app thì admin thấy 0 trong ~5s.
-            var activeSince = DateTime.UtcNow.AddSeconds(-3);
+            // Cửa sổ 10s: tolerance khi server bận (50+ device đồng thời).
+            // Heartbeat client 1.5s/lần → user thoát app thì admin thấy 0 trong ~12s.
+            var activeSince = DateTime.UtcNow.AddSeconds(-10);
             var activeDevices = await _context.AppClientPresences.AsNoTracking()
                 .CountAsync(p => p.LastSeenUtc >= activeSince);
 
