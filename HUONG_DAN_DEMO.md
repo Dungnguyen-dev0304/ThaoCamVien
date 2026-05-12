@@ -167,6 +167,17 @@ Khi xong đồ án, chuyển API lên VPS/cloud (Azure App Service, Render, Fly.
 
 ---
 
+## 6. Test automation trên nhiều máy
+
+File này chỉ nói chuyện chạy **thật** trên nhiều máy (ngrok + điện thoại). Phần **kiểm thử tự động** (Playwright cho Web Admin, xUnit cho API, sharding cho nhiều máy, GitHub Actions matrix, cách "nhìn được" test đang chạy) đã tách riêng ở [HUONG_DAN_TEST_AUTOMATION.md](HUONG_DAN_TEST_AUTOMATION.md). Đọc file đó nếu muốn:
+
+- Viết test E2E cho trang Admin và **xem browser thật mở ra từng bước** (`HEADED=1`).
+- Xem lại Trace Viewer / video khi test fail trên CI.
+- Chia bộ test cho nhiều máy chạy song song (sharding + matrix).
+- Sinh code test bằng cách click tay (`playwright codegen`).
+
+---
+
 ## Checklist trước khi demo
 
 - [ ] SQL Server đang chạy, DB `web` có dữ liệu.

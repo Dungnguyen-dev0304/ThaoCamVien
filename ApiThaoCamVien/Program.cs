@@ -48,6 +48,9 @@ builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<PoiLocalizationService>();
 
+// ─── 6b. Hàng đợi FIFO khi nhiều người cùng quét 1 QR (Scoped: dùng chung DbContext của request)
+builder.Services.AddScoped<QrQueueService>();
+
 // ─── 7. UDP server discovery (cho app mobile auto-detect IP LAN) ──────────────
 builder.Services.AddHostedService<UdpDiscoveryService>();
 

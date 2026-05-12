@@ -4,5 +4,6 @@
     <Deploy Solution="Debug|*" />
   </Project>
   <Project Path="SharedThaoCamVien/SharedThaoCamVien.csproj" Id="0b4e8966-d967-4eee-94db-80e2c7d43388" />
+  <Project Path="ThaoCamVien.Tests/ThaoCamVien.Tests.csproj" />
   <Project Path="WebThaoCamVien/WebThaoCamVien.csproj" />
 </Solution>

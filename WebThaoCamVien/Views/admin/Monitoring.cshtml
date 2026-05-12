@@ -198,6 +198,32 @@
     </div>
 </div>
 
+<div class="mon-card" style="margin-top: 20px;">
+    <div class="flex items-center justify-between mb-3">
+        <div>
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Hàng đợi FIFO</p>
+            <h4 class="text-base font-extrabold text-slate-800 mt-1">Người đang xếp hàng quét audio theo POI</h4>
+        </div>
+        <span class="mon-pill"><span class="live-dot"></span> Live · 2s</span>
+    </div>
+    <div class="overflow-auto max-h-[420px]">
+        <table class="mon-table" id="queueTable">
+            <thead>
+                <tr>
+                    <th>POI</th>
+                    <th>Đang chờ</th>
+                    <th>Đang phát</th>
+                    <th>Tổng trong hàng</th>
+                    <th>Người chờ lâu nhất</th>
+                </tr>
+            </thead>
+            <tbody id="queue-body">
+                <tr><td colspan="5" class="text-slate-400 text-sm text-center">Đang tải…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <p class="text-[11px] text-slate-400 text-right mt-2">
     Cập nhật lần cuối: <span id="updated-at">—</span>
 </p>
@@ -448,5 +474,60 @@
             } catch { /* network blip — bỏ qua */ }
         }
         setInterval(() => { if (!document.hidden) pollActiveDevices(); }, 2000);
+
+        // ─── Auto-refresh bảng "Thiết bị đang dùng app" — 3s/lần ──────────
+        // Phục vụ load test: 50+ máy ảo nhảy liên tục, không nên đợi
+        // 30s mới thấy thay đổi.
+        async function pollDeviceList() {
+            try {
+                const r = await fetch('/Admin/ActiveDevicesJson?staleSeconds=5', { credentials: 'same-origin' });
+                if (!r.ok) return;
+                const d = await r.json();
+                if (Array.isArray(d.devices)) renderDevices(d.devices);
+            } catch { /* network blip — bỏ qua */ }
+        }
+        setInterval(() => { if (!document.hidden) pollDeviceList(); }, 3000);
+        pollDeviceList();
+
+        // ─── Auto-refresh "Lượt thăm" KPI khi load test đang chạy ────────
+        // KPI lượt thăm hôm nay tăng nhanh khi swarm chạy → poll 5s/lần.
+        async function pollKpi() {
+            try {
+                const r = await fetch('/Admin/MonitoringDataJson?days=' + currentDays, { credentials: 'same-origin' });
+                if (!r.ok) return;
+                const d = await r.json();
+                setValue('k-total', d.kpi.totalVisits);
+                setValue('k-today', d.kpi.visitsToday);
+                setValue('k-listen', d.kpi.avgListen);
+            } catch { /* bỏ qua */ }
+        }
+        setInterval(() => { if (!document.hidden) pollKpi(); }, 5000);
+
+        // ─── Widget "Hàng đợi FIFO theo POI" — refresh 2s/lần ──────────────
+        async function refreshQueues() {
+            try {
+                const r = await fetch('/Admin/ActiveQueuesJson', { credentials: 'same-origin' });
+                if (!r.ok) return;
+                const d = await r.json();
+                const tbody = document.getElementById('queue-body');
+                if (!d.queues || d.queues.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-slate-400 text-sm text-center">Không có hàng đợi nào đang hoạt động</td></tr>';
+                    return;
+                }
+                const now = Date.now();
+                tbody.innerHTML = d.queues.map(q => {
+                    const waitSec = Math.max(0, Math.round((now - new Date(q.oldestJoinUtc + 'Z').getTime()) / 1000));
+                    return `<tr>
+                        <td><strong>${q.poiName}</strong> <span class="text-slate-400 text-xs">#${q.poiId}</span></td>
+                        <td><span style="color:#f59e0b;font-weight:700">${q.waiting}</span></td>
+                        <td><span style="color:#22c55e;font-weight:700">${q.playing}</span></td>
+                        <td>${q.total}</td>
+                        <td>${waitSec}s</td>
+                    </tr>`;
+                }).join('');
+            } catch { /* network blip — bỏ qua */ }
+        }
+        setInterval(() => { if (!document.hidden) refreshQueues(); }, 2000);
+        refreshQueues();
     </script>
 }

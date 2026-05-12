@@ -29,6 +29,7 @@ public partial class WebContext : DbContext
     public virtual DbSet<PoiTranslation> PoiTranslations { get; set; }
     public DbSet<PoiAudio> PoiAudios { get; set; }
     public virtual DbSet<AppClientPresence> AppClientPresences { get; set; }
+    public virtual DbSet<QueueTicket> QueueTickets { get; set; }
 
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //    => optionsBuilder.UseSqlServer("Server=.;Database=web;Trusted_Connection=True;TrustServerCertificate=True;");
@@ -201,6 +202,26 @@ public partial class WebContext : DbContext
                 .HasForeignKey(d => d.PoiId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_translations_poi");
+        });
+
+        // 11. Cấu hình QUEUE_TICKETS (FIFO khi nhiều người cùng quét 1 POI)
+        modelBuilder.Entity<QueueTicket>(entity =>
+        {
+            entity.HasKey(e => e.TicketId).HasName("PK_queue_tickets");
+            entity.ToTable("queue_tickets");
+
+            entity.Property(e => e.TicketId).HasColumnName("ticket_id").ValueGeneratedOnAdd();
+            entity.Property(e => e.PoiId).HasColumnName("poi_id");
+            entity.Property(e => e.SessionId).HasMaxLength(64).HasColumnName("session_id");
+            entity.Property(e => e.JoinedUtc).HasColumnType("datetime").HasColumnName("joined_utc");
+            entity.Property(e => e.StartedPlayingUtc).HasColumnType("datetime").HasColumnName("started_playing_utc");
+            entity.Property(e => e.FinishedUtc).HasColumnType("datetime").HasColumnName("finished_utc");
+
+            // Index phục vụ ComputePosition: lọc theo POI + chưa xong
+            entity.HasIndex(e => new { e.PoiId, e.FinishedUtc })
+                  .HasDatabaseName("IX_queue_tickets_poi_active");
+            entity.HasIndex(e => e.JoinedUtc)
+                  .HasDatabaseName("IX_queue_tickets_joined");
         });
 
         OnModelCreatingPartial(modelBuilder);

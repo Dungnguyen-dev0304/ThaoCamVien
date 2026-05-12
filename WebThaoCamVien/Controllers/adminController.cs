@@ -99,6 +99,86 @@ namespace WebThaoCamVien.Controllers
             return Json(new { activeCount = count, staleSeconds, updatedAtUtc = DateTime.UtcNow });
         }
 
+        /// <summary>
+        /// Lightweight poll cho trang Monitoring: trả danh sách device sống +
+        /// POI đang nghe. Refresh mỗi 3s để bảng thiết bị nhảy theo load test.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveDevicesJson([FromQuery] int staleSeconds = 5)
+        {
+            staleSeconds = Math.Clamp(staleSeconds, 2, 60);
+            var since = DateTime.UtcNow.AddSeconds(-staleSeconds);
+
+            var devicesRaw = await _context.AppClientPresences.AsNoTracking()
+                .Where(p => p.LastSeenUtc >= since)
+                .OrderByDescending(p => p.LastSeenUtc)
+                .Take(100)
+                .ToListAsync();
+
+            var poiIds = devicesRaw.Where(d => d.CurrentPoiId != null)
+                                   .Select(d => d.CurrentPoiId!.Value)
+                                   .Distinct().ToList();
+            var poiNames = await _context.Pois.AsNoTracking()
+                .Where(p => poiIds.Contains(p.PoiId))
+                .ToDictionaryAsync(p => p.PoiId, p => p.Name ?? $"POI {p.PoiId}");
+
+            var devices = devicesRaw.Select(d => new
+            {
+                sessionId = string.IsNullOrEmpty(d.SessionId) ? "—"
+                    : (d.SessionId.Length > 14 ? d.SessionId.Substring(0, 14) + "…" : d.SessionId),
+                lastSeen = d.LastSeenUtc.ToLocalTime().ToString("HH:mm:ss"),
+                secondsAgo = (int)(DateTime.UtcNow - d.LastSeenUtc).TotalSeconds,
+                currentPoiId = d.CurrentPoiId,
+                currentPoi = d.CurrentPoiId.HasValue && poiNames.TryGetValue(d.CurrentPoiId.Value, out var n) ? n : null,
+            }).ToList();
+
+            return Json(new
+            {
+                total = devices.Count,
+                devices,
+                updatedAtUtc = DateTime.UtcNow,
+            });
+        }
+
+        /// <summary>
+        /// Hàng đợi đang hoạt động theo POI: dùng cho widget "Hàng đợi đang chờ" trên
+        /// trang Monitoring. Mỗi nhóm POI trả số đang chờ, số đang phát, người chờ lâu nhất.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveQueuesJson()
+        {
+            var data = await _context.QueueTickets.AsNoTracking()
+                .Where(t => t.FinishedUtc == null)
+                .GroupBy(t => t.PoiId)
+                .Select(g => new
+                {
+                    poiId = g.Key,
+                    waiting = g.Count(t => t.StartedPlayingUtc == null),
+                    playing = g.Count(t => t.StartedPlayingUtc != null),
+                    total = g.Count(),
+                    oldestJoinUtc = g.Min(t => t.JoinedUtc),
+                })
+                .OrderByDescending(x => x.total)
+                .ToListAsync();
+
+            // Lookup tên POI để hiển thị thân thiện hơn ID
+            var poiIds = data.Select(d => d.poiId).ToList();
+            var poiNames = await _context.Pois.AsNoTracking()
+                .Where(p => poiIds.Contains(p.PoiId))
+                .ToDictionaryAsync(p => p.PoiId, p => p.Name ?? $"POI {p.PoiId}");
+
+            var result = data.Select(d => new
+            {
+                d.poiId,
+                poiName = poiNames.TryGetValue(d.poiId, out var n) ? n : $"POI {d.poiId}",
+                d.waiting,
+                d.playing,
+                d.total,
+                d.oldestJoinUtc,
+            });
+            return Json(new { queues = result, updatedAtUtc = DateTime.UtcNow });
+        }
+
         // ─────────────────────────────────────────────────────────────────
         // MONITORING: giám sát hành vi user theo thời gian thực
         // Trang /Admin/Monitoring — cards KPI + Chart.js (top POI, hourly,
@@ -269,10 +349,12 @@ namespace WebThaoCamVien.Controllers
             }).ToList();
 
             // ── 7. ACTIVE DEVICES (live) ──────────────────────────────────
+            // Take(100) để load-test 50–80 máy ảo vẫn thấy đủ. Bình thường app chỉ
+            // có vài chục device thật → bảng vẫn gọn.
             var devicesRaw = await _context.AppClientPresences.AsNoTracking()
                 .Where(p => p.LastSeenUtc >= activeSince)
                 .OrderByDescending(p => p.LastSeenUtc)
-                .Take(20)
+                .Take(100)
                 .ToListAsync();
 
             var currentPoiIds = devicesRaw.Where(d => d.CurrentPoiId != null)

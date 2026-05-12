@@ -378,6 +378,60 @@ public sealed class MobileController : ControllerBase
         return Ok(new PresencePingResponse { Ok = true, ServerUtc = now });
     }
 
+    // ─── HÀNG ĐỢI FIFO khi nhiều người cùng quét 1 QR ────────────────────
+    // Kịch bản: 50 học sinh đứng trước chuồng hổ cùng quét TCV-1.
+    // Server gán thứ tự bằng IDENTITY → ai INSERT trước → phát audio trước.
+    // Mỗi POI là 1 hàng đợi độc lập; sang POI khác thì tạo ticket mới.
+
+    /// <summary>POST /api/mobile/queue/join — xin số thứ tự cho POI hiện tại.</summary>
+    [HttpPost("queue/join")]
+    public async Task<IActionResult> QueueJoin(
+        [FromBody] QueueJoinBody body,
+        [FromServices] QrQueueService queue)
+    {
+        if (body == null || body.PoiId <= 0 || string.IsNullOrWhiteSpace(body.SessionId))
+            return BadRequest(new { message = "Invalid payload (poiId + sessionId required)" });
+        if (body.SessionId.Length is < 8 or > 64)
+            return BadRequest(new { message = "Invalid sessionId length" });
+
+        var r = await queue.JoinAsync(body.PoiId, body.SessionId, HttpContext.RequestAborted);
+        return Ok(new
+        {
+            ticketId = r.TicketId,
+            position = r.Position,
+            total = r.Total,
+        });
+    }
+
+    /// <summary>GET /api/mobile/queue/status/{ticketId} — poll xem đã đến lượt chưa.</summary>
+    [HttpGet("queue/status/{ticketId:long}")]
+    public async Task<IActionResult> QueueStatus(
+        long ticketId,
+        [FromServices] QrQueueService queue)
+    {
+        var s = await queue.GetStatusAsync(ticketId, HttpContext.RequestAborted);
+        if (s == null) return NotFound(new { message = "Ticket expired or finished" });
+
+        return Ok(new
+        {
+            ticketId = s.TicketId,
+            position = s.Position,
+            total = s.Total,
+            isPlaying = s.IsPlaying,
+        });
+    }
+
+    /// <summary>DELETE /api/mobile/queue/{ticketId} — báo server "đã phát xong".</summary>
+    [HttpDelete("queue/{ticketId:long}")]
+    public async Task<IActionResult> QueueLeave(
+        long ticketId,
+        [FromServices] QrQueueService queue)
+    {
+        var ok = await queue.LeaveAsync(ticketId, HttpContext.RequestAborted);
+        if (!ok) return NotFound(new { message = "Ticket not found" });
+        return Ok(new { ok = true });
+    }
+
     /// <summary>GET /api/mobile/about/sections</summary>
     [HttpGet("about/sections")]
     public Task<IActionResult> GetAboutSections([FromQuery] string? lang = null)
@@ -501,6 +555,12 @@ public sealed class PresencePingBody
 {
     public string SessionId { get; set; } = "";
     public int? CurrentPoiId { get; set; }
+}
+
+public sealed class QueueJoinBody
+{
+    public int PoiId { get; set; }
+    public string SessionId { get; set; } = "";
 }
 
 public sealed class PresencePingResponse
