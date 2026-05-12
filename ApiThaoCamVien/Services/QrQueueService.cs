@@ -52,9 +52,11 @@ public sealed class QrQueueService
             var (position, total) = await ComputePositionAsync(poiId, ticket.TicketId, ct);
             return new JoinResult(ticket.TicketId, position, total);
         }
-        catch (OperationCanceledException)
+        catch (Exception) when (ct.IsCancellationRequested)
         {
-            // Client cancel — trả sentinel, không re-throw.
+            // Bất kỳ exception nào (OperationCanceledException, SqlException
+            // 'Operation cancelled by user', DbUpdateException...) khi client
+            // đã cancel → trả sentinel. Layer 1 chống VS popup triệt để.
             return Cancelled;
         }
     }
@@ -83,7 +85,7 @@ public sealed class QrQueueService
             return new StatusResult(ticketId, position, total,
                 IsPlaying: ticket.StartedPlayingUtc != null || position == 1);
         }
-        catch (OperationCanceledException)
+        catch (Exception) when (ct.IsCancellationRequested)
         {
             return null;
         }
@@ -102,7 +104,7 @@ public sealed class QrQueueService
             }
             return true;
         }
-        catch (OperationCanceledException)
+        catch (Exception) when (ct.IsCancellationRequested)
         {
             return false;
         }
@@ -134,7 +136,7 @@ public sealed class QrQueueService
 
             return position == 0 ? (-1, total) : (position, total);
         }
-        catch (OperationCanceledException)
+        catch (Exception) when (ct.IsCancellationRequested)
         {
             return (-2, 0);
         }

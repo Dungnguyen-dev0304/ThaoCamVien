@@ -105,10 +105,10 @@ namespace WebThaoCamVien.Controllers
         /// POI đang nghe. Refresh mỗi 3s để bảng thiết bị nhảy theo load test.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ActiveDevicesJson([FromQuery] int staleSeconds = 15)
+        public async Task<IActionResult> ActiveDevicesJson([FromQuery] int staleSeconds = 20)
         {
-            // Window 15s mặc định: với heartbeat client mỗi 1.5s, miss 10 lần liên
-            // tiếp mới drop. Đủ chống nhiễu khi server bận hoặc network blip.
+            // Window 20s: heartbeat client 3s, miss 6 lần liên tiếp mới drop.
+            // Đủ chống nhiễu khi server bận hoặc network blip dưới load nặng.
             staleSeconds = Math.Clamp(staleSeconds, 2, 120);
             var since = DateTime.UtcNow.AddSeconds(-staleSeconds);
 

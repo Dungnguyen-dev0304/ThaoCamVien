@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.SqlClient;
 
 namespace ApiThaoCamVien.Filters;
 
 /// <summary>
-/// Backup cuối cùng (Layer 3): bắt OperationCanceledException ở tầng
-/// IExceptionHandler — xử lý exception trong user code trước khi bubble lên
-/// host. Đảm bảo VS không hiện popup ngay cả khi cancellation xảy ra
-/// trong middleware/host code chứ không phải controller.
+/// Layer 3 backup: bắt mọi exception ở middleware level nếu lỡ filter MVC
+/// không bắt được. Cùng logic detect cancellation như filter.
 /// </summary>
 public sealed class CancellationExceptionHandler : IExceptionHandler
 {
@@ -15,14 +14,31 @@ public sealed class CancellationExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is OperationCanceledException)
+        if (IsClientCancellation(exception, httpContext))
         {
             if (!httpContext.Response.HasStarted)
             {
                 httpContext.Response.StatusCode = 499;
             }
-            return ValueTask.FromResult(true);   // đã handle, không bubble
+            return ValueTask.FromResult(true);
         }
         return ValueTask.FromResult(false);
     }
+
+    private static bool IsClientCancellation(Exception ex, HttpContext ctx)
+    {
+        if (ex is OperationCanceledException) return true;
+        if (ctx.RequestAborted.IsCancellationRequested) return true;
+
+        if (ex is SqlException sqlEx && ContainsCancelText(sqlEx.Message)) return true;
+        if (ex.InnerException is SqlException innerSql && ContainsCancelText(innerSql.Message))
+            return true;
+
+        return false;
+    }
+
+    private static bool ContainsCancelText(string? msg) =>
+        !string.IsNullOrEmpty(msg) &&
+        (msg.Contains("cancelled", StringComparison.OrdinalIgnoreCase)
+         || msg.Contains("canceled", StringComparison.OrdinalIgnoreCase));
 }

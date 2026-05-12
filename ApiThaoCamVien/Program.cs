@@ -7,16 +7,14 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── 1. Database — pool đủ lớn để chịu 50+ device đồng thời ────────────
-// Mỗi HTTP request mượn 1 DbContext từ pool, trả lại khi xong. PoolSize=256
-// cho phép ~256 request có DB query song song; số request không cần DB
-// (presence ping nhẹ) không bị giới hạn bởi đây.
-// Max Pool Size=400 trong appsettings.json (raw SQL connection pool).
+// ─── 1. Database — pool đủ lớn cho 50+ device, KHÔNG retry ────────────
+// QUAN TRỌNG: KHÔNG dùng EnableRetryOnFailure dưới load cao — mỗi failed
+// request retry 3 lần → load gấp 3, làm tình hình nghẽn tệ hơn. Thà
+// fail nhanh và để client retry vòng sau.
 builder.Services.AddDbContextPool<WebContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.CommandTimeout(30)
-                  .EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(2), errorNumbersToAdd: null)),
+        sql => sql.CommandTimeout(15)),   // 15s thay vì 30s — fail nhanh hơn
     poolSize: 256);
 
 // ─── 2. Controllers + JSON + Global Filters ─────────────────────────────────

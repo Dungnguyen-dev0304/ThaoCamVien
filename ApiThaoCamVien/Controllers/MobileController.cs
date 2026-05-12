@@ -358,26 +358,36 @@ public sealed class MobileController : ControllerBase
         if (sessionId.Length is < 8 or > 64)
             return BadRequest(new { message = "Invalid sessionId" });
 
-        var now = DateTime.UtcNow;
-        var row = await _ctx.AppClientPresences.FindAsync(new object[] { sessionId }, HttpContext.RequestAborted);
-        if (row == null)
+        var ct = HttpContext.RequestAborted;
+        try
         {
-            _ctx.AppClientPresences.Add(new AppClientPresence
+            var now = DateTime.UtcNow;
+            var row = await _ctx.AppClientPresences.FindAsync(new object[] { sessionId }, ct);
+            if (row == null)
             {
-                SessionId = sessionId,
-                LastSeenUtc = now,
-                CurrentPoiId = body?.CurrentPoiId
-            });
-        }
-        else
-        {
-            row.LastSeenUtc = now;
-            if (body?.CurrentPoiId is int poiId && poiId > 0)
-                row.CurrentPoiId = poiId;
-        }
+                _ctx.AppClientPresences.Add(new AppClientPresence
+                {
+                    SessionId = sessionId,
+                    LastSeenUtc = now,
+                    CurrentPoiId = body?.CurrentPoiId
+                });
+            }
+            else
+            {
+                row.LastSeenUtc = now;
+                if (body?.CurrentPoiId is int poiId && poiId > 0)
+                    row.CurrentPoiId = poiId;
+            }
 
-        await _ctx.SaveChangesAsync(HttpContext.RequestAborted);
-        return Ok(new PresencePingResponse { Ok = true, ServerUtc = now });
+            await _ctx.SaveChangesAsync(ct);
+            return Ok(new PresencePingResponse { Ok = true, ServerUtc = now });
+        }
+        catch (Exception) when (ct.IsCancellationRequested)
+        {
+            // Client cancel heartbeat (timeout) — không phải lỗi server.
+            // Layer 1 ở chính endpoint để VS không bao giờ thấy SqlException.
+            return StatusCode(499);
+        }
     }
 
     // ─── HÀNG ĐỢI FIFO khi nhiều người cùng quét 1 QR ────────────────────
