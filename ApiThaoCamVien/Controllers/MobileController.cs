@@ -397,6 +397,8 @@ public sealed class MobileController : ControllerBase
             return BadRequest(new { message = "Invalid sessionId length" });
 
         var r = await queue.JoinAsync(body.PoiId, body.SessionId, HttpContext.RequestAborted);
+        if (r.Position == -2) return StatusCode(499);   // client cancelled
+
         return Ok(new
         {
             ticketId = r.TicketId,

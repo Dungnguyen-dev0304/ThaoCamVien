@@ -15,88 +15,129 @@ public sealed class QrQueueService
 
     public QrQueueService(WebContext ctx) => _ctx = ctx;
 
+    // CANCELLED sentinel — khi client cancel (Ctrl+C python), service trả về
+    // record này thay vì throw OperationCanceledException. Controller check
+    // r.Position == -2 thì biết là cancel và trả 499. Không bao giờ exception
+    // bubble ra ngoài service → Visual Studio không hiện popup user-unhandled.
+    private static readonly JoinResult Cancelled = new(0, -2, 0);
+
     public async Task<JoinResult> JoinAsync(int poiId, string sessionId, CancellationToken ct)
     {
-        // Nếu session đã đang trong hàng cùng POI (chưa Finished) → tái sử dụng,
-        // tránh user spam click tạo nhiều ticket.
-        var existing = await _ctx.QueueTickets
-            .Where(t => t.PoiId == poiId
-                     && t.SessionId == sessionId
-                     && t.FinishedUtc == null)
-            .OrderByDescending(t => t.TicketId)
-            .FirstOrDefaultAsync(ct);
+        try
+        {
+            var existing = await _ctx.QueueTickets
+                .Where(t => t.PoiId == poiId
+                         && t.SessionId == sessionId
+                         && t.FinishedUtc == null)
+                .OrderByDescending(t => t.TicketId)
+                .FirstOrDefaultAsync(ct);
 
-        QueueTicket ticket;
-        if (existing != null)
-        {
-            ticket = existing;
-        }
-        else
-        {
-            ticket = new QueueTicket
+            QueueTicket ticket;
+            if (existing != null)
             {
-                PoiId = poiId,
-                SessionId = sessionId,
-                JoinedUtc = DateTime.UtcNow,
-            };
-            _ctx.QueueTickets.Add(ticket);
-            await _ctx.SaveChangesAsync(ct);   // IDENTITY tự tăng — atomic
-        }
+                ticket = existing;
+            }
+            else
+            {
+                ticket = new QueueTicket
+                {
+                    PoiId = poiId,
+                    SessionId = sessionId,
+                    JoinedUtc = DateTime.UtcNow,
+                };
+                _ctx.QueueTickets.Add(ticket);
+                await _ctx.SaveChangesAsync(ct);
+            }
 
-        var (position, total) = await ComputePositionAsync(poiId, ticket.TicketId, ct);
-        return new JoinResult(ticket.TicketId, position, total);
+            var (position, total) = await ComputePositionAsync(poiId, ticket.TicketId, ct);
+            return new JoinResult(ticket.TicketId, position, total);
+        }
+        catch (OperationCanceledException)
+        {
+            // Client cancel — trả sentinel, không re-throw.
+            return Cancelled;
+        }
     }
 
     public async Task<StatusResult?> GetStatusAsync(long ticketId, CancellationToken ct)
     {
-        var ticket = await _ctx.QueueTickets.AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TicketId == ticketId, ct);
-        if (ticket == null || ticket.FinishedUtc != null) return null;
-
-        var (position, total) = await ComputePositionAsync(ticket.PoiId, ticketId, ct);
-
-        // Đến lượt: đánh dấu StartedPlayingUtc lần đầu tiên hit position 1.
-        if (position == 1 && ticket.StartedPlayingUtc == null)
+        try
         {
-            var live = await _ctx.QueueTickets.FindAsync(new object[] { ticketId }, ct);
-            if (live != null && live.StartedPlayingUtc == null)
-            {
-                live.StartedPlayingUtc = DateTime.UtcNow;
-                await _ctx.SaveChangesAsync(ct);
-            }
-        }
+            var ticket = await _ctx.QueueTickets.AsNoTracking()
+                .FirstOrDefaultAsync(t => t.TicketId == ticketId, ct);
+            if (ticket == null || ticket.FinishedUtc != null) return null;
 
-        return new StatusResult(ticketId, position, total,
-            IsPlaying: ticket.StartedPlayingUtc != null || position == 1);
+            var (position, total) = await ComputePositionAsync(ticket.PoiId, ticketId, ct);
+            if (position == -2) return null;   // cancelled inside ComputePositionAsync
+
+            if (position == 1 && ticket.StartedPlayingUtc == null)
+            {
+                var live = await _ctx.QueueTickets.FindAsync(new object[] { ticketId }, ct);
+                if (live != null && live.StartedPlayingUtc == null)
+                {
+                    live.StartedPlayingUtc = DateTime.UtcNow;
+                    await _ctx.SaveChangesAsync(ct);
+                }
+            }
+
+            return new StatusResult(ticketId, position, total,
+                IsPlaying: ticket.StartedPlayingUtc != null || position == 1);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
     }
 
     public async Task<bool> LeaveAsync(long ticketId, CancellationToken ct)
     {
-        var ticket = await _ctx.QueueTickets.FindAsync(new object[] { ticketId }, ct);
-        if (ticket == null) return false;
-        if (ticket.FinishedUtc == null)
+        try
         {
-            ticket.FinishedUtc = DateTime.UtcNow;
-            await _ctx.SaveChangesAsync(ct);
+            var ticket = await _ctx.QueueTickets.FindAsync(new object[] { ticketId }, ct);
+            if (ticket == null) return false;
+            if (ticket.FinishedUtc == null)
+            {
+                ticket.FinishedUtc = DateTime.UtcNow;
+                await _ctx.SaveChangesAsync(ct);
+            }
+            return true;
         }
-        return true;
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
-    /// Position = ROW_NUMBER() trong nhóm POI lọc theo FinishedUtc IS NULL,
-    /// sắp xếp theo TicketId tăng dần. Trả (-1, total) nếu ticket không còn active.
+    /// Position = số ticket có TicketId &lt;= ticketId trong cùng POI và chưa Finished.
+    /// Total = tổng ticket active của POI.
+    /// Trả (-2, 0) nếu cancel. Trả (-1, total) nếu ticket không còn active.
+    ///
+    /// 2 COUNT query nhẹ thay vì load toàn list — chịu được 50+ device đồng thời.
     /// </summary>
     private async Task<(int position, int total)> ComputePositionAsync(
         int poiId, long ticketId, CancellationToken ct)
     {
-        var activeIds = await _ctx.QueueTickets.AsNoTracking()
-            .Where(t => t.PoiId == poiId && t.FinishedUtc == null)
-            .OrderBy(t => t.TicketId)
-            .Select(t => t.TicketId)
-            .ToListAsync(ct);
+        try
+        {
+            var total = await _ctx.QueueTickets.AsNoTracking()
+                .CountAsync(t => t.PoiId == poiId && t.FinishedUtc == null, ct);
 
-        var idx = activeIds.IndexOf(ticketId);
-        return idx < 0 ? (-1, activeIds.Count) : (idx + 1, activeIds.Count);
+            if (total == 0) return (-1, 0);
+
+            // Position = số ticket cùng POI, chưa Finished, có TicketId <= mình.
+            // Vì TicketId là IDENTITY tăng dần → cách này tương đương ROW_NUMBER.
+            var position = await _ctx.QueueTickets.AsNoTracking()
+                .CountAsync(t => t.PoiId == poiId
+                              && t.FinishedUtc == null
+                              && t.TicketId <= ticketId, ct);
+
+            return position == 0 ? (-1, total) : (position, total);
+        }
+        catch (OperationCanceledException)
+        {
+            return (-2, 0);
+        }
     }
 }
 

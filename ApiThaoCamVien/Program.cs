@@ -1,4 +1,5 @@
-﻿using ApiThaoCamVien.Models;
+﻿using ApiThaoCamVien.Filters;
+using ApiThaoCamVien.Models;
 using ApiThaoCamVien.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -6,24 +7,35 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── 1. Database (nhiều user đồng thời: mỗi HTTP request = DbContext riêng, pool tái sử dụng) ─
-// App MAUI: mỗi máy một client, không có “giới hạn số app”; giới hạn thực tế là API + SQL Server.
+// ─── 1. Database — pool đủ lớn để chịu 50+ device đồng thời ────────────
+// Mỗi HTTP request mượn 1 DbContext từ pool, trả lại khi xong. PoolSize=256
+// cho phép ~256 request có DB query song song; số request không cần DB
+// (presence ping nhẹ) không bị giới hạn bởi đây.
+// Max Pool Size=400 trong appsettings.json (raw SQL connection pool).
 builder.Services.AddDbContextPool<WebContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.CommandTimeout(30)),
-    poolSize: 128);
+        sql => sql.CommandTimeout(30)
+                  .EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(2), errorNumbersToAdd: null)),
+    poolSize: 256);
 
-// ─── 2. Controllers + JSON ───────────────────────────────────────────────────
-builder.Services.AddControllers().AddJsonOptions(x =>
+// ─── 2. Controllers + JSON + Global Filters ─────────────────────────────────
+builder.Services.AddControllers(options =>
 {
-    // Chống vòng lặp vô tận (navigation properties)
+    // Layer 2: bắt OperationCanceledException toàn cục cho mọi MVC action
+    // → Visual Studio không popup user-unhandled khi client cancel.
+    options.Filters.Add<OperationCanceledExceptionFilter>();
+}).AddJsonOptions(x =>
+{
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    // Trả về null thay vì bỏ qua field
     x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     // Không encode "&" thành "&" — URL VNPay phải giữ nguyên
     x.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 });
+
+// Layer 3: IExceptionHandler — backup cuối cùng ở middleware level
+builder.Services.AddExceptionHandler<CancellationExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // ─── 3. CORS ─────────────────────────────────────────────────────────────────
 // QUAN TRỌNG: AllowAnyOrigin phải được set để mobile app gọi được API
@@ -73,24 +85,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// ─── Middleware: nuốt OperationCanceledException khi client disconnect ──
-// Khi load test Ctrl+C, Python đóng connection giữa request → ASP.NET
-// cancel CancellationToken → EF Core throw TaskCanceledException →
-// Visual Studio popup "user-unhandled". Đây là bình thường, không phải bug.
-// Middleware này bắt + log INFO + trả 499 (Client Closed Request) để VS
-// không hiện popup nữa.
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
-    {
-        // Client tự cancel — bình thường, không phải lỗi server.
-        context.Response.StatusCode = 499;   // Nginx-style "client closed request"
-    }
-});
+// ─── Exception handler pipeline ─────────────────────────────────────────
+// Bắt OperationCanceledException ở 3 lớp:
+//   1. Service: try/catch trong QrQueueService → trả sentinel value
+//   2. ExceptionFilter: OperationCanceledExceptionFilter cho mọi MVC action
+//   3. IExceptionHandler: CancellationExceptionHandler — backup ở middleware
+// Kết quả: VS không bao giờ popup "user-unhandled" khi client Ctrl+C.
+app.UseExceptionHandler();
 
 // QUAN TRỌNG: UseCors() phải TRƯỚC UseAuthorization() và MapControllers()
 app.UseCors();
