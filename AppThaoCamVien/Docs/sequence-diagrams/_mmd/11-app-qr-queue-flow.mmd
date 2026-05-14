@@ -1,0 +1,37 @@
+sequenceDiagram
+    autonumber
+    actor U as Người dùng (thiết bị)
+    participant App as App MAUI
+    participant NE as NarrationEngine
+
+    rect rgb(255, 240, 255)
+        Note over U,NE: LUỒNG 1: User tap thủ công (forcePlay) → Clear queue
+        U->>App: Tap POI khác khi đang phát
+        App->>NE: PlayAsync(newPoi, forcePlay: true)
+        NE->>NE: ClearQueueInternal()
+        NE->>NE: CancelCurrentPlayback()
+        NE->>NE: Stop Audio/TTS
+        NE->>NE: ClearQueueInternal() → Xóa tất cả POI đang chờ
+        NE-->>App: Phát POI mới ngay lập tức
+        App-->>U: Phát thuyết minh POI mới
+
+        Note over U,NE: Các POI trong queue bị hủy, không được phát
+    end
+
+    rect rgb(245, 245, 255)
+        Note over U,NE: LUỒNG 2: GPS tự động enqueue (geofencing)
+        U->>App: Di chuyển vào vùng POI mới
+        App->>NE: PlayAsync(gpsPoi, forcePlay: false)
+
+        alt Đang có audio đang phát
+            NE->>NE: EnqueueIfRoom(gpsPoi)
+            NE->>NE: Kiểm tra: đã có trong queue? queue đầy?
+            NE->>NE: _queue.Enqueue(gpsPoi) nếu còn chỗ
+            NE-->>App: QueueCount tăng
+            App-->>U: "POI X sẽ được phát sau"
+        else Không có audio đang phát
+            NE->>NE: PlayInternalAsync(gpsPoi)
+            NE-->>App: Phát ngay
+            App-->>U: "Đang phát thuyết minh POI X"
+        end
+    end

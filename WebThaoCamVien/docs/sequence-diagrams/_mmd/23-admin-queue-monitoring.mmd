@@ -1,0 +1,92 @@
+sequenceDiagram
+    autonumber
+    actor A as Admin
+    participant V as Giao diện Monitoring
+    participant C as AdminController
+    participant DB as SQL Server (WebContext)
+
+    Note over A,DB: LUỒNG: Giám sát hàng đợi FIFO theo POI (real-time)
+
+    rect rgb(230, 245, 255)
+        Note over A,DB: GIAI ĐOẠN 1: Tải trang Monitoring
+        A->>V: Mở /Admin/Monitoring
+        V->>C: GET /Admin/Monitoring
+        C-->>V: 200 View (Razor)
+        V-->>A: Render trang + widget "Hàng đợi FIFO"
+        A-->>V: Trang đã sẵn sàng
+    end
+
+    rect rgb(240, 255, 240)
+        Note over A,DB: GIAI ĐOẠN 2: Poll hàng đợi (2 giây/lần)
+        loop Mỗi 2 giây
+            V->>C: GET /Admin/ActiveQueuesJson
+            C->>DB: Query QueueTickets WHERE FinishedUtc == null
+            C->>DB: GROUP BY PoiId
+            C->>DB: COUNT(waiting) = StartedPlayingUtc == null
+            C->>DB: COUNT(playing) = StartedPlayingUtc != null
+            C->>DB: COUNT(total) = tất cả
+            C->>DB: MIN(JoinedUtc) = người chờ lâu nhất
+            DB-->>C: Kết quả group theo POI
+
+            Note over C: Lookup tên POI để hiển thị
+            C->>DB: Query Pois WHERE PoiId IN (...)
+            DB-->>C: Dictionary {poiId -> name}
+
+            C-->>V: JSON {queues: [{poiId, poiName, waiting, playing, total, oldestJoinUtc}]}
+            V->>V: Tính waitSec = (now - oldestJoinUtc)
+            V-->>A: Cập nhật bảng "Hàng đợi FIFO"
+        end
+    end
+
+    rect rgb(255, 245, 230)
+        Note over A,DB: GIAI ĐOẠN 3: Giám sát thiết bị online (song song)
+        loop Mỗi 2 giây
+            V->>C: GET /Admin/ActiveAppSessionsJson?staleSeconds=3
+            C->>DB: Query AppClientPresence WHERE LastPing >= (now - staleSeconds)
+            C-->>V: JSON {activeCount, sessions}
+            V->>V: Cập nhật KPI "Thiết bị online"
+        end
+    end
+
+    rect rgb(245, 245, 255)
+        Note over A,DB: GIAI ĐOẠN 4: Thiết bị gia nhập hàng đợi
+        App->>Api: POST /api/qr/join {poiId, sessionId}
+        Api->>DB: INSERT QueueTicket (TicketId tự tăng)
+        DB-->>Api: TicketId mới
+        Api-->>App: JoinResult(TicketId, Position, Total)
+
+        Note over A: Admin thấy bảng queue tự cập nhật
+        V->>C: GET /Admin/ActiveQueuesJson (lần tiếp theo)
+        C->>DB: COUNT total += 1
+        C-->>V: waiting += 1
+        V-->>A: "Đang chờ" tăng lên
+    end
+
+    rect rgb(255, 240, 240)
+        Note over A,DB: GIAI ĐOẠN 5: Thiết bị bắt đầu phát
+        App->>Api: GET /api/qr/status/{ticketId}
+        Api->>DB: Kiểm tra Position == 1
+        Api->>DB: UPDATE StartedPlayingUtc = NOW
+        DB-->>Api: OK
+        Api-->>App: StatusResult(IsPlaying: true)
+
+        Note over A: Admin thấy "Đang phát" tăng, "Đang chờ" giảm
+        V->>C: GET /Admin/ActiveQueuesJson (lần tiếp theo)
+        C->>DB: COUNT(playing) += 1, COUNT(waiting) -= 1
+        C-->>V: {waiting: N-1, playing: M+1}
+        V-->>A: Cập nhật bảng real-time
+    end
+
+    rect rgb(230, 255, 255)
+        Note over A,DB: GIAI ĐOẠN 6: Thiết bị rời khỏi hàng đợi
+        App->>Api: POST /api/qr/leave/{ticketId}
+        Api->>DB: UPDATE FinishedUtc = NOW
+        DB-->>Api: OK
+        Api-->>App: true
+
+        Note over A: Admin thấy tổng trong hàng giảm
+        V->>C: GET /Admin/ActiveQueuesJson (lần tiếp theo)
+        C->>DB: COUNT total -= 1
+        C-->>V: total -= 1
+        V-->>A: Hàng đợi POI cập nhật
+    end
