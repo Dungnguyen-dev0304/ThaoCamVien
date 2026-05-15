@@ -96,6 +96,25 @@
       font-size: 13px;
     }
 
+    .teamRow {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: rgba(37, 99, 235, .06);
+      border: 1px solid rgba(37, 99, 235, .15);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .teamMember {
+      color: var(--text);
+    }
+
+    .teamDivider {
+      margin: 0 12px;
+      color: var(--muted);
+    }
+
     .pillRow {
       display: flex;
       gap: 8px;
@@ -412,6 +431,11 @@
             Product Requirements Document cho hệ sinh thái: Web quản trị nội dung + App trải nghiệm tham quan (map, POI,
             audio, QR, about).
           </p>
+          <div class="teamRow">
+            <span class="teamMember"><strong>Nguyễn Tấn Dũng</strong> — MSSV: 3123411050</span>
+            <span class="teamDivider">|</span>
+            <span class="teamMember"><strong>Nguyễn Thái Thùy Dương</strong> — MSSV: 3123411059</span>
+          </div>
         </div>
         <div class="pillRow" aria-label="metadata">
           <div class="pill"><strong>Doc</strong>: prd.htm</div>
@@ -425,6 +449,7 @@
       <nav aria-label="Table of contents">
         <div class="tocTitle">Mục lục</div>
         <ul>
+          <li><a href="#thanh-vien">Thành viên nhóm</a></li>
           <li><a href="#tong-quan">Tổng quan</a></li>
           <li><a href="#muc-tieu">Mục tiêu & KPI</a></li>
           <li><a href="#pham-vi">Phạm vi & ngoài phạm vi</a></li>
